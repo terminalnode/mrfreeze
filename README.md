@@ -13,3 +13,36 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 
 ### Silly commands
 * **!mrfreeze** - Posts a MrFreeze-quote with user instead of Batman and server instead of Gotham.
+* **!source** (or **!github**)    - Posts a link to this github page.
+* **!dummies**   - Invite links for the dummy bots Ba'athman and Robin.
+* **!readme**    - Posts a link to the github page as well, but to the README.md file (this one!).
+
+### Non-command features
+* Will greet a server when coming online.
+
+## Todo
+### Commands
+* **!restart**   - (Owner) Restarts the bot completely. Very useful for testing new code.
+* **!gitupdate** - (Owner) Fetches latest updates from github.
+* **!unban**     - (Mod) Removes ban from the server.
+* **!banish**    - (Mod) Assigns the tag 'Antarctica' to a user for five minutes.
+* **!dmcl**      - (Mod) DM commandlog file for the current server to author.
+* **!ban**       - (Mod) Bans the user from the server.
+* **!kick**      - (Mod) Kicks the user from the server.
+* **!mute**      - (Mod) Mutes the user.
+* **!unmute**    - (Mod) Unmutes the user.
+* **!rules**     - Displays one, several or all rules depending on how the command is executed.
+* **!activity**  - Changes the activity of the bot ('Playing [...]'). No mod requirement, have fun!
+* **!region**    - Allows a user to assign a regional role such as continent (could also be used for countries).
+* **!vote**      - Creates a vote where users vote by reacting with specified emoji.
+* * This does not work with nitro emojis, but does work with server emojis.
+* **!mrfreeze**  - Posts a dank Mr. Freeze quote from Batman & Robin. Replaces 'Batman' with you and 'Gotham' with channel name.
+* **!rps**       - Play rock, paper, scissors with the bot. With scores!
+* **!quote**     - (Mod) Add, delete, and (All) read random quotes.
+* **!dice**      - Roll a select number of dice. Intend to also implement option to select type of dice.
+* **!ink**       - Attempt to bring the ink look-up used on r/fountainpens to discord.
+
+### Various
+* **!temp** will be turned into a function constantly looking through messages for temperature statements.
+* Add an is_owner() check to the cmds_owner cog.
+* Make links in cmds_brag cog embedded. Link for how to do this in cog.
