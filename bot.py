@@ -6,9 +6,10 @@ import traceback
 # Importing commands from ./botfunctions
 from botfunctions import *
 
-load_cogs = [ 'cogs.owner_cmds',
-              'cogs.mrfreeze_cmd',
-              'cogs.tempconverter' ]              ]
+load_cogs = [ 'cogs.cmds_owner',
+              'cogs.cmds_brag',
+              'cogs.cmd_mrfreeze',
+              'cogs.tempconverter' ]
 bot = commands.Bot(command_prefix='!')
 
 if __name__ == '__main__':
