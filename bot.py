@@ -3,10 +3,11 @@ from discord.ext import commands
 import asyncio, collections, random, signal, sys
 import traceback
 
-# Importing commands from ./bot_commons
+# Importing commands from ./botfunctions
 from botfunctions import *
 
-load_cogs = ['cogs.owner_cmds']
+load_cogs = ['cogs.owner_cmds',
+             'cogs.mrfreeze_cmd']
 bot = commands.Bot(command_prefix='!')
 
 if __name__ == '__main__':

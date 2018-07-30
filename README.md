@@ -12,4 +12,4 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * TBA
 
 ### Silly commands
-* TBA
+* **!mrfreeze** - Posts a MrFreeze-quote with user instead of Batman and server instead of Gotham.
