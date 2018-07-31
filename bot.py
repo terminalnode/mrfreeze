@@ -35,6 +35,9 @@ async def on_ready():
             await bot_trash.send(':wave: ' + native.mrfreeze())
         except:
             print ('ERROR: No channel bot-trash in ' + i.name + '. Can\'t greet them.')
+    # Set activity to "Listening to your commands"
+    await bot.change_presence(status=None, activity=
+        discord.Activity(name='your commands...', type=discord.ActivityType.listening))
 
 @bot.event
 async def on_message(message):
