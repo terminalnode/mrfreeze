@@ -6,7 +6,7 @@ async def convert(ctx, tempstatement):
     # The origin temperature will be a float number.
     # The origin unit will be a single letter corresponding to:
     # (d)egrees, (f)ahrenheit, (k)elvin, (c)elcius, (r)ankine
-    origin_temp   = float(re.match('\d+[,.]?\d+', tempstatement).group().replace(',','.'))
+    origin_temp   = float(re.match('-?\d+[,.]?\d+', tempstatement).group().replace(',','.'))
     origin_unit   = re.search('[a-z]', tempstatement).group()
 
     # If the origin unit is unspecified (degrees) we'll look at the users
