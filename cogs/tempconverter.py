@@ -10,6 +10,9 @@ class TempConverterCog():
 
     @commands.command(name='placeholder')
     async def _placeholder(self, ctx):
+        # This regex expression will find any temperature expression in a string.
+        # re.search('\d+[,.]?\d+ ?(degrees|c|f|°c|°f|k|°k|r|°r)[^\w]?', string)
+        # It will match generic degrees, celcius, fahrenheit, kelvin and rankine
         pass
 
 def setup(bot):
