@@ -52,14 +52,29 @@ async def convert(ctx, tempstatement):
         elif dest == 'k':
             return temp * 5.0 / 9.0
 
-    # For now we'll just convert between C and F, later on
-    # we'll add an option to convert to the other temperatures.
-    if origin_unit == 'c':
-        dest_unit = 'f'
-    elif origin_unit == 'f':
-        dest_unit = 'c'
-    else:
-        dest_unit = 'c'
+    # Now we're gonna check if there are any specific wishes for what
+    # to convert the unit to.
+    dest_unit = str()
+    try:
+        unit_regex = ' (?:°?c(elcius)?|°?f(ahrenheit)?|°?k(elvin)?|°?r(ankine)?)[^\w]'
+        dest_unit = re.search('in' + unit_regex, ctx.message.content.lower() + ' ').group().strip()
+        dest_unit = re.search('\s\w+', dest_unit).group().strip()[0]
+    except:
+        pass
+
+    # Defaults unless an in- or to-statement is found.
+    # This converts c to f and f to c, r and k are converted
+    # to f for north americans and c for everyone else.
+    if not dest_unit:
+        if origin_unit == 'c':
+            dest_unit = 'f'
+        elif origin_unit == 'f':
+            dest_unit = 'c'
+        else:
+            dest_unit = 'c'
+            for i in ctx.author.roles:
+                if i.name == 'North America':
+                    origin_unit = 'f'
 
     # Now let's convert the temperature.
     if origin_unit == 'c':
