@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
-import asyncio, collections, random, signal, sys
-import traceback
+import collections, random, signal, re
+import traceback, sys, asyncio
 
 # Importing commands from ./botfunctions
 from botfunctions import *
@@ -35,6 +35,23 @@ async def on_ready():
             await bot_trash.send(':wave: ' + native.mrfreeze())
         except:
             print ('ERROR: No channel bot-trash in ' + i.name + '. Can\'t greet them.')
+
+@bot.event
+async def on_message(message):
+    ctx = await bot.get_context(message)
+    # the trailing space let's us match temperatures at the end of the message.
+    tempstatement = re.search('(\d+[,.]?\d+) ?(?:degrees|°?c(elcius)?|°?f(ahrenheit)?|' +
+                              '°?k(elvin)?|°?r(ankine)?)[^\w]',
+                              message.content.lower() + ' ')
+
+    if message.author == bot.user:
+        pass # never do anything the bot says.
+
+    elif ctx.valid: # this is a command, we should invoke it.
+        await bot.invoke(ctx)
+
+    elif tempstatement != None:
+        await temp.convert(ctx, tempstatement)
 
 ### Program ends here
 # Client.run with the bots token

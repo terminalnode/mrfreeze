@@ -44,5 +44,6 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 
 ### Various
 * **!temp** will be turned into a function constantly looking through messages for temperature statements.
+* * The temperature function is now live, but will be expanded upon later.
 * Add an is_owner() check to the cmds_owner cog.
 * Make links in cmds_brag cog embedded. Link for how to do this in cog.
