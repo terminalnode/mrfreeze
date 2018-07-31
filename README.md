@@ -1,4 +1,4 @@
-# MrFreezeRW
+# MrFreeze (Rewrite)
 This is a rewrite of MrFreeze using cogs instead of mashing everything into a single file. I also hope my adventures in writing MrFreeze will result in a somewhat cleaner bot.
 
 ## Reimplemented functions:
