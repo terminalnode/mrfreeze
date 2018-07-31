@@ -34,7 +34,7 @@ async def on_ready():
             bot_trash = discord.utils.get(i.channels, name='bot-trash')
             await bot_trash.send(':wave: ' + native.mrfreeze())
         except:
-            pass # If there's no #bot-trash I'm not waving.
+            print ('ERROR: No channel bot-trash in ' + i.name + '. Can\'t greet them.')
 
 ### Program ends here
 # Client.run with the bots token
