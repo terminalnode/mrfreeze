@@ -66,7 +66,7 @@ async def convert(ctx, tempstatement):
     manual_conversion = False
     try:
         unit_regex = ' (?:°?c(elcius)?|°?f(ahrenheit)?|°?k(elvin)?|°?r(ankine)?)[^\w]'
-        dest_unit = re.search('in' + unit_regex, ctx.message.content.lower() + ' ').group().strip()
+        dest_unit = re.search('(?:in|as)' + unit_regex, ctx.message.content.lower() + ' ').group().strip()
         dest_unit = re.search('\s\w+', dest_unit).group().strip()[0]
         manual_conversion = True
     except:
