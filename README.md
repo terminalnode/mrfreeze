@@ -9,16 +9,17 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * TBA
 
 ### User utility commands
-* TBA
+* **!temp**     - DMs a help message regarding the automatic temperature conversion. Does no conversion of it's own.
 
 ### Silly commands
-* **!mrfreeze** - Posts a MrFreeze-quote with user instead of Batman and server instead of Gotham.
-* **!source** (or **!github**)    - Posts a link to this github page.
+* **!mrfreeze**  - Posts a MrFreeze-quote with user instead of Batman and server instead of Gotham.
+* **!source**    - Posts a link to this github page.
 * **!dummies**   - Invite links for the dummy bots Ba'athman and Robin.
 * **!readme**    - Posts a link to the github page as well, but to the README.md file (this one!).
 
 ### Non-command features
 * Will greet a server when coming online.
+* Will automatically detect temperature statements and convert them with no user interraction required.
 
 ## Todo
 ### Commands
@@ -26,7 +27,6 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * **!gitupdate** - (Owner) Fetches latest updates from github.
 * **!unban**     - (Mod) Removes ban from the server.
 * **!banish**    - (Mod) Assigns the tag 'Antarctica' to a user for five minutes.
-* **!dmcl**      - (Mod) DM commandlog file for the current server to author.
 * **!ban**       - (Mod) Bans the user from the server.
 * **!kick**      - (Mod) Kicks the user from the server.
 * **!mute**      - (Mod) Mutes the user.
@@ -43,7 +43,5 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * **!ink**       - Attempt to bring the ink look-up used on r/fountainpens to discord.
 
 ### Various
-* **!temp** will be turned into a function constantly looking through messages for temperature statements.
-* * The temperature function is now live, but will be expanded upon later.
 * Add an is_owner() check to the cmds_owner cog.
 * Make links in cmds_brag cog embedded. Link for how to do this in cog.
