@@ -43,7 +43,7 @@ async def on_ready():
 async def on_message(message):
     ctx = await bot.get_context(message)
     # the trailing space let's us match temperatures at the end of the message.
-    tempstatement = re.search('(( -)?\d+[,.]?\d+) ?(?:°?d(eg)?(egrees)?|°?c(elcius)?(ivilized( units)?)?(ivilised( units)?)?(u)?|' +
+    tempstatement = re.search('(( -)?\d+[,.]?\d+) ?(?:°?d(eg)?(egrees)?|°?c(elcius)?(elsius)?(ivilized( units)?)?(ivilised( units)?)?(u)?|' +
                               '°?f(ahrenheit)?(reedom( units)?)?(u)?|°?k(elvin)?|°?r(ankine)?)[^\w]',
                               ' ' + message.content.lower() + ' ')
 
