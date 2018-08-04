@@ -1,4 +1,5 @@
-import discord, sys, os
+import discord, sys
+from subprocess import run, PIPE
 from discord.ext import commands
 from botfunctions import checks
 
