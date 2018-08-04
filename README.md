@@ -21,6 +21,7 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 ### Non-command features
 * Will greet a server when coming online.
 * Will automatically detect temperature statements and convert them with no user interraction required.
+* Will post a message to #mod-discussion when a user leaves.
 
 ## Todo
 ### Commands

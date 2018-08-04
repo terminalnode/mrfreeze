@@ -39,6 +39,9 @@ async def on_ready():
     await bot.change_presence(status=None, activity=
         discord.Activity(name='your commands...', type=discord.ActivityType.listening))
 
+# Certain events, namely temp, depends on checking for temperature statements in
+# all messages sent to the chat. If a command is detected before that the command
+# will run instead.
 @bot.event
 async def on_message(message):
     ctx = await bot.get_context(message)
@@ -55,6 +58,21 @@ async def on_message(message):
 
     elif tempstatement != None:
         await temp.convert(ctx, tempstatement)
+
+# Message when people leave.
+@bot.event
+async def on_member_remove(member):
+    mod_channel = discord.utils.get(member.guild.channels, name='mod-discussion')
+    member_name = str(member.name + '#' + str(member.discriminator))
+    await mod_channel.send(member.mention + ' (' + member_name + ')' + ' has left the server. :(')
+
+# Command errors
+@bot.event
+async def on_command_error(ctx, error):
+    get_command = re.compile('!\w+')
+    command = get_command.match(ctx.message.content).group()
+    if isinstance(error, commands.CheckFailure):
+        print(native.get_author(ctx) + 'tried to invoke command !' + str(ctx.command) + ' which resulted in a check failure.')
 
 ### Program ends here
 # Client.run with the bots token
