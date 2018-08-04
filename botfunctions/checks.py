@@ -1,3 +1,5 @@
+# Here we define all of our custom checks.
+
 async def is_owner(ctx):
     if ctx.author.id != 154516898434908160:
         await ctx.send(ctx.author.mention +

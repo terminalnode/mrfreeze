@@ -1,3 +1,6 @@
+# This script is used to carry out the live temperature conversions after
+# bot.py catches a temperature statement.
+
 import discord, re
 from discord.ext import commands
 
