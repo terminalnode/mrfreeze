@@ -44,3 +44,4 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 ### Various
 * Add an is_owner() check to the cmds_owner cog.
 * Make links in cmds_brag cog embedded. Link for how to do this in cog.
+* Add error handling for CheckFailure to prevent ugly output.
