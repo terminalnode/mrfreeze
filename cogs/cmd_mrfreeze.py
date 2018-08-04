@@ -40,7 +40,7 @@ class MrFreezeCog():
             await ctx.send('Allow me to break the ice: My name is Freeze and ' +
             'the command **!mrfreeze** will have me print one of my timeless quotes from Batman & Robin.')
         elif suck_reply:
-            await ctx.send('Freeze in hell,' + ctx.author.mention + '!')
+            await ctx.send('Freeze in hell, ' + ctx.author.mention + '!')
         elif death_reply:
             await ctx.send(ctx.author.mention + ' ' +
             'You\'re not sending ME to the COOLER!')
