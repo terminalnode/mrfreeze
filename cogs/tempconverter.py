@@ -17,7 +17,7 @@ class TempConverterCog():
         await ctx.author.send('''You've tried to invoke the temperature conversion command, unfortunately there is no such command. Instead I will continuously look through all messages you send to the server and search for temperature statements. These statements usually look something like this:
 "Oh geez it's so warm here, over 80 degrees."
 "It's like -10 c outside and I'm *freezing* to death."
-"What's 370,5 kelvin in normal units?"
+"What's 370,5 kelvin in civilised units?"
 "5.2 celcius???"
 and so on and so on. I will detect both abbreviated and unabbreviated units and decimals both written as dots (.) or commas (,). So basically just write whatever you wanted to write to start with and I'll handle the temperature conversions for you.
 
