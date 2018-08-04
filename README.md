@@ -3,7 +3,8 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 
 ## Reimplemented functions:
 ### Owner commands
-* **!restart** - Restarts the bot.
+* **!restart**   - Restarts the bot. Very useful for testing new code.
+* **!gitupdate** - Fetches latest updates from github.
 
 ### Mod commands
 * TBA
@@ -23,8 +24,6 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 
 ## Todo
 ### Commands
-* **!restart**   - (Owner) Restarts the bot completely. Very useful for testing new code.
-* **!gitupdate** - (Owner) Fetches latest updates from github.
 * **!unban**     - (Mod) Removes ban from the server.
 * **!banish**    - (Mod) Assigns the tag 'Antarctica' to a user for five minutes.
 * **!ban**       - (Mod) Bans the user from the server.

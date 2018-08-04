@@ -1,5 +1,6 @@
 import discord, sys, os
 from discord.ext import commands
+from botfunctions import checks
 
 class OwnerCmdsCog:
     def __init__(self, bot):
@@ -9,13 +10,30 @@ class OwnerCmdsCog:
     ### RESTART THE Bot ###
     #######################
     @commands.command(name='restart')
-    async def _restart(self, ctx, *kwargs):
-        if ctx.author.id == 154516898434908160: # This is my discord user ID. If you're modifying this, change to your ID.
-            await ctx.send(ctx.author.mention + " Yes Dear Leader... I will restart now.")
-            print ('\n') # extra new line after the commandlog() output
-            os.execl(sys.executable, sys.executable, *sys.argv)
-        else:
-            await ctx.send(ctx.author.mention + " You're not the boss of me, I restart when Terminal wants me to.")
+    @commands.check(checks.is_owner)
+    async def _restart(self, ctx, *args):
+        await ctx.send(ctx.author.mention + " Yes Dear Leader... I will restart now.")
+        print ('\n') # extra new line after the commandlog() output
+        os.execl(sys.executable, sys.executable, *sys.argv)
+
+    @commands.command(name='gitupdate', aliases=['git'])
+    @commands.check(checks.is_owner)
+    async def _gitupdate(self, ctx, *args):
+        # git fetch returns nothing if no updates were found
+        # for some reason the output of git fetch is posted to stderr
+        gitfetch = str(run(['git', 'fetch'], stderr=PIPE, encoding='utf_8').stderr)
+        gitpull = str(run(['git', 'pull'], stdout=PIPE, encoding='utf_8').stdout)
+        output = str()
+
+        if gitfetch == '':
+            gitfetch = 'No output.'
+
+        output += '**git fetch:**\n'
+        output += gitfetch + '\n\n'
+        output += '**git pull:**\n'
+        output += gitpull
+
+        await ctx.author.send(output)
 
 def setup(bot):
     bot.add_cog(OwnerCmdsCog(bot))
