@@ -28,16 +28,23 @@ async def on_ready():
     print ('User name: ' + str(bot.user.name))
     print ('User ID: ' + str(bot.user.id))
     print ('-----------')
-    # Greetings message for all the servers
+
+    # Creating dict of all pins in channels in the guilds.
+    global pinsDict
+    pinsDict = None
+    pinsDict = await pinlists.create_dict(bot.guilds)
+
+    # Set activity to "Listening to your commands"
+    await bot.change_presence(status=None, activity=
+        discord.Activity(name='your commands...', type=discord.ActivityType.listening))
+
+    # Greetings message for all the servers now that all is setup.
     for i in bot.guilds:
         try:
             bot_trash = discord.utils.get(i.channels, name='bot-trash')
             await bot_trash.send(':wave: ' + native.mrfreeze())
         except:
             print ('ERROR: No channel bot-trash in ' + i.name + '. Can\'t greet them.')
-    # Set activity to "Listening to your commands"
-    await bot.change_presence(status=None, activity=
-        discord.Activity(name='your commands...', type=discord.ActivityType.listening))
 
 # Certain events, namely temp, depends on checking for temperature statements in
 # all messages sent to the chat. If a command is detected before that the command
@@ -73,6 +80,52 @@ async def on_command_error(ctx, error):
     command = get_command.match(ctx.message.content).group()
     if isinstance(error, commands.CheckFailure):
         print(native.get_author(ctx) + 'tried to invoke command !' + str(ctx.command) + ' which resulted in a check failure.')
+
+# This sucks, but here's how we'll check if a pin was added
+# or removed. The bla bla pinned a message thing has no content.
+# So we'll see if any of the last three messages without any content
+# are within 10000 microseconds (or 10 milliseconds) of when
+# the last pin was made. If we get a hit, we'll assume a pin was added
+# and post the latest pin to the chat.
+
+# A message was pinned.
+@bot.event
+async def on_guild_channel_pins_update(channel, last_pin):
+    global pinsDict
+
+    # Unfortunately we have to cast an empty return
+    # if the dict isn't finished yet.
+    if pinsDict == None:
+        print ('The PinsDict isn\'t finished yet!')
+        return
+
+    # The channel might be new, if so we need to create an entry for it.
+    try:
+        pinsDict[channel.guild.id][channel.id]
+    except KeyError:
+        pinsDict[channel.guild.id][channel.id] = 0
+
+    # For comparisson between the two. These numbers will be
+    # used to determine whether a pin was added or removed.
+    channel_pins = await channel.pins()
+    old_pins = pinsDict[channel.guild.id][channel.id]
+    new_pins = len(channel_pins)
+
+    # Was a new pin added?
+    # If a pin was added when the bot was starting up, this won't work.
+    # But it will work the next time as the pinsDict is updated.
+    was_added = False
+    if new_pins > old_pins:
+        was_added = True
+
+    # Updating the list of pins.
+    pinsDict[channel.guild.id][channel.id] = new_pins
+
+    if was_added:
+        message = channel_pins[0]
+        pinned_message = discord.Embed(description = message.content, color=0x00dee9)
+        pinned_message.set_author(name=message.author.display_name, icon_url=message.author.avatar_url)
+        await channel.send('The following message was just pinned:\n', embed=pinned_message)
 
 ### Program ends here
 # Client.run with the bots token
