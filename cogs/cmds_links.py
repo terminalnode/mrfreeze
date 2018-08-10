@@ -16,8 +16,12 @@ class BragCog():
 
     @commands.command(name='source', aliases=['github'])
     async def _source(self, ctx, *args):
-        await ctx.send('My source code is available at:\n' +
-                       'https://github.com/kaminix/MrFreezeRW')
+        source = discord.Embed(color=0x00dee9)
+        source.set_thumbnail(url='https://i.imgur.com/sVP6w67.png')
+        source.add_field(name='Source code',
+                         value='My source code is available on ' +
+                               '[Github](https://github.com/kaminix/MrFreezeRW)!')
+        await ctx.send(embed=source)
 
     @commands.command(name='dummies')
     async def _dummies(self, ctx, *args):
