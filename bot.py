@@ -6,11 +6,16 @@ import traceback, sys, asyncio
 # Importing commands from ./botfunctions
 from botfunctions import *
 
+# Cogs starting with cmd contains only one command,
+# cogs starting with cmds has multiple commands sharing some common trait.
+# Cogs not starting with either aren't 'real' commands but more like help files.
 load_cogs = [ 'cogs.cmds_owner',
               'cogs.cmds_mod',
               'cogs.cmds_links',
               'cogs.cmd_mrfreeze',
-              'cogs.tempconverter' ]
+              'cogs.tempconverter',
+              'cogs.cmd_quote' ]
+
 bot = commands.Bot(command_prefix='!')
 
 if __name__ == '__main__':
