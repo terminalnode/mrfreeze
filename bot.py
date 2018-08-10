@@ -7,6 +7,7 @@ import traceback, sys, asyncio
 from botfunctions import *
 
 load_cogs = [ 'cogs.cmds_owner',
+              'cogs.cmds_mod',
               'cogs.cmds_links',
               'cogs.cmd_mrfreeze',
               'cogs.tempconverter' ]
