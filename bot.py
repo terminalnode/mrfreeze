@@ -86,13 +86,6 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
         print(native.get_author(ctx) + 'tried to invoke command !' + str(ctx.command) + ' which resulted in a check failure.')
 
-# This sucks, but here's how we'll check if a pin was added
-# or removed. The bla bla pinned a message thing has no content.
-# So we'll see if any of the last three messages without any content
-# are within 10000 microseconds (or 10 milliseconds) of when
-# the last pin was made. If we get a hit, we'll assume a pin was added
-# and post the latest pin to the chat.
-
 # A message was pinned.
 @bot.event
 async def on_guild_channel_pins_update(channel, last_pin):
