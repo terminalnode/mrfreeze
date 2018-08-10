@@ -33,6 +33,7 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * **!kick**      - (Mod) Kicks the user from the server.
 * **!mute**      - (Mod) Mutes the user.
 * **!unmute**    - (Mod) Unmutes the user.
+* **!quote**     - (Mod) Add, delete, and (Users) read random quotes.
 * **!rules**     - Displays one, several or all rules depending on how the command is executed.
 * **!activity**  - Changes the activity of the bot ('Playing [...]'). No mod requirement, have fun!
 * **!region**    - Allows a user to assign a regional role such as continent (could also be used for countries).
@@ -40,7 +41,6 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * * This does not work with nitro emojis, but does work with server emojis.
 * **!mrfreeze**  - Posts a dank Mr. Freeze quote from Batman & Robin. Replaces 'Batman' with you and 'Gotham' with channel name.
 * **!rps**       - Play rock, paper, scissors with the bot. With scores!
-* **!quote**     - (Mod) Add, delete, and (All) read random quotes.
 * **!dice**      - Roll a select number of dice. Intend to also implement option to select type of dice.
 * **!ink**       - Attempt to bring the ink look-up used on r/fountainpens to discord.
 
