@@ -10,9 +10,6 @@ class OwnerCmdsCog:
     def __init__(self, bot):
         self.bot = bot
 
-    ####### restart #######
-    ### RESTART THE Bot ###
-    #######################
     @commands.command(name='restart')
     @commands.check(checks.is_owner)
     async def _restart(self, ctx, *args):
