@@ -3,6 +3,9 @@ from subprocess import run, PIPE
 from discord.ext import commands
 from botfunctions import checks
 
+# This cog is for commands restricted to the owner of the bot (me!).
+# It has features like !restart and !gitupdate.
+
 class OwnerCmdsCog:
     def __init__(self, bot):
         self.bot = bot
