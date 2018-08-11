@@ -8,12 +8,12 @@ from botfunctions import *
 
 # Cogs starting with cmd contains only one command,
 # cogs starting with cmds has multiple commands sharing some common trait.
-load_cogs = [ 'cogs.cmds_owner',
-              'cogs.cmds_mod',
-              'cogs.cmds_links',
-              'cogs.cmd_mrfreeze',
-              'cogs.cmd_quote',
-              'cogs.help_temp' ]
+load_cogs = [ 'cogs.cmds_owner',    # Owner-only commands
+              'cogs.cmds_mod',      # Mod-only commands.
+              'cogs.cmds_links',    # !dummies, !readme, !source
+              'cogs.cmd_mrfreeze',  # !mrfreeze
+              'cogs.cmd_quote',     # !quote
+              'cogs.help_temp' ]    # !temp, DM instructions for automatic temp conversion.
 
 bot = commands.Bot(command_prefix='!')
 
@@ -58,7 +58,7 @@ async def on_ready():
 async def on_message(message):
     ctx = await bot.get_context(message)
     # the trailing space let's us match temperatures at the end of the message.
-    tempstatement = re.search('(( -)?\d+[,.]?\d+) ?(?:°?d(eg)?(egrees)?|°?c(elcius)?(elsius)?(ivilized( units)?)?(ivilised( units)?)?(u)?|' +
+    tempstatement = re.search('(( -)?\d+[,.]?(\d+)?) ?(?:°?d(eg)?(egrees)?|°?c(elcius)?(elsius)?(ivilized( units)?)?(ivilised( units)?)?(u)?|' +
                               '°?f(ahrenheit)?(reedom( units)?)?(u)?|°?k(elvin)?|°?r(ankine)?)[^\w]',
                               ' ' + message.content.lower() + ' ')
 
