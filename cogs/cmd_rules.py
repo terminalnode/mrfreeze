@@ -10,14 +10,16 @@ class RulesCog():
     async def _rules(self, ctx, *args):
         request = str()
         for i in args:
-            request += (i)
+            request += (i.lower())
+        print(request)
 
         rules = {
         1: ( '1', 'topic', 'ontopic', 'offtopic' ),
         2: ( '2', 'civil', 'disagreement' ),
         3: ( '3', 'dismissive', 'opinion', 'opinions' ),
-        4: ( '4', 'joke', 'jokes', 'joking', 'sex', 'sexual', 'orientation', 'weight', 'race' ),
-        5: ( '5', 'shoe', 'shoes', 'age', 'mature', 'maturity', 'shoesize' ),
+        4: ( '4', 'joke', 'jokes', 'joking', 'sex', 'sexual',
+             'orientation', 'weight', 'race', 'skin', 'color', 'colour' ),
+        5: ( '5', 'shoe', 'shoes', 'age', 'mature', 'maturity', 'shoesize', 'act' ),
         6: ( '6', 'spam' ),
         7: ( '7', 'benice', 'nice' )
         }
@@ -31,7 +33,7 @@ class RulesCog():
         else:
             for rule_no in rules:
                 for keyword in rules[rule_no]:
-                    if keyword in args and rule_no not in called_rules:
+                    if keyword in request and rule_no not in called_rules:
                         called_rules.append(rule_no)
 
         await ctx.send(native.get_rule(called_rules))
