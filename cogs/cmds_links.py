@@ -6,7 +6,7 @@ from botfunctions import native
 # https://leovoel.github.io/embed-visualizer/
 # https://cog-creators.github.io/discord-embed-sandbox/
 
-class BragCog():
+class LinksCog():
     def __init__(self, bot):
         self.bot = bot
 
@@ -48,4 +48,4 @@ class BragCog():
         await ctx.send(embed=dummies)
 
 def setup(bot):
-    bot.add_cog(BragCog(bot))
+    bot.add_cog(LinksCog(bot))
