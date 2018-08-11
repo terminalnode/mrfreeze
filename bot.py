@@ -6,6 +6,8 @@ import traceback, sys, asyncio
 # Importing commands from ./botfunctions
 from botfunctions import *
 
+bot = commands.Bot(command_prefix='!')
+
 # Cogs starting with cmd contains only one command,
 # cogs starting with cmds has multiple commands sharing some common trait.
 load_cogs = [ 'cogs.cmds_owner',    # Owner-only commands
@@ -16,8 +18,10 @@ load_cogs = [ 'cogs.cmds_owner',    # Owner-only commands
               'cogs.cmd_rules',     # !rules
               'cogs.help_temp' ]    # !temp, DM instructions for automatic temp conversion.
 
-bot = commands.Bot(command_prefix='!')
+# We don't use this.
+bot.remove_command("help")
 
+# Here's where the actual loading of the cogs go.
 if __name__ == '__main__':
     for cog in load_cogs:
         try:
