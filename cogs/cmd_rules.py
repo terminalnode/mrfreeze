@@ -11,7 +11,6 @@ class RulesCog():
         request = str()
         for i in args:
             request += (i.lower())
-        print(request)
 
         rules = {
         1: ( '1', 'topic', 'ontopic', 'offtopic' ),
