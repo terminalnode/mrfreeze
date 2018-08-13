@@ -1,4 +1,5 @@
 token
+.DS_Store
 cogs/__pycache__
 botfunctions/__pycache__
 experimentation.py
