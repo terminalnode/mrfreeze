@@ -1,4 +1,4 @@
-import sqlite3
+import sqlite3, discord
 from sqlite3 import Error
 
 # This file manages the userdb where we keep stuff like rps scores, mutes,
@@ -41,6 +41,7 @@ def create():
                         server integer NOT NULL,
                         disp_name text NOT NULL,
                         name text NOT NULL,
+                        avatar text NOT NULL,
                         discriminator integer NOT NULL,
                         FOREIGN KEY (server) REFERENCES servers (id),
                         CONSTRAINT server_user PRIMARY KEY (id, server)
@@ -53,7 +54,7 @@ def create():
                         quotee integer NOT NULL,
                         server integer NOT NULL,
                         channel integer NOT NULL,
-                        date_said datetime NOT NULL,
+                        date_said text NOT NULL,
                         content text NOT NULL,
                         shortcut text,
                         FOREIGN KEY (quoter) REFERENCES users (id),
@@ -100,9 +101,8 @@ def create():
 # Create or update server/channel/user/etc.
 def fix_server(guild):
     conn = connect_to_db()
-    # TODO Replace these values with guild.id and guild.name
-    id = 123452
-    name = 'test server'
+    id = guild.id
+    name = guild.name
 
     with conn:
         c = conn.cursor()
@@ -132,13 +132,11 @@ def fix_server(guild):
 
 def fix_channel(channel):
     conn = connect_to_db()
-    # TODO Replace these values with channel.id, channel.guild.id and channel.name
-    channel_id = 2345
-    server_id = 12345
-    name = 'test channel'
+    channel_id = channel.id
+    server_id = channel.guild.id
+    name = channel.name
 
-    # TODO Change 123 into channel.guild
-    fix_server(123)
+    fix_server(channel.guild)
 
     with conn:
         c = conn.cursor()
@@ -168,22 +166,21 @@ def fix_channel(channel):
         c.execute(sql, (name, server_id, channel_id))
 
 
-def fix_user(user):
+def fix_user(ctx):
     conn = connect_to_db()
 
-    # TODO Change these values.
-    user_id = 91522
-    server_id = 2344
-    discriminator = 453
-    user_name = 'Terminal'
-    user_disp_name = 'Terminal Noe'
+    user_id = ctx.author.id
+    server_id = ctx.guild.id
+    discriminator = ctx.author.discriminator
+    user_name = ctx.author.name
+    user_disp_name = ctx.author.display_name
+    avatar = ctx.author.avatar_url
 
-    # TODO Change 123 into user.guild
-    fix_server(123)
+    fix_server(ctx.guild)
 
     with conn:
         c = conn.cursor()
-        q_user = ''' SELECT * FROM users WHERE id = ? AND server = ? '''
+        q_user = ''' SELECT * FROM users WHERE id=? AND server=? '''
         c.execute(q_user, (user_id,server_id))
         fetch = c.fetchall()
         user_exists = True
@@ -197,17 +194,21 @@ def fix_user(user):
                   UPDATE users
                     SET disp_name = ?,
                         discriminator = ?,
-                        name = ?
+                        name = ?,
+                        avatar = ?
                     WHERE id = ? AND server = ?
                   '''
 
         if not user_exists:
             sql = '''
-                  INSERT INTO users (disp_name, discriminator, name, id, server)
-                  VALUES (?,?,?,?,?)
+                  INSERT INTO users (disp_name, discriminator, avatar, name, id, server)
+                  VALUES (?,?,?,?,?,?)
                   '''
 
-        c.execute(sql, (user_disp_name, discriminator, user_name, user_id, server_id))
+        try:
+            c.execute(sql, (user_disp_name, discriminator, avatar, user_name, user_id, server_id))
+        except Error as e:
+            print(e)
 
 
 def fix_mute(user, duration, is_delete):
@@ -217,8 +218,103 @@ def fix_rps(user):
     conn = connect_to_db()
 
 # Quote-related commands.
+def quote_embed(db_entry):
+    conn = connect_to_db()
+    db_entry = db_entry[0]
+    id         = db_entry[0]
+    quoter_id  = db_entry[1]
+    quotee_id  = db_entry[2]
+    server_id  = db_entry[3]
+    channel_id = db_entry[4]
+    date_said  = db_entry[5]
+    content    = db_entry[6]
+
+    # Getting some variables.
+    with conn:
+        c = conn.cursor()
+        u_sql = ''' SELECT * FROM users WHERE id = ? AND server = ? '''
+        c.execute(u_sql, (quoter_id, server_id))
+        quoter_tuple = c.fetchall()[0]
+        c.execute(u_sql, (quotee_id, server_id))
+        quotee_tuple = c.fetchall()[0]
+
+    # dname is displayname
+    quoter_dname = quoter_tuple[2]
+    quotee_dname = quotee_tuple[2]
+    # hashname is user_name#discriminator, ex. TerminalNode#5986
+    quoter_hashname = (quoter_tuple[3] + '#' + str(quoter_tuple[5]))
+    quotee_hashname = (quotee_tuple[3] + '#' + str(quotee_tuple[5]))
+    # avatar urls
+    quoter_avatar = quoter_tuple[4]
+    quotee_avatar = quotee_tuple[4]
+
+    # combined_name is dname (hashname)
+    # Super Terminal (TerminalNode#5986)
+    # quoter_combined_name = ('%s (%s)' % (quoter_dname, quoter_hashname))
+    # quotee_combined_name = ('%s (%s)' % (quotee_dname, quotee_hashname))
+
+
+    embed = discord.Embed(color=0x00dee9)
+    embed.set_author(name = quotee_dname, icon_url = quotee_avatar)
+    embed.add_field(name = ('Posted on: ' + date_said), value = content)
+    embed.set_footer(icon_url = quoter_avatar, text=("Added by " + quoter_dname + ' (Quote ID: ' + str(id) + ')'))
+
+    return embed
+
+
+
 def crt_quote(ctx, quote):
     conn = connect_to_db()
+    id        = quote.id
+    quoter    = ctx.author.id
+    quotee    = quote.author.id
+    server    = quote.guild.id
+    channel   = quote.channel.id
+    date_said = '{:%Y-%m-%d at %H:%M}'.format(quote.created_at)
+    content   = quote.content
+
+    print ('Check: crt_quote 1')
+    fix_user(ctx)
+    print ('Check: crt_quote 2')
+    fix_user(quote)
+    print ('Check: crt_quote 3')
+    fix_channel(quote.channel)
+    print ('Check: crt_quote 4')
+
+    with conn:
+        c = conn.cursor()
+
+        q_quote = ''' SELECT * FROM quotes WHERE id = ? '''
+        c.execute(q_quote, (id,))
+        fetch = c.fetchall()
+        quote_exists = True
+        if len(fetch) == 0:
+            quote_exists = False
+
+        print('Check: crt_quote 5')
+
+        if not quote_exists:
+            sql =   '''
+                    INSERT INTO quotes (id, quoter, quotee, server, channel, date_said, content)
+                    VALUES (?,?,?,?,?,?,?)
+                    '''
+            try:
+                print ('Check: crt_quote 6')
+                c.execute(sql, (id, quoter, quotee, server, channel, date_said, content))
+                print ('Check: crt_quote 7')
+                c.execute('SELECT * FROM quotes WHERE id = ?', (c.lastrowid,))
+                new_entry = c.fetchall()
+            except Error as e:
+                print(e)
+
+    # Now we're ready for out return values
+    if not quote_exists:
+        print ('Check: crt_quote 8 (quote created!)')
+        print ('New entry: ', new_entry)
+        return quote_embed(new_entry)
+    else:
+        print ('Check: crt_quote 8 (quote not created)')
+        return False
 
 def get_quote_id(id, name):
     conn = connect_to_db()
