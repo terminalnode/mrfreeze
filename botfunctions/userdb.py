@@ -234,12 +234,12 @@ def fix_user(ctx):
 
         if not user_exists:
             sql = '''
-                  INSERT INTO users (disp_name, discriminator, avatar, name, id, server)
+                  INSERT INTO users (disp_name, discriminator, name, avatar, id, server)
                   VALUES (?,?,?,?,?,?)
                   '''
 
         try:
-            c.execute(sql, (user_disp_name, discriminator, avatar, user_name, user_id, server_id))
+            c.execute(sql, (user_disp_name, discriminator, user_name, avatar, user_id, server_id))
         except Error as e:
             print(e)
 
