@@ -43,7 +43,10 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * **!mrfreeze**  - Posts a dank Mr. Freeze quote from Batman & Robin. Replaces 'Batman' with you and 'Gotham' with channel name.
 * **!rps**       - Play rock, paper, scissors with the bot. With scores!
 * **!dice**      - Roll a select number of dice. Intend to also implement option to select type of dice.
+
+### Far-Away ideas/commands
 * **!ink**       - Attempt to bring the ink look-up used on r/fountainpens to discord.
+* **!blackjack** - A game of blackjack.
 
 ### Various
 * Add an is_owner() check to the cmds_owner cog.
