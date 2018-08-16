@@ -90,6 +90,8 @@ async def on_command_error(ctx, error):
     command = get_command.match(ctx.message.content).group()
     if isinstance(error, commands.CheckFailure):
         print(native.get_author(ctx) + 'tried to invoke command !' + str(ctx.command) + ' which resulted in a check failure.')
+    else:
+        print(error)
 
 # A message was pinned.
 @bot.event
