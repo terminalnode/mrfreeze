@@ -262,13 +262,14 @@ def quote_embed(db_entry):
     ### [ ( db_entry ) ] -> ( db_entry )
     db_entry   = db_entry[0]
     ### Unpacking (db_entry) into some variables we'll be using.
-    id         = db_entry[0]
+    id         = str(db_entry[0])
     quoter_id  = db_entry[1]
     quotee_id  = db_entry[2]
     server_id  = db_entry[3]
     channel_id = db_entry[4]
     date_said  = db_entry[5]
     content    = db_entry[6]
+    name       = db_entry[7]
 
     ### Using the quoter and quotee information, we can
     ### Retrieve some additional information from the users db
@@ -294,8 +295,11 @@ def quote_embed(db_entry):
     embed = discord.Embed(color=0x00dee9)
     # embed.set_author(name = quotee_dname)
     embed.set_thumbnail(url=quotee_avatar)
-    embed.add_field(name = (quotee_dname + ', ' + date_said), value = (content + '\n\u200b'))
-    embed.set_footer(icon_url = quoter_avatar, text=("Added by " + quoter_dname + ' (Quote ID: ' + str(id) + ')'))
+    if name == None:
+        embed.add_field(name = (quotee_dname + ', ' + date_said), value = ('%s\n\n(**ID:** %s)' % (content, id)))
+    else:
+        embed.add_field(name = (quotee_dname + ', ' + date_said), value = ('%s\n\n(**ID:** %s)\n(**Name:** %s)' % (content, id, name)))
+    embed.set_footer(icon_url = quoter_avatar, text=("Added by %s" % (quoter_dname)))
 
     return embed
 
@@ -343,7 +347,7 @@ def crt_quote(ctx, quote):
     if not quote_exists:
         return quote_embed(new_entry)
     else:
-        return False
+        return None
 
 ### This function assigns the optional field 'name' to a given quote.
 def name_quote(id, name):
@@ -351,7 +355,6 @@ def name_quote(id, name):
 
     with conn:
         c = conn.cursor()
-
         q_quote = ''' SELECT * FROM quotes WHERE id = ? '''
         c.execute(q_quote, (id,))
         fetch = c.fetchall()
@@ -385,6 +388,20 @@ def name_quote(id, name):
 ### a quote is found) and returns the resulting embed.
 def get_quote_id(id):
     conn = connect_to_db()
+
+    with conn:
+        c = conn.cursor()
+        q_quote = ''' SELECT * FROM quotes WHERE id = ? OR name = ? '''
+        fetch = list()
+        try:
+            c.execute(q_quote, (id,id))
+            fetch = c.fetchall()
+        except Error as e:
+            print (e)
+        if len(fetch) != 0:
+            return quote_embed(fetch)
+        else:
+            return None
 
 ### This function retrieves a random quote from the dictionary.
 ### Can optionally look for a random quote by a certain user.
