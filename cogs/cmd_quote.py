@@ -1,6 +1,7 @@
 import discord, re
 from discord.ext import commands
 from botfunctions import userdb, checks
+import traceback, sys
 
 # This cog is for the !quote command.
 # Mods are able to add quotes to the list.
@@ -21,20 +22,23 @@ class QuoteCmdCog:
             got_id = True
 
         # For ease of use there are a number of aliases for each command.
-        add_commands = ('add',)
-        name_commands = ('name', 'shortcut', 'alias')
-        remove_commands = ('remove', 'delete', 'erase')
+        add_commands    = ('add', 'ajouter', 'ajoute', 'ajoutez', 'ajoutons', 'adda')
+        name_commands   = ('name', 'shortcut', 'alias')
+        remove_commands = ('remove', 'delete', 'erase', 'del', 'rmv', 'undo')
         random_commands = ('random', 'rnd', 'any', 'whatever', 'anything')
-        read_commands = ('read', 'cite', 'lookup', 'number', 'name')
-        help_commands = ('help', 'how', 'howto')
+        read_commands   = ('read', 'cite', 'lookup', 'number', 'name')
+        help_commands   = ('help', 'how', 'howto')
 
         # Let's make sure the database exists.
         userdb.create()
 
         # Now we'll define the different functions which will execute once
         # we've figured out the command.
+
+        ####################
+        ### ADD QUOTE
+        ####################
         async def add_quote(id):
-            nonlocal ctx
             # We need to find the post with the correct ID to add it.
             msg = False
             for channel in ctx.guild.text_channels:
@@ -45,13 +49,16 @@ class QuoteCmdCog:
 
             if msg != False:
                 new_quote = userdb.crt_quote(ctx, msg)
-                if new_quote != False:
+                if new_quote != None:
                     await ctx.send(embed=new_quote)
                 else:
                     await ctx.send(ctx.author.mention + ' That quote is already in the database.')
             else:
                 await ctx.send(ctx.author.mention + ' I wasn\'t able to find any post with the id: ' + str(id))
 
+        ####################
+        ### NAME QUOTE
+        ####################
         async def name_quote(id, name):
             found, updated, old_name = userdb.name_quote(id, name)
 
@@ -76,14 +83,27 @@ class QuoteCmdCog:
                 # The quote wasn't found.
                 await ctx.send(ctx.author.mention + ' I can\'t find that quote and thus can\'t assign a name/shortcut to it!')
 
+        ####################
+        ### REMOVE/DELETE QUOTE
+        ####################
         async def remove_quote():
             pass
 
+        ####################
+        ### RANDOM QUOTE
+        ####################
         async def random_quote():
             pass
 
-        async def read_quote():
-            pass
+        ####################
+        ### READ QUOTE
+        ####################
+        async def read_quote(id):
+            quote = userdb.get_quote_id(str(id))
+            if quote != None:
+                await ctx.send(embed=quote)
+            else:
+                await ctx.send(ctx.author.mention + ' Sorry I couldn\'t find any quote by the name/id **' + str(id) + '**!')
 
         # Finally, we'll try to execute one of the above functions.
         if len(args) == 0:
@@ -92,6 +112,7 @@ class QuoteCmdCog:
         # tested:
         # await add_quote(479269483219910668)
         # await name_quote(479269483219910668, 'test3')
+        await read_quote(479269483219910668)
 
 
 
