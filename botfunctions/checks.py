@@ -7,4 +7,4 @@ async def is_owner(ctx):
     return ctx.author.id == 154516898434908160
 
 async def is_mod(ctx):
-    return(discord.utils.get(ctx.guild.roles, name='Administration') in ctx.author.roles)
+    return (discord.utils.get(ctx.guild.roles, name='Administration') in ctx.author.roles)
