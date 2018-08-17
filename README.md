@@ -30,7 +30,7 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 ## Todo
 ### Commands
 * **!unban**     - (Mod) Removes ban from the server.
-* **!banish**    - (Mod) Assigns the tag 'Antarctica' to a user for five minutes.
+* **!banish**    - (Mod) Assigns the role 'Antarctica' to a user for five minutes.
 * **!ban**       - (Mod) Bans the user from the server.
 * **!kick**      - (Mod) Kicks the user from the server.
 * **!mute**      - (Mod) Mutes the user.
