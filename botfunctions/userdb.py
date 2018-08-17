@@ -68,7 +68,7 @@ def create():
                         channel integer NOT NULL,
                         date_said text NOT NULL,
                         content text NOT NULL,
-                        name text,
+                        alias text,
                         FOREIGN KEY (quoter) REFERENCES users (id),
                         FOREIGN KEY (quotee) REFERENCES users (id),
                         FOREIGN KEY (server) REFERENCES servers (id),
@@ -269,7 +269,7 @@ def quote_embed(db_entry):
     channel_id = db_entry[4]
     date_said  = db_entry[5]
     content    = db_entry[6]
-    name       = db_entry[7]
+    alias       = db_entry[7]
 
     ### Using the quoter and quotee information, we can
     ### Retrieve some additional information from the users db
@@ -295,10 +295,10 @@ def quote_embed(db_entry):
     embed = discord.Embed(color=0x00dee9)
     # embed.set_author(name = quotee_dname)
     embed.set_thumbnail(url=quotee_avatar)
-    if name == None:
+    if alias == None:
         embed.add_field(name = (quotee_dname + ', ' + date_said), value = ('%s\n\n(**ID:** %s)' % (content, id)))
     else:
-        embed.add_field(name = (quotee_dname + ', ' + date_said), value = ('%s\n\n(**ID:** %s)\n(**Name:** %s)' % (content, id, name)))
+        embed.add_field(name = (quotee_dname + ', ' + date_said), value = ('%s\n\n(**ID:** %s)\n(**Alias:** %s)' % (content, id, alias)))
     embed.set_footer(icon_url = quoter_avatar, text=("Added by %s" % (quoter_dname)))
 
     return embed
@@ -349,41 +349,46 @@ def crt_quote(ctx, quote):
     else:
         return None
 
-### This function assigns the optional field 'name' to a given quote.
-def name_quote(id, name):
+### This function assigns the optional field 'alias' to a given quote.
+def name_quote(id, alias):
     conn = connect_to_db()
 
-    with conn:
-        c = conn.cursor()
-        q_quote = ''' SELECT * FROM quotes WHERE id = ? '''
-        c.execute(q_quote, (id,))
-        fetch = c.fetchall()
+    # If the alias is all numbers we won't add it.
+    if alias.isdigit():
+        return None
 
-        # The following variables are necessary
-        # to know what went wrong, if anything.
-        found_quote = False
-        updated_quote = False
-        old_name = None
-        if len(fetch) != 0:
-            found_quote = True
-            old_name = fetch[0][7]
+    else:
+        with conn:
+            c = conn.cursor()
+            q_quote = ''' SELECT * FROM quotes WHERE id = ? '''
+            c.execute(q_quote, (id,))
+            fetch = c.fetchall()
 
-            sql =   '''
-                    UPDATE quotes
-                    SET name = ?
-                    WHERE id = ?
-                    '''
+            # The following variables are necessary
+            # to know what went wrong, if anything.
+            found_quote = False
+            updated_quote = False
+            old_alias = None
+            if len(fetch) != 0:
+                found_quote = True
+                old_alias = fetch[0][7]
 
-            if old_name != name:
-                try:
-                    c.execute(sql, (name, id))
-                    updated_quote = True
-                except Error as e:
-                    print (e)
+                sql =   '''
+                        UPDATE quotes
+                        SET alias = ?
+                        WHERE id = ?
+                        '''
 
-    return (found_quote, updated_quote, old_name)
+                if old_alias != alias:
+                    try:
+                        c.execute(sql, (alias, id))
+                        updated_quote = True
+                    except Error as e:
+                        print (e)
 
-### This function retrieves a quote based on an ID or name.
+        return (found_quote, updated_quote, old_alias)
+
+### This function retrieves a quote based on an ID or alias.
 ### Quote is then sent to the quote_embed()-function (if
 ### a quote is found) and returns the resulting embed.
 def get_quote_id(id):
@@ -391,7 +396,7 @@ def get_quote_id(id):
     with conn:
         c = conn.cursor()
 
-        q_quote = ''' SELECT * FROM quotes WHERE id = ? OR name = ? '''
+        q_quote = ''' SELECT * FROM quotes WHERE id = ? OR alias = ? '''
         fetch = list()
         c.execute(q_quote, (id,id))
         fetch = c.fetchall()
@@ -405,8 +410,8 @@ def delete_quote(id):
     conn = connect_to_db()
     with conn:
         c = conn.cursor()
-        q_quotes = ''' SELECT * FROM quotes WHERE id = ? OR name = ? '''
-        d_quotes = ''' DELETE FROM quotes WHERE id = ? OR name = ? '''
+        q_quotes = ''' SELECT * FROM quotes WHERE id = ? OR alias = ? '''
+        d_quotes = ''' DELETE FROM quotes WHERE id = ? OR alias = ? '''
         c.execute(q_quotes, (id,id))
         fetch = c.fetchall()
         print(fetch)

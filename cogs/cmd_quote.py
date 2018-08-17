@@ -23,7 +23,7 @@ class QuoteCmdCog:
 
         # For ease of use there are a number of aliases for each command.
         add_commands    = ('add', 'ajouter', 'ajoute', 'ajoutez', 'ajoutons', 'adda')
-        name_commands   = ('name', 'shortcut', 'alias')
+        alias_commands   = ('name', 'shortcut', 'alias')
         remove_commands = ('remove', 'delete', 'erase', 'del', 'rmv', 'undo')
         random_commands = ('random', 'rnd', 'any', 'whatever', 'anything')
         read_commands   = ('read', 'cite', 'lookup', 'number', 'name', 'by', 'from')
@@ -57,31 +57,36 @@ class QuoteCmdCog:
                 await ctx.send('%s I wasn\'t able to find any post with the id: %s' % (ctx.author.mention, str(id)))
 
         ####################
-        ### NAME QUOTE
+        ### NAME QUOTE (ASSIGN ALIAS TO)
         ####################
-        async def name_quote(id, name):
-            found, updated, old_name = userdb.name_quote(id, name)
+        async def name_quote(id, alias):
+            # We don't allow aliases that are all digits.
+            if (str(alias)).isdigit():
+                await ctx.send('%s You\'re not allowed to pick an alias that\'s all digits. Pick a real alias, smud.' % (ctx.author.mention,))
 
-            if found and updated:
-                # Alternative 1:
-                # All went smoothly.
-                if old_name != None and old_name != str():
-                    await ctx.send('%s The shortcut was changed from **%s** to **%s**!' % (ctx.author.mention, str(old_name), name))
-                else:
-                    await ctx.send('%s The shortcut **%s** was assigned to the requested quote.' % (ctx.author.mention, name))
+            else:
+                found, updated, old_alias = userdb.name_quote(id, alias)
 
-            elif found and not updated:
-                # Alternative 2:
-                # Found but couldn't update.
-                if old_name == name:
-                    await ctx.send('%s That quote already has the shortcut **%s**!' % (ctx.author.mention, name))
-                else:
-                    await ctx.send('%s I found the quote, but for some reason I wasn\'t able to update the name/shortcut.' % (ctx.author.mention,))
+                if found and updated:
+                    # Alternative 1:
+                    # All went smoothly.
+                    if old_alias != None and old_alias != str():
+                        await ctx.send('%s The alias was changed from **%s** to **%s**!' % (ctx.author.mention, str(old_alias), alias))
+                    else:
+                        await ctx.send('%s The alias **%s** was assigned to the requested quote.' % (ctx.author.mention, alias))
 
-            elif not found:
-                # Alternative 3:
-                # The quote wasn't found.
-                await ctx.send('%s I can\'t find that quote and thus can\'t assign a name/shortcut to it!' % (ctx.author.mention,))
+                elif found and not updated:
+                    # Alternative 2:
+                    # Found but couldn't update.
+                    if old_alias == alias:
+                        await ctx.send('%s That quote already has the alias **%s**!' % (ctx.author.mention, alias))
+                    else:
+                        await ctx.send('%s I found the quote, but for some reason I wasn\'t able to update the alias.' % (ctx.author.mention,))
+
+                elif not found:
+                    # Alternative 3:
+                    # The quote wasn't found.
+                    await ctx.send('%s I can\'t find that quote and thus can\'t assign a alias to it!' % (ctx.author.mention,))
 
         ####################
         ### REMOVE/DELETE QUOTE
@@ -95,10 +100,10 @@ class QuoteCmdCog:
             if isinstance(quote, tuple):
                 found, multiple = quote
                 if found and multiple:
-                    await ctx.send('%s I found multiple matches with that name/id, so I didn\'t delete anything. My bad, this shouldn\'t happen...' % (ctx.author.mention,))
+                    await ctx.send('%s I found multiple matches with that alias or id, so I didn\'t delete anything. My bad, this shouldn\'t happen...' % (ctx.author.mention,))
 
                 elif not found:
-                    await ctx.send('%s Your search didn\'t return any matches, so I haven\'t deleted anything.' % (ctx.author.mention,))
+                    await ctx.send('%s The alias or id you provided didn\'t return any matches, so I haven\'t deleted anything.' % (ctx.author.mention,))
 
             else:
                 await ctx.send(('%s Success! The following quote was deleted:' % (ctx.author.mention,)), embed=quote)
@@ -107,9 +112,8 @@ class QuoteCmdCog:
         ### RANDOM QUOTE
         ####################
         async def random_quote(id):
-            id = str(id)
             if id != None:
-                quote = userdb.get_quote_rnd(id)
+                quote = userdb.get_quote_rnd(str(id))
             else:
                 quote = userdb.get_quote_rnd(None)
 
@@ -134,7 +138,7 @@ class QuoteCmdCog:
             if quote != None:
                 await ctx.send(embed=quote)
             else:
-                await ctx.send('%s Sorry I couldn\'t find any quote by the name/id **%s**!' % (ctx.author.mention, id))
+                await ctx.send('%s Sorry I couldn\'t find any quote by the alias/id **%s**!' % (ctx.author.mention, id))
 
         ####################
         ### COUNT QUOTES
