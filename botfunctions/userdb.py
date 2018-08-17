@@ -243,13 +243,17 @@ def fix_user(ctx):
         except Error as e:
             print(e)
 
-### This function creates/updates the db entry for a certain users mute status in a certain server.
+### This function creates/updates the db entry
+### for a certain users mute status in a certain server.
 def fix_mute(user, duration, is_delete):
     conn = connect_to_db()
 
-### This function creates/updates the db entry for a certain user in a certain server.
+### This function creates/updates the db entry for a certain
+### user in a certain server.
 def fix_rps(user):
     conn = connect_to_db()
+
+
 ##########
 ### Quote-related commands.
 ##########
@@ -293,12 +297,14 @@ def quote_embed(db_entry):
     quotee_avatar = quotee_tuple[4]
 
     embed = discord.Embed(color=0x00dee9)
-    # embed.set_author(name = quotee_dname)
     embed.set_thumbnail(url=quotee_avatar)
     if alias == None:
-        embed.add_field(name = (quotee_dname + ', ' + date_said), value = ('%s\n\n(**ID:** %s)' % (content, id)))
+        embed.add_field( name  = ('%s, %s' % (quotee_dname, date_said)),
+                         value = ('%s\n\n(**ID:** %s)' % (content, id)))
     else:
-        embed.add_field(name = (quotee_dname + ', ' + date_said), value = ('%s\n\n(**ID:** %s)\n(**Alias:** %s)' % (content, id, alias)))
+        embed.add_field( name = ('%s, %s' % (quotee_dname, date_said)),
+                         value = ('%s\n\n(**ID:** %s)\n(**Alias:** %s)' % (content, id, alias)))
+
     embed.set_footer(icon_url = quoter_avatar, text=("Added by %s" % (quoter_dname)))
 
     return embed
