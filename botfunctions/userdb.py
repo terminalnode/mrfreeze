@@ -463,6 +463,26 @@ def get_quote_rnd(user_id):
         else:
             return None
 
+### This function is used to count the number of quotes in the
+### database and can optionally count the quotes by a certain user.
+def count_quotes(id):
+    conn = connect_to_db()
+    with conn:
+        c = conn.cursor()
+        if id != None:
+            q_quotes = ''' SELECT * FROM quotes WHERE quotee = ? '''
+            c.execute(q_quotes, (id,))
+
+        else:
+            q_quotes = ''' SELECT * FROM quotes '''
+            c.execute(q_quotes)
+        fetch = c.fetchall()
+
+    if len(fetch) == 1:
+        return (len(fetch), quote_embed(fetch))
+    else:
+        return (len(fetch), None)
+
 
 
 

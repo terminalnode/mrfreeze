@@ -1,4 +1,4 @@
-import discord, re
+import discord, re, inflect
 from discord.ext import commands
 from botfunctions import userdb, checks
 import traceback, sys
@@ -140,7 +140,16 @@ class QuoteCmdCog:
         ### COUNT QUOTES
         ####################
         async def count_quotes(id):
-            pass
+            id = str(id)
+            count, quote = userdb.count_quotes(id)
+            infl = inflect.engine()
+
+            if count == 0:
+                await ctx.send('%s That user has yet to say anything quote worthy.' % (ctx.author.mention,))
+            elif count == 1:
+                await ctx.send(('%s There\'s a single quote attributed to that user, and that\'s this one:' % (ctx.author.mention,)), embed=quote)
+            else:
+                await ctx.send('%s There are %s quotes attributed to that user.' % (ctx.author.mention, infl.number_to_words(count)))
 
 
         # tested:
@@ -154,6 +163,8 @@ class QuoteCmdCog:
         # await random_quote(471904058270154754) # with mrfreeze user id
         # await delete_quote(479269483219910668) # deleting quote with unique name/id.
         # await delete_quote(479755040509263882) # stopped deleting due to multiple matches
+        # await count_quotes(471904058270154754) # mrfreeze, works with one and two quotes added.
+        # await count_quotes(123456) # bogus id, should return zero quotes.
 
 
 
