@@ -52,9 +52,9 @@ class QuoteCmdCog:
                 if new_quote != None:
                     await ctx.send(embed=new_quote)
                 else:
-                    await ctx.send(ctx.author.mention + ' That quote is already in the database.')
+                    await ctx.send('%s That quote is already in the database.' % (ctx.author.mention,))
             else:
-                await ctx.send(ctx.author.mention + ' I wasn\'t able to find any post with the id: ' + str(id))
+                await ctx.send('%s I wasn\'t able to find any post with the id: %s' % (ctx.author.mention, str(id)))
 
         ####################
         ### NAME QUOTE
@@ -66,35 +66,50 @@ class QuoteCmdCog:
                 # Alternative 1:
                 # All went smoothly.
                 if old_name != None and old_name != str():
-                    await ctx.send(ctx.author.mention + ' The shortcut was changed from **' + str(old_name) + '** to **' + name + '**!')
+                    await ctx.send('%s The shortcut was changed from **%s** to **%s**!' % (ctx.author.mention, str(old_name), name))
                 else:
-                    await ctx.send(ctx.author.mention + ' The shortcut **' + name + '** was assigned to the requested quote.')
+                    await ctx.send('%s The shortcut **%s** was assigned to the requested quote.' % (ctx.author.mention, name))
 
             elif found and not updated:
                 # Alternative 2:
                 # Found but couldn't update.
                 if old_name == name:
-                    await ctx.send(ctx.author.mention + ' That quote already has the shortcut **' + name + '**!')
+                    await ctx.send('%s That quote already has the shortcut **%s**!' % (ctx.author.mention, name))
                 else:
-                    await ctx.send(ctx.author.mention + ' I found the quote, but for some reason I wasn\'t able to update the name/shortcut.')
+                    await ctx.send('%s I found the quote, but for some reason I wasn\'t able to update the name/shortcut.' % (ctx.author.mention,))
 
             elif not found:
                 # Alternative 3:
                 # The quote wasn't found.
-                await ctx.send(ctx.author.mention + ' I can\'t find that quote and thus can\'t assign a name/shortcut to it!')
+                await ctx.send('%s I can\'t find that quote and thus can\'t assign a name/shortcut to it!' % (ctx.author.mention,))
 
         ####################
         ### REMOVE/DELETE QUOTE
         ####################
-        async def remove_quote():
-            pass
+        async def delete_quote(id):
+            id = str(id)
+            quote = userdb.delete_quote(id)
+
+            # If quote is a tuple it means error.
+            # If it's not it means it's an embed.
+            if isinstance(quote, tuple):
+                found, multiple = quote
+                if found and multiple:
+                    await ctx.send('%s I found multiple matches with that name/id, so I didn\'t delete anything. My bad, this shouldn\'t happen...' % (ctx.author.mention,))
+
+                elif not found:
+                    await ctx.send('%s Your search didn\'t return any matches, so I haven\'t deleted anything.' % (ctx.author.mention,))
+
+            else:
+                await ctx.send(('%s Success! The following quote was deleted:' % (ctx.author.mention,)), embed=quote)
 
         ####################
         ### RANDOM QUOTE
         ####################
         async def random_quote(id):
+            id = str(id)
             if id != None:
-                quote = userdb.get_quote_rnd(str(id))
+                quote = userdb.get_quote_rnd(id)
             else:
                 quote = userdb.get_quote_rnd(None)
 
@@ -114,15 +129,19 @@ class QuoteCmdCog:
         ### READ QUOTE
         ####################
         async def read_quote(id):
-            quote = userdb.get_quote_id(str(id))
+            id = str(id)
+            quote = userdb.get_quote_id(id)
             if quote != None:
                 await ctx.send(embed=quote)
             else:
-                await ctx.send(ctx.author.mention + ' Sorry I couldn\'t find any quote by the name/id **' + str(id) + '**!')
+                await ctx.send('%s Sorry I couldn\'t find any quote by the name/id **%s**!' % (ctx.author.mention, id))
 
-        # Finally, we'll try to execute one of the above functions.
-        if len(args) == 0:
+        ####################
+        ### COUNT QUOTES
+        ####################
+        async def count_quotes(id):
             pass
+
 
         # tested:
         # await add_quote(479269483219910668) # quote by mrfreeze
@@ -133,6 +152,8 @@ class QuoteCmdCog:
         # await random_quote(None)
         # await random_quote('154516898434908160') # with terminal user ID.
         # await random_quote(471904058270154754) # with mrfreeze user id
+        # await delete_quote(479269483219910668) # deleting quote with unique name/id.
+        # await delete_quote(479755040509263882) # stopped deleting due to multiple matches
 
 
 

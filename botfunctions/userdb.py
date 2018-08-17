@@ -401,6 +401,38 @@ def get_quote_id(id):
         else:
             return None
 
+def delete_quote(id):
+    conn = connect_to_db()
+    with conn:
+        c = conn.cursor()
+        q_quotes = ''' SELECT * FROM quotes WHERE id = ? OR name = ? '''
+        d_quotes = ''' DELETE FROM quotes WHERE id = ? OR name = ? '''
+        c.execute(q_quotes, (id,id))
+        fetch = c.fetchall()
+        print(fetch)
+
+        # No hits
+        if len(fetch) == 0:
+            found = False
+            multiple = False
+
+        # Exactly one hit
+        elif len(fetch) == 1:
+            found = True
+            multiple = False
+            c.execute(d_quotes, (id,id))
+
+        # Multiple hits
+        elif len(fetch) >= 2:
+            found = True
+            multiple = True
+
+    if found and not multiple:
+        return quote_embed(fetch)
+    else:
+        return (found, multiple)
+
+
 ### This function retrieves a random quote from the dictionary.
 ### Can optionally look for a random quote by a certain user.
 ### Quote is then sent to quote_embed()-function (if a quote
@@ -410,8 +442,6 @@ def get_quote_rnd(user_id):
     with conn:
         c = conn.cursor()
 
-
-        fetch = list()
         if user_id != None:
             q_quotes = ''' SELECT * FROM quotes WHERE quotee = ?'''
             c.execute(q_quotes, (user_id,))
