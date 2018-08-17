@@ -1,4 +1,4 @@
-import sqlite3, discord
+import sqlite3, discord, random
 from sqlite3 import Error
 
 ### This file manages the userdb where we keep stuff like rps scores, mutes,
@@ -388,16 +388,14 @@ def name_quote(id, name):
 ### a quote is found) and returns the resulting embed.
 def get_quote_id(id):
     conn = connect_to_db()
-
     with conn:
         c = conn.cursor()
+
         q_quote = ''' SELECT * FROM quotes WHERE id = ? OR name = ? '''
         fetch = list()
-        try:
-            c.execute(q_quote, (id,id))
-            fetch = c.fetchall()
-        except Error as e:
-            print (e)
+        c.execute(q_quote, (id,id))
+        fetch = c.fetchall()
+
         if len(fetch) != 0:
             return quote_embed(fetch)
         else:
@@ -407,5 +405,62 @@ def get_quote_id(id):
 ### Can optionally look for a random quote by a certain user.
 ### Quote is then sent to quote_embed()-function (if a quote
 ### is found) and returns the resulting embed.
-def get_quote_rnd(id, user):
+def get_quote_rnd(user_id):
     conn = connect_to_db()
+    with conn:
+        c = conn.cursor()
+
+
+        fetch = list()
+        if user_id != None:
+            q_quotes = ''' SELECT * FROM quotes WHERE quotee = ?'''
+            c.execute(q_quotes, (user_id,))
+        else:
+            q_quotes = ''' SELECT * FROM quotes '''
+            c.execute(q_quotes)
+
+        fetch = c.fetchall()
+
+        if len(fetch) == 0:
+            fetched_quote = None
+        else:
+            # Our embed generator requires the quote to be in a list
+            # because that's how the quotes are usually supplied by c.fetchall()
+            fetched_quote = [random.choice(fetch)]
+
+        if fetched_quote != None:
+            return quote_embed(fetched_quote)
+        else:
+            return None
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#### Scroll space

@@ -26,14 +26,14 @@ class QuoteCmdCog:
         name_commands   = ('name', 'shortcut', 'alias')
         remove_commands = ('remove', 'delete', 'erase', 'del', 'rmv', 'undo')
         random_commands = ('random', 'rnd', 'any', 'whatever', 'anything')
-        read_commands   = ('read', 'cite', 'lookup', 'number', 'name')
+        read_commands   = ('read', 'cite', 'lookup', 'number', 'name', 'by', 'from')
         help_commands   = ('help', 'how', 'howto')
 
         # Let's make sure the database exists.
         userdb.create()
 
-        # Now we'll define the different functions which will execute once
-        # we've figured out the command.
+        # Below are the different functions which will execute once
+        # we've figured out the desired command.
 
         ####################
         ### ADD QUOTE
@@ -92,8 +92,23 @@ class QuoteCmdCog:
         ####################
         ### RANDOM QUOTE
         ####################
-        async def random_quote():
-            pass
+        async def random_quote(id):
+            if id != None:
+                quote = userdb.get_quote_rnd(str(id))
+            else:
+                quote = userdb.get_quote_rnd(None)
+
+            # Found quote!
+            if (quote != None):
+                await ctx.send(embed=quote)
+
+            # Found no quote with chosen ID.
+            elif (quote == None) and (id != None):
+                await ctx.send('%s I couldn\'t find any quotes by the mentioned user.' % (ctx.author.mention,))
+
+            # Found no quotes in the database.
+            elif (quote == None) and (id == None):
+                await ctx.send('%s There doesn\'t seem to be any quotes in the database. Perhaps consider adding one?' % (ctx.author.mention,))
 
         ####################
         ### READ QUOTE
@@ -110,9 +125,14 @@ class QuoteCmdCog:
             pass
 
         # tested:
-        # await add_quote(479269483219910668)
+        # await add_quote(479269483219910668) # quote by mrfreeze
+        # await add_quote(479755040509263882) # quote by mrfreeze
+        # await add_quote(479971404503318539) # quote by terminal
         # await name_quote(479269483219910668, 'test3')
-        await read_quote(479269483219910668)
+        # await read_quote('479269483219910668')
+        # await random_quote(None)
+        # await random_quote('154516898434908160') # with terminal user ID.
+        # await random_quote(471904058270154754) # with mrfreeze user id
 
 
 
