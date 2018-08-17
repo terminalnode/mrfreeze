@@ -47,8 +47,3 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 ### Far-Away ideas/commands
 * **!ink**       - Attempt to bring the ink look-up used on r/fountainpens to discord.
 * **!blackjack** - A game of blackjack.
-
-### Various
-* Add an is_owner() check to the cmds_owner cog.
-* Make links in cmds_brag cog embedded. Link for how to do this in cog.
-* Add error handling for CheckFailure to prevent ugly output.
