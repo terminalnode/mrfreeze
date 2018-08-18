@@ -412,6 +412,7 @@ def get_quote_id(id):
         else:
             return None
 
+### This function will delete a quote of a given ID.
 def delete_quote(id):
     conn = connect_to_db()
     with conn:
