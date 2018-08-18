@@ -366,8 +366,8 @@ def name_quote(id, alias):
     else:
         with conn:
             c = conn.cursor()
-            q_quote = ''' SELECT * FROM quotes WHERE id = ? '''
-            c.execute(q_quote, (id,))
+            q_quote = ''' SELECT * FROM quotes WHERE id = ? OR alias = ? '''
+            c.execute(q_quote, (id,id))
             fetch = c.fetchall()
 
             # The following variables are necessary
@@ -382,12 +382,12 @@ def name_quote(id, alias):
                 sql =   '''
                         UPDATE quotes
                         SET alias = ?
-                        WHERE id = ?
+                        WHERE id = ? OR alias = ?
                         '''
 
                 if old_alias != alias:
                     try:
-                        c.execute(sql, (alias, id))
+                        c.execute(sql, (alias, id, id))
                         updated_quote = True
                     except Error as e:
                         print (e)

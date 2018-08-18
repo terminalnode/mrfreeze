@@ -29,7 +29,7 @@ class QuoteCmdCog:
         'random' : ('random', 'rnd', 'any', 'whatever', 'anything'),
         'read'   : ('read', 'cite', 'lookup', 'number', 'name', 'by', 'from'),
         'count'  : ('count', 'number', 'quantity'),
-        'help'   : ('help', 'how', 'howto')
+        'help'   : ('help', 'how', 'howto', 'wtf', 'wut', 'halp')
         }
 
         # Let's make sure the database exists.
@@ -89,7 +89,7 @@ class QuoteCmdCog:
                 elif not found:
                     # Alternative 3:
                     # The quote wasn't found.
-                    await ctx.send('%s I can\'t find that quote and thus can\'t assign a alias to it!' % (ctx.author.mention,))
+                    await ctx.send('%s I can\'t find that quote and thus can\'t assign an alias to it!' % (ctx.author.mention,))
 
         ####################
         ### REMOVE/DELETE QUOTE
@@ -201,87 +201,84 @@ class QuoteCmdCog:
             await random_quote(ctx.message.mentions[0].id, None)
             sent_reply = True
 
-        # Single arguments
-        elif number_of_args == 1:
-            # 1. Check if it's a command.
+        # Attention: New if-clause.
+        if not sent_reply:
             for command in commands_dict:
                 if args[0] in commands_dict[command]:
                     chosen = command
-            # 1.5 Check if it's a command that can be called as a single argument.
-            if chosen == 'read':
-                chosen = 'random'
 
-            elif chosen not in ('random', 'count', 'help'):
-                chosen = None
+        # If 'read' is specified without any additional arguments,
+        # it will default to 'random'.
+        if (chosen == 'read') and (number_of_args == 1):
+            chosen = 'random'
 
-            # Step 2, 3 and 4 are separate if clauses to minimize the time
-            # we access the database. All of this requires a lot of searching
-            # through the database, but that's the price we have to pay
-            # for ease of use and versatility.
-
-            # 2. Check if it's an existing quote id or alias.
-            if chosen == None and sent_reply == False:
-                quote  = userdb.get_quote_id(args[0])
-                if quote != None:
-                    await read_quote(None, quote)
+        # Attention: New if-clause.
+        if (chosen != None) and (sent_reply == False):
+            if chosen == 'add':
+                if (number_of_args >= 2) and (args[1].isdigit()):
+                    await add_quote(args[1])
                     sent_reply = True
 
-            # 3. Check if it's a user ID from which we can retrieve a quote.
-            if chosen == None and sent_reply == False:
-                quote = userdb.get_quote_rnd(args[0])
-                if quote != None:
-                    await random_quote(None, quote)
+            elif chosen == 'alias':
+                sent_reply = True
+                if (number_of_args >= 3):
+                    await name_quote(args[1], args[2])
+                else:
+                    await ctx.send('%s You need to type *!quote alias <id or old alias> <new alias>* for that to work!' % (ctx.author.mention,))
+
+            elif chosen == 'delete':
+                if (number_of_args >= 2):
+                    await delete_quote(args[1])
                     sent_reply = True
 
-            # 4. Check if it's a post ID from which we can create a new quote.
-            if chosen == None and sent_reply == False:
-                await add_quote(args[0])
+            elif chosen == 'random':
+                sent_reply = True
+                if len(ctx.message.mentions) > 0:
+                    await random_quote(ctx.message.mentions[0].id, None)
+                else:
+                    await random_quote(None, None)
+
+            elif chosen == 'read':
+                if (number_of_args >= 2):
+                    sent_reply = True
+                    if userdb.get_quote_id(args[1]) == None:
+                        await random_quote(None, None)
+                    else:
+                        await read_quote(args[1], None)
+
+            elif chosen == 'count':
+                sent_reply = True
+                if (len(ctx.message.mentions) > 0):
+                    await count_quotes(ctx.message.mentions[0].id)
+                else:
+                    await count_quotes(None)
+
+            elif chosen == 'help':
+                sent_reply = True
+                # TODO implement help thingie.
+                await ctx.send(('%s Sorry the help command isn\'t implemented yet. You\'ll have to guess!' % (ctx.author.mention,)))
+
+        # These three checks are as separate if-statements to avoid
+        # accessing the database too many times.
+
+        # Check if it's an existing quote id or alias.
+        if chosen == None and sent_reply == False:
+            quote  = userdb.get_quote_id(args[0])
+            if quote != None:
+                await read_quote(None, quote)
                 sent_reply = True
 
-        #######
-        ### Now we're getting to the normal arguments. From here on we have at least
-        ### two arguments from which we, hopefully, can deduce what to do.
-        #######
+        # Check if it's a user ID from which we can retrieve a quote.
+        if chosen == None and sent_reply == False:
+            quote = userdb.get_quote_rnd(args[0])
+            if quote != None:
+                await random_quote(None, quote)
+                sent_reply = True
 
-        # If len(args) is less than 1 we've don't need to do this again.
-        if number_of_args > 1:
-            for command in commands_dict:
-                if args[0] in commands_dict[command]:
-                    chosen = command
-
-        if (command != None) and (sent_reply == False):
-                if command == 'add':
-                    if (number_of_args >= 2) and (args[1].isdigit()):
-                        await add_quote(args[1])
-                        sent_reply = True
-
-                elif command == 'alias':
-                    if (number_of_args >= 3):
-                        await name_quote(args[1], args[2])
-
-                elif command == 'delete':
-                    if (number_of_args >= 2):
-                        await delete_quote(args[1])
-
-                elif command == 'random':
-                    if len(ctx.message.mentions) > 0:
-                        await random_quote(ctx.message.mentions[0].id, None)
-                    else:
-                        await random_quote(None, None)
-
-                elif command == 'read':
-                    if (number_of_args >= 2):
-                        await read_quote(args[1])
-
-                elif command == 'count':
-                    if (len(ctx.message.mentions) > 0):
-                        count_quotes(ctx.message.mentions[0].id)
-                    else:
-                        count_quotes(None)
-
-                elif command == 'help':
-                    # TODO implement help thingie.
-                    await ctx.send(('%s Sorry the help command isn\'t implemented yet. You\'ll have to guess!' % (ctx.author.mention,)))
+        # Check if it's a post ID from which we can create a new quote.
+        if chosen == None and sent_reply == False:
+            await add_quote(args[0])
+            sent_reply = True
 
         # Finally, if nothing has triggered by now we have no idea wtf they're trying to do.
         if (command == None) and (sent_reply == False):
