@@ -13,9 +13,8 @@ bot = commands.Bot(command_prefix='!')
 load_cogs = [ 'cogs.cmds_owner',    # Owner-only commands
               'cogs.cmds_mod',      # Mod-only commands.
               'cogs.cmds_links',    # !dummies, !readme, !source
-              'cogs.cmd_mrfreeze',  # !mrfreeze
               'cogs.cmd_quote',     # !quote
-              'cogs.cmd_rules',     # !rules
+              'cogs.cmds_users',    # Various smaller commands: !rules, !vote, !mrfreeze
               'cogs.help_temp' ]    # !temp, DM instructions for automatic temp conversion.
 
 # We don't use this.
