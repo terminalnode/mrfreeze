@@ -2,6 +2,7 @@ This is a TODO list so I won't forget.
 
 Quotes:
   Name quotes:
+    Merge 'read' and 'random' in cmd_quote.py
     Check for double name entries, all names must be unique.
     Check that the name isn't all numbers.
 
