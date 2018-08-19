@@ -1,4 +1,4 @@
-import discord
+import discord, re
 from discord.ext import commands
 from botfunctions import native
 
@@ -87,7 +87,38 @@ class RulesCog():
 
     @commands.command(name='vote', aliases=['election', 'choice', 'choose'])
     async def _vote(self, ctx, *args):
-        await ctx.send('Soon my children, very soon...')
+        remoji = re.compile('<:\w+:\d+>')
+        remojid = re.compile('\d+')
+        # skipping first line because we don't need it
+        lines = ctx.message.content.split()[1:]
+
+        # For each line we'll try to add a react of the first character,
+        # if that fails we'll look for a custom emoji of the form:
+        # <:\w+:\d+> (remoji)
+
+        success = False
+        for line in lines:
+            try:
+                await ctx.message.add_reaction(line[0])
+                success = True
+            except:
+                pass
+
+            match = remoji.match(line)
+            if not isinstance(match, type(None)):
+                match_id = int(remojid.search(match.group()).group())
+                emoji = discord.utils.get(ctx.guild.emojis, id=match_id)
+                try:
+                    await ctx.message.add_reaction(emoji)
+                    success = True
+                except:
+                    pass
+
+        if success:
+            await ctx.send('%s That\'s such a great proposition I voted for everything!' % (ctx.author.mention))
+        else:
+            await ctx.send('%s There\'s literally nothing I can vote for in your so-called "vote"! :rofl:' % (ctx.author.mention,))
+
 
 def setup(bot):
     bot.add_cog(RulesCog(bot))

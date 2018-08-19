@@ -15,6 +15,8 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * **!temp**     - DMs a help message regarding the automatic temperature conversion. Does no conversion of it's own.
 * **!rules**    - Displays one, several or all rules depending on how the command is executed.
 * **!quote**     - Add, delete, and read random quotes.
+* **!vote**      - Creates a vote where users vote by reacting with specified emoji.
+* * This does not work with nitro emojis, but does work with server emojis.
 
 ### Silly commands
 * **!mrfreeze**  - Posts a MrFreeze-quote with user instead of Batman and server instead of Gotham.
@@ -39,8 +41,6 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * **!unmute**    - (Mod) Unmutes the user.
 * **!activity**  - Changes the activity of the bot ('Playing [...]'). No mod requirement, have fun!
 * **!region**    - Allows a user to assign a regional role such as continent (could also be used for countries).
-* **!vote**      - Creates a vote where users vote by reacting with specified emoji.
-* * This does not work with nitro emojis, but does work with server emojis.
 * **!rps**       - Play rock, paper, scissors with the bot. With scores!
 * **!dice**      - Roll a select number of dice. Intend to also implement option to select type of dice.
 
