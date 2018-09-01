@@ -20,15 +20,6 @@ load_cogs = [ 'cogs.cmds_owner',    # Owner-only commands
 # We don't use this.
 bot.remove_command("help")
 
-# Here's where the actual loading of the cogs go.
-if __name__ == '__main__':
-    for cog in load_cogs:
-        try:
-            bot.load_extension(cog)
-        except Exception as e:
-            print(f'Failed to load extension {cog}.', file=sys.stderr)
-            traceback.print_exc()
-
 # This will be printed in the console once the
 # bot has been connected to discord.
 @bot.event
@@ -54,6 +45,15 @@ async def on_ready():
             await bot_trash.send(':wave: ' + native.mrfreeze())
         except:
             print ('ERROR: No channel bot-trash in ' + i.name + '. Can\'t greet them.')
+
+# Here's where the actual loading of the cogs go.
+if __name__ == '__main__':
+    for cog in load_cogs:
+        try:
+            bot.load_extension(cog)
+        except Exception as e:
+            print(f'Failed to load extension {cog}.', file=sys.stderr)
+            traceback.print_exc()
 
 # Certain events, namely temp, depends on checking for temperature statements in
 # all messages sent to the chat. If a command is detected before that the command
