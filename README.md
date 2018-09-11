@@ -27,10 +27,10 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 
 ### Non-command features
 * Will greet a server when coming online.
-* Will automatically detect temperature statements and convert them with no user interraction required.
+* Will automatically detect temperature statements and convert them with no user interaction required.
 * Will post a message to #mod-discussion when a user leaves.
 * Will quote a message that was just pinned so people don't have to check the list of pins.
-* * Caveat: The bot does a lot of loading when starting up for this to work. If a message was pinned while this loading occured the next message to get pinned won't be posted, however the next one after that will.
+* * Caveat: The bot does a lot of loading when starting up for this to work. If a message was pinned while this loading occurred the next message to get pinned won't be posted, however the next one after that will.
 
 ## Todo
 ### Commands
