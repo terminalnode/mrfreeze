@@ -6,6 +6,8 @@ Quotes:
     Merge 'read' and 'random' in cmd_quote.py
     Check for double name entries, all names must be unique.
     Check that the name isn't all numbers.
+  Images in quotes:
+    imgurpython https://github.com/Imgur/imgurpython
 
 Various:
   CheckFailure error handling.
