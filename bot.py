@@ -75,6 +75,9 @@ async def on_message(message):
     elif tempstatement != None:
         await temp.convert(ctx, tempstatement)
 
+    elif (bot.user in message.mentions) and not (message.author == bot.user):
+        await ctx.send(message.author.mention + ' wtf do you want smud?')
+
 # Message when people leave.
 @bot.event
 async def on_member_remove(member):
