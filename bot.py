@@ -96,6 +96,7 @@ async def on_command_error(ctx, error):
         print(native.get_author(ctx) + 'tried to invoke command !' + str(ctx.command) + ' which resulted in a check failure.')
     else:
         print(error)
+        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
 # A message was pinned.
 @bot.event

@@ -32,3 +32,24 @@ def get_rule(rules):
                 value += '\n'
 
     return value
+
+def mentions_list(mentions):
+    text_list = str()
+
+    if len(mentions) == 0:
+        text_list = 'No one.'
+
+    elif len(mentions) == 1:
+        text_list = mentions[0].mention
+
+    else:
+        for i in range(len(mentions)):
+            if i != (len(mentions)-1):
+                if i == 0:
+                    text_list += (mentions[i].mention)
+                else:
+                    text_list += (', ' + mentions[i].mention)
+            else:
+                text_list += (' and ' + mentions[i].mention)
+
+    return text_list

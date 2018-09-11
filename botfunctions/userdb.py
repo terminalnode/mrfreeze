@@ -1,5 +1,6 @@
-import sqlite3, discord, random
+import sqlite3, discord, random, discord
 from sqlite3 import Error
+from discord.ext import commands
 
 ### This file manages the userdb where we keep stuff like rps scores, mutes,
 ### etc. We also have a register of all channels and users which is constantly
@@ -199,17 +200,28 @@ def fix_channel(channel):
         c.execute(sql, (name, server_id, channel_id))
 
 ### This function creates/updates the db entry for a certain user in a certain server.
+# ctx can be a context object, member object or message object.
 def fix_user(ctx):
     conn = connect_to_db()
-
-    user_id = ctx.author.id
-    server_id = ctx.guild.id
-    discriminator = ctx.author.discriminator
-    user_name = ctx.author.name
-    user_disp_name = ctx.author.display_name
-    avatar = ctx.author.avatar_url
+    if isinstance(ctx, discord.member.Member):
+        # If ctx is a member, the following definitions are used:
+        user_id = ctx.id
+        server_id = ctx.guild.id
+        discriminator = ctx.discriminator
+        user_name = ctx.name
+        user_disp_name = ctx.display_name
+        avatar = ctx.avatar_url
+    elif isinstance(ctx, discord.ext.commands.context.Context) or isinstance(ctx, discord.message.Message):
+        # If ctx is a ctx or a message, the following definitions are used:
+        user_id = ctx.author.id
+        server_id = ctx.guild.id
+        discriminator = ctx.author.discriminator
+        user_name = ctx.author.name
+        user_disp_name = ctx.author.display_name
+        avatar = ctx.author.avatar_url
 
     fix_server(ctx.guild)
+
 
     with conn:
         c = conn.cursor()
@@ -245,13 +257,124 @@ def fix_user(ctx):
 
 ### This function creates/updates the db entry
 ### for a certain users mute status in a certain server.
-def fix_mute(user, duration, is_delete):
+# user takes a discord.Member object
+# voluntary takes a boolean.
+# until takes a datetime.datetime object, otherwise None.
+# delete takes a boolean, defaults to false.
+def fix_mute(user, voluntary=False, until=None, delete=False):
     conn = connect_to_db()
+    id = user.id
+    server = user.guild.id
+    fix_user(user)
+
+    if until == None:
+        # If no limit is specified, it will default to
+        # january first in the year 5000.ll
+        until = ('5000-01-01 00:00')
+    else:
+        # If a limit is specified, we'll parse it into a string now.
+        # Format looks like: 2018-09:01 04:18
+        until = '{:%Y-%m-%d %H:%M}'.format(until)
+
+    with conn:
+        c = conn.cursor()
+        q_sql = ''' SELECT * FROM  mutes WHERE id = ? AND server = ? '''
+        # If the length of the db querry is 0, bool(0) == False.
+        # If it's not, it will return true.
+        mute_check = c.execute(q_sql, (id, server)).fetchall()
+        muted = bool(len(mute_check))
+
+        # The options here are:
+        # muted && delete           Delete an existing mute.
+        # muted && not delete       Update an existing mute.
+        # not muted && delete       Deleting a non-existing mute (invalid combination).
+        # not muted && not delete   Add a new mute.
+
+        success = True
+        reason = 'No error.'
+        if muted and delete:
+            # Delete an existing mute.
+            sql = ''' DELETE FROM mutes WHERE id = ? AND server = ? '''
+            try:
+                c.execute(sql, (id, server))
+            except:
+                success = False
+                reason = 'Failed to delete existing mute.'
+
+        elif muted and not delete:
+            # Update an existing mute.
+            sql = '''
+                  UPDATE mutes
+                  SET until = ?,
+                      voluntary = ?
+                  WHERE id = ? AND server = ?
+                  '''
+            try:
+                c.execute(sql, (until, voluntary, id, server))
+            except:
+                success = False
+                reason = 'Failed to update existing mute.'
+
+        elif not muted and delete:
+            # Delete a non-existing mute (invalid combination) - nothing to do here.
+            success = False
+            reason = 'The user is not muted.'
+
+        elif not muted and not delete:
+            # Add a new mute.
+            sql = '''
+                  INSERT INTO mutes (id, server, until, voluntary)
+                  VALUES (?,?,?,?)
+                  '''
+            try:
+                c.execute(sql, (id, server, until, voluntary))
+            except:
+                success = False
+                reason = 'Failed to add new mute to database.'
+
+    return (success, reason)
 
 ### This function creates/updates the db entry for a certain
 ### user in a certain server.
 def fix_rps(user):
     conn = connect_to_db()
+
+def is_blacklisted(user):
+    conn = connect_to_db()
+
+    with conn:
+        c = conn.cursor()
+        sql = ''' SELECT * FROM region_bl WHERE id = ? AND server = ?'''
+        c.execute(sql, (user.id, user.guild.id))
+        fetch = c.fetchall()
+
+    # if len(fetch) is 0 this will return False, otherwise True.
+    # So if there are no matches, this will return False.
+    return bool(len(fetch))
+
+def fix_blacklist(user, add=False):
+    conn = connect_to_db()
+
+    fix_user(user)
+    blacklisted = is_blacklisted(user)
+    success = True
+    with conn:
+        c = conn.cursor()
+        sql = str()
+        if not blacklisted and add:
+            sql = '''
+                  INSERT INTO region_bl (id, server)
+                  VALUES (?,?)
+                  '''
+        elif blacklisted and not add:
+            sql = ''' DELETE FROM region_bl WHERE id = ? AND server = ? '''
+
+        try:
+            c.execute(sql, (user.id, user.guild.id))
+        except Error as e:
+            success = False
+
+    return (success, blacklisted)
 
 
 ##########
