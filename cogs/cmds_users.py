@@ -52,7 +52,8 @@ class RulesCog():
                         called_rules.append(rule_no)
 
         if len(called_rules) == 0:
-            await ctx.send('Sorry %s, your terms don\'t seem to match any rules. :thinking:' % (ctx.author.mention,))
+            replystr = 'Sorry %s, your terms don\'t seem to match any rules. :thinking:'
+            await ctx.send(replystr % (ctx.author.mention,))
         else:
             await ctx.send(ctx.author.mention + '\n' + native.get_rule(called_rules))
 
@@ -87,17 +88,19 @@ class RulesCog():
                     death_reply = True
 
         if help_reply:
-            await ctx.send('Allow me to break the ice: My name is Freeze and ' +
-            'the command **!mrfreeze** will have me print one of my timeless quotes from Batman & Robin.')
+            replystr = ('Allow me to break the ice: My name is Freeze and the command **!mrfreeze** ' +
+                        ' will have me print one of my timeless quotes from Batman & Robin.')
+            await ctx.send(replystr)
         elif suck_reply:
-            await ctx.send('Freeze in hell, ' + ctx.author.mention + '!')
+            replystr = 'Freeze in hell, %s!'
+            await ctx.send(replystr % (ctx.author.mention,))
         elif death_reply:
-            await ctx.send(ctx.author.mention + ' ' +
-            'You\'re not sending ME to the COOLER!')
+            replystr = '%s You\'re not sending *ME* to the *COOLER*!'
+            await ctx.send(replystr % (ctx.author.mention,))
         else:
             quote = native.mrfreeze()
             quote = quote.replace('Batman', ctx.author.mention)
-            quote = quote.replace('Gotham', '**' + ctx.guild.name + '**')
+            quote = quote.replace('Gotham', ('**' + ctx.guild.name + '**'))
             await ctx.send(quote)
 
     @commands.command(name='vote', aliases=['election', 'choice', 'choose'])
@@ -130,9 +133,11 @@ class RulesCog():
                     pass
 
         if success:
-            await ctx.send('%s That\'s such a great proposition I voted for everything!' % (ctx.author.mention))
+            replystr = '%s That\'s such a great proposition I voted for everything!'
+            await ctx.send(replystr % (ctx.author.mention))
         else:
-            await ctx.send('%s There\'s literally nothing I can vote for in your smuddy little attempt at a vote! :rofl:' % (ctx.author.mention,))
+            replystr = '%s There\'s literally nothing I can vote for in your smuddy little attempt at a vote! :rofl:'
+            await ctx.send(replystr % (ctx.author.mention,))
 
     @commands.command(name='region', aliases=['regions'])
     async def _region(self, ctx, *args):
@@ -229,15 +234,18 @@ class RulesCog():
             if success:
                 if not antarctica_spelling:
                     # Correct spelling.
-                    await ctx.send(ctx.author.mention + ' is a filthy smud claiming to live in Antarctica, ' +
-                                  'their wish has been granted and they will be stuck there for about TEN minutes!')
+                    replystr = ('%s is a filthy smud claiming to live in Antarctica, ' +
+                                'their wish has been granted and they will be stuck there for about TEN minutes!')
+                    await ctx.send(replystr % (ctx.author.mention,))
 
                 else:
-                    await ctx.send(ctx.author.mention + ' is a filthy smud claiming to live in \'' + spelling + '\'! They couldn\'t even spell it right ' +
-                                   'and because of that they\'ll be stuck there for about TWENTY minutes!')
+                    replystr = ('%s is a filthy smud claiming to live in \'%s\'! They couldn\'t even spell it right ' +
+                                'and because of that they\'ll be stuck there for about TWENTY minutes!')
+                    await ctx.send(replystr % (ctx.author.mention, spelling))
 
             elif not success:
-                await ctx.send(ctx.author.mention + ' is a filthy smud claiming to live in Antarctica, but I couldn\'t banish them there due to:\n' + reason)
+                replystr = ('%s is a filthy smud claiming to live in Antarctica, but I couldn\'t banish them there due to:\n%s')
+                await ctx.send(replystr % (ctx.author.mention, reason))
 
         elif add_blacklist or rmv_blacklist:
             if not is_mod:
@@ -256,20 +264,25 @@ class RulesCog():
                         reason = ('Error connecting to discord.')
 
                 if success:
-                    await ctx.send(ctx.author.mention + ' Smuds like you are not allowed to neither remove nor add entries to the blacklist. ' +
-                                   'This misdemeanor has earned you about FIFTEEN minutes in Antarctica!')
+                    replystr = ('%s Smuds like you are not allowed to neither remove nor add entries to the blacklist. ' +
+                                'This misdemeanor has earned you about FIFTEEN minutes in Antarctica!')
+                    await ctx.send(replystr % (ctx.author.mention,))
                 else:
-                    await ctx.send(ctx.author.mention + ' Smuds like you are not allowed to neither remove nor add entries to the blacklist.\n\n' +
-                                   'Normally this would earn you FIFTEEN minutes in Antarctica, but I failed to banish you due to:\n' + reason)
+                    replystr = ('%s Smuds like you are not allowed to neither remove nor add entries to the blacklist.\n\n' +
+                                'Normally this would earn you FIFTEEN minutes in Antarctica, but I failed to banish you due to:\n%s')
+                    await ctx.send(replystr % (ctx.author.mention, reason))
 
             elif add_blacklist and rmv_blacklist:
                 # Conflicting messages, not sure if we're supposed to add or remove.
-                await ctx.send(ctx.author.mention + ' I\'m getting mixed messages, I\'m not sure if you want to remove or add entries to the blacklist.')
+                replystr = '%s I\'m getting mixed messages, I\'m not sure if you want to remove or add entries to the blacklist.'
+                await ctx.send(replystr % (ctx.author.mention,))
 
             elif len(ctx.message.mentions) == 0:
                 # We can't do this without any mentions.
-                await ctx.send(ctx.author.mention + ' You want to edit the blacklist, but you failed to mention anyone. ' +
-                               'You\'re a huge disappointment to modkind, please never talk to me again.')
+                replystr = ('%s You want to edit the blacklist, but you failed to mention anyone. ' +
+                            'You\'re a huge disappointment to modkind, please never talk to me again.')
+                await ctx.send(replystr % (ctx.author.mention,))
+
 
             else:
                 # Else means that:
@@ -303,43 +316,59 @@ class RulesCog():
                 if add_blacklist:
                     if total_tally == 1 and fails_tally == 0:
                         # One total and succeeded.
-                        await ctx.send('%s The filthy region abusing smud %s has been banned from changing their region.' % (ctx.author.mention, success_str))
+                        replystr = '%s The filthy region abusing smud %s has been banned from changing their region.'
+                        await ctx.send(replystr % (ctx.author.mention, success_str))
 
                     elif total_tally == 1 and fails_tally == 1:
                         # One total and failed.
-                        await ctx.send('%s I wasn\'t able to add %s to the list of smuds banned from changing their region. Perhaps they\'re already on the list?' % (ctx.author.mention, fails_str))
+                        replystr = ('%s I wasn\'t able to add %s to the list of smuds '
+                                   'banned from changing their region. Perhaps they\'re already on the list?')
+                        await ctx.send(replystr % (ctx.author.mention, fails_str))
 
                     elif total_tally > 1 and fails_tally == 0:
                         # More than one and all succeeded.
-                        await ctx.send('%s The filthy region abusing smuds %s have been banned from changing their region.' % (ctx.author.mention, success_str))
+                        replystr = '%s The filthy region abusing smuds %s have been banned from changing their region.'
+                        await ctx.send(replystr % (ctx.author.mention, success_str))
 
                     elif total_tally > 1 and fails_tally > 0:
                         # More than one and at least one fail.
-                        await ctx.send('%s I wasn\'t able to add all of the requested users to the list of smuddy region abusers, perhaps some of them were already there?\nBlacklisted: %s\nNot blacklisted: %s' % (ctx.author.mention, success_str, fails_str))
+                        replystr = ('%s I wasn\'t able to add all of the requested users to the list ' +
+                                    'of smuddy region abusers, perhaps some of them were already there?' +
+                                    '\nBlacklisted: %s\nNot blacklisted: %s')
+                        await ctx.send(replystr % (ctx.author.mention, success_str, fails_str))
 
                 elif rmv_blacklist:
                     if total_tally == 1 and fails_tally == 0:
                         # One total and succeeded.
-                        await ctx.send('%s The user %s is once again allowed to change their region.' % (ctx.author.mention, success_str))
+                        replystr = '%s The user %s is once again allowed to change their region.'
+                        await ctx.send(replystr % (ctx.author.mention, success_str))
 
                     elif total_tally == 1 and fails_tally == 1:
                         # One total and failed.
-                        await ctx.send('%s I wasn\'t able to remove %s from the list of smuds banned from changing their region. Perhaps they\'re already off the list?' % (ctx.author.mention, fails_str))
+                        replystr = ('%s I wasn\'t able to remove %s from the list of smuds ' +
+                                   'banned from changing their region. Perhaps they\'re already off the list?')
+                        await ctx.send(replystr % (ctx.author.mention, fails_str))
 
                     elif total_tally > 1 and fails_tally == 0:
                         # More than one and all succeeded.
-                        await ctx.send('%s The users %s are once again allowed to change their regions.' % (ctx.author.mention, success_str))
+                        replystr = '%s The users %s are once again allowed to change their regions.'
+                        await ctx.send(replystr % (ctx.author.mention, success_str))
 
                     elif total_tally > 1 and fails_tally > 0:
                         # More than one and at least one fail.
-                        await ctx.send('%s I wasn\'t able to remove all of the requested users from the list of smuddy region abusers, perhaps some of them were already removed?\nUnblacklisted: %s\nNot unblacklisted: %s' % (ctx.author.mention, success_str, fails_str))
+                        replystr = ('%s I wasn\'t able to remove all of the requested users from the list of smuddy region abusers, ' +
+                                   'perhaps some of them were already removed?\nUnblacklisted: %s\nNot unblacklisted: %s')
+                        await ctx.send(replystr % (ctx.author.mention, success_str, fails_str))
 
         elif is_blacklisted:
-            await ctx.send('%s Smuds like you are why we can\'t have nice things, or rather... why you can\'t have nice things. The *privilege* of changing your own region has been revoked from you.' % (ctx.author.mention))
+            replystr = ('%s Smuds like you are why we can\'t have nice things, or rather...' +
+                       'why you can\'t have nice things. The *privilege* of changing your own' +
+                       'region has been revoked from you.')
+            await ctx.send(replystr % (ctx.author.mention))
 
         elif give_list:
             # Print a list of all the available regions.
-            await ctx.send(ctx.author.mention + ' The available regions are:\n' +
+            replystr = ('%s The available regions are:\n' +
                            '- Africa\n' +
                            '- North America\n' +
                            '- South America\n' +
@@ -348,6 +377,7 @@ class RulesCog():
                            '- Europe\n' +
                            '- Middle-East\n' +
                            '- Oceania')
+            await ctx.send(replystr % (ctx.author.mention,))
 
         else:
             # List of region_ids from role abc's in region_ids[guild.id], except for Antarctica.
@@ -363,10 +393,12 @@ class RulesCog():
                         match = [region, self.region_ids[ctx.guild.id][region].id]
 
             if len(match) == 0:
-                await ctx.send('%s I couldn\'t find any match for the region you mentioned. Type !region list for a list of available regions.' % (ctx.author.mention,))
+                replystr = '%s I couldn\'t find any match for the region you mentioned. Type !region list for a list of available regions.'
+                await ctx.send(replystr % (ctx.author.mention,))
 
             elif match[1] in old_author_roles:
-                await ctx.send('%s You\'re already in %s, wtf are you trying to do?' % (ctx.author.mention, match[0]))
+                replystr = '%s You\'re already in **%s**, wtf are you trying to do?'
+                await ctx.send(replystr % (ctx.author.mention, match[0]))
 
             else:
                 new_author_roles.append(match[1])
@@ -376,11 +408,14 @@ class RulesCog():
 
                 try:
                     await ctx.author.edit(roles=new_author_roles)
-                    await ctx.send('%s You\'ve successfully been assigned a new region!\nWelcome to **%s**!' % (ctx.author.mention, match[0]))
+                    replystr = '%s You\'ve successfully been assigned a new region!\nWelcome to **%s**!'
+                    await ctx.send(replystr % (ctx.author.mention, match[0]))
                 except discord.Forbidden:
-                    await ctx.send('%s I found a match for you, but I wasn\'t allowed to edit your roles due to insufficient privilegies. :sob:' % (ctx.author.mention,))
+                    replystr = '%s I found a match for you, but I wasn\'t allowed to edit your roles due to insufficient privilegies. :sob:'
+                    await ctx.send(replystr % (ctx.author.mention,))
                 except discord.HTTPException:
-                    await ctx.send('%s I found a match for you, but due to a connection error I wasn\'t able to edit your roles. :sob:' % (ctx.author.mention,))
+                    replystr = '%s I found a match for you, but due to a connection error I wasn\'t able to edit your roles. :sob:'
+                    await ctx.send(replystr % (ctx.author.mention,))
 
 
 def setup(bot):
