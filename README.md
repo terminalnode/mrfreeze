@@ -16,7 +16,7 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * **!rules**    - Displays one, several or all rules depending on how the command is executed.
 * **!quote**     - Add, delete, and read random quotes.
 * **!vote**      - Creates a vote where users vote by reacting with specified emoji.
-* * This does not work with nitro emojis, but does work with server emojis.
+* * **Caveat:** This does not work with nitro emojis, but does work with server emojis.
 * **!region**    - Allows a user to assign themselves a regional role.
 
 ### Silly commands
