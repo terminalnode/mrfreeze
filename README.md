@@ -37,10 +37,10 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 ## Todo
 ### Commands
 * **!unban**     - (Mod) Removes ban from the server.
-* **!banish**    - (Mod) Assigns the role 'Antarctica' to a user for five minutes.
 * **!ban**       - (Mod) Bans the user from the server.
 * **!kick**      - (Mod) Kicks the user from the server.
 * **!mute**      - (Mod) Mutes the user.
+* * **!banish**  - (Mod) Sub-function to mute with a default mute time and custom message.
 * **!unmute**    - (Mod) Unmutes the user.
 * **!purge**     - (Mod) Purge a certain number of messages.
 * **!rps**       - Play rock, paper, scissors with the bot. With scores!

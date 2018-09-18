@@ -9,8 +9,12 @@ class ModCmdsCog:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='banish')
+    @commands.command(name='mute', aliases=['exile', 'banish'])
     async def _banish(self, ctx):
+        print
+
+    @commands.command(name='unmute', aliases=['unexile', 'unbanish'])
+    async def _unmute(self, ctx):
         print
 
     @commands.command(name='ban')
@@ -19,14 +23,6 @@ class ModCmdsCog:
 
     @commands.command(name='unban')
     async def _unban(self, ctx):
-        print
-
-    @commands.command(name='mute')
-    async def _mute(self, ctx):
-        print
-
-    @commands.command(name='unmute')
-    async def _unmute(self, ctx):
         print
 
     @commands.command(name='kick')
