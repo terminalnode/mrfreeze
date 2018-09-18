@@ -441,7 +441,7 @@ class UserCmdsCog():
                     await ctx.send(replystr % (ctx.author.mention,))
 
     @commands.command(name='activity', aliases=['listen', 'listening', 'playing', 'play', 'game', 'gaming', 'gameing', 'stream', 'streaming', 'watch', 'watching'])
-    async def _mrfreeze(self, ctx, *args):
+    async def _activity(self, ctx, *args):
         # Dictionary of all different activity types with keywords.
         # The keywords are defined in separate tuples so I can access
         # them without the dictionary.
