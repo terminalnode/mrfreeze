@@ -10,4 +10,4 @@ Quotes:
     imgurpython https://github.com/Imgur/imgurpython
 
 Various:
-  CheckFailure error handling.
+  Posting of latest pin does not include images, it should.
