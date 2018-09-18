@@ -31,7 +31,7 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * Will post a message to #mod-discussion when a user leaves.
 * Will quote a message that was just pinned so people don't have to check the list of pins.
 * * Caveat: The bot does a lot of loading when starting up for this to work. If a message was pinned while this loading occurred the next message to get pinned won't be posted, however the next one after that will.
-* Will give a rude response when mentioned without a command/temp. statement by someone else.
+* Will give a rude response when mentioned without a command/temperature statement by someone else.
 
 ## Todo
 ### Commands
@@ -41,6 +41,7 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * **!kick**      - (Mod) Kicks the user from the server.
 * **!mute**      - (Mod) Mutes the user.
 * **!unmute**    - (Mod) Unmutes the user.
+* **!purge**     - (Mod) Purge a certain number of messages.
 * **!activity**  - Changes the activity of the bot ('Playing [...]'). No mod requirement, have fun!
 * **!rps**       - Play rock, paper, scissors with the bot. With scores!
 * **!dice**      - Roll a select number of dice. Intend to also implement option to select type of dice.
