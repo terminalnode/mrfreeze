@@ -20,10 +20,11 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * **!region**    - Allows a user to assign themselves a regional role.
 
 ### Silly commands
-* **!mrfreeze**  - Posts a MrFreeze-quote with user instead of Batman and server instead of Gotham.
-* **!source**    - Posts a link to this github page.
+* **!activity**  - Changes the activity of the bot ('Playing [...]', 'Listening to [...]' etc). No mod requirement, have fun!
 * **!dummies**   - Invite links for the dummy bots Ba'athman and Robin.
+* **!mrfreeze**  - Posts a MrFreeze-quote with user instead of Batman and server instead of Gotham.
 * **!readme**    - Posts a link to the github page as well, but to the README.md file (this one!).
+* **!source**    - Posts a link to this github page.
 
 ### Non-command features
 * Will greet a server when coming online.
@@ -42,7 +43,6 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * **!mute**      - (Mod) Mutes the user.
 * **!unmute**    - (Mod) Unmutes the user.
 * **!purge**     - (Mod) Purge a certain number of messages.
-* **!activity**  - Changes the activity of the bot ('Playing [...]'). No mod requirement, have fun!
 * **!rps**       - Play rock, paper, scissors with the bot. With scores!
 * **!dice**      - Roll a select number of dice. Intend to also implement option to select type of dice.
 

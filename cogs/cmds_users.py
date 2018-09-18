@@ -2,7 +2,7 @@ import discord, re, datetime
 from discord.ext import commands
 from botfunctions import native, checks, userdb
 
-class RulesCog():
+class UserCmdsCog():
     def __init__(self, bot):
         self.bot = bot
 
@@ -152,7 +152,6 @@ class RulesCog():
                 except:
                     pass
 
-        print(added_reacts)
         if success:
             replystr = '%s That\'s such a great proposition I voted for everything!'
             await ctx.send(replystr % (ctx.author.mention))
@@ -441,6 +440,88 @@ class RulesCog():
                     replystr = '%s I found a match for you, but due to a connection error I wasn\'t able to edit your roles. :sob:'
                     await ctx.send(replystr % (ctx.author.mention,))
 
+    @commands.command(name='activity', aliases=['listen', 'listening', 'playing', 'play', 'game', 'gaming', 'gameing', 'stream', 'streaming', 'watch', 'watching'])
+    async def _mrfreeze(self, ctx, *args):
+        # Dictionary of all different activity types with keywords.
+        # The keywords are defined in separate tuples so I can access
+        # them without the dictionary.
+        play_words   = ('play','playing', 'game', 'gaming', 'gameing')
+        stream_words = ('stream', 'streaming')
+        listen_words = ('listen', 'listening')
+        watch_words  = ('watch', 'watching')
+
+        activity_types = {
+            None                           : ('activity',),
+            discord.ActivityType.playing   : play_words,
+            discord.ActivityType.streaming : stream_words,
+            discord.ActivityType.listening : listen_words,
+            discord.ActivityType.watching  : watch_words
+        }
+
+        # We will determine the chosen activity in one of two ways.
+        # 1. By checking which alias they used.
+        # 2. By seeing which arguments they tried.
+        for type in activity_types:
+            for alias in activity_types[type]:
+                if alias == ctx.invoked_with:
+                    chosen_activity = type
+
+        # On to step 2, seeing which arguments they tried and
+        # possibly identifying a type of activity.
+
+        if chosen_activity == None:
+            for type in activity_types:
+                for alias in activity_types[type]:
+                    if (len(args) >= 1) and (args[0] == alias):
+                        chosen_activity = type
+                        args = args[1:]
+
+                    elif (len(args) >= 2) and (args[0] == 'is') and (args[1] == alias):
+                        chosen_activity = type
+                        args = args[2:]
+
+        success = False
+        if len(args) != 0:
+            joint_args = ' '.join(args)
+            # If we haven't been able to identify an activity we'll default to listening:
+            if chosen_activity == None:
+                chosen_activity = discord.ActivityType.listening
+            try:
+                await self.bot.change_presence(status=None, activity=
+                      discord.Activity(name=joint_args, type=chosen_activity))
+                success = True
+            except:
+                pass
+
+        if chosen_activity == discord.ActivityType.playing:
+            reply_activity = 'playing'
+        elif chosen_activity == discord.ActivityType.streaming:
+            # streaming doesn't work as I want it, you need a url and shit
+            reply_activity = 'playing'
+        elif chosen_activity == discord.ActivityType.listening:
+            reply_activity = 'listening to'
+        elif chosen_activity == discord.ActivityType.watching:
+            reply_activity = 'watching'
+        else:
+            # Default activity.
+            reply_activity = 'listening to'
+
+        if success:
+            replystr = '%s OK then, I guess I\'m **%s %s** now.'
+            await ctx.send(replystr % (ctx.author.mention, reply_activity ,joint_args))
+
+        elif len(args) == 0:
+            if chosen_activity == None: # No activity specified.
+                replystr = '%s You didn\'t tell me what to do.'
+                await ctx.send(replystr % (ctx.author.mention,))
+
+            else: # No name specified.
+                replystr = '%s I can tell you want me to be **%s** something, but I don\'t know what.'
+                await ctx.send(replystr % (ctx.author.mention, reply_activity))
+        else:
+            replystr = '<@!154516898434908160> Something went wrong when trying to change my activity and I have no idea what. Come see!'
+            await ctx.send(replystr)
+
 
 def setup(bot):
-    bot.add_cog(RulesCog(bot))
+    bot.add_cog(UserCmdsCog(bot))
