@@ -35,7 +35,7 @@ class RulesCog():
              'orientation', 'weight', 'race', 'skin', 'color',
              'gender', 'colour' ),
         5: ( '5', 'shoe', 'shoes', 'age', 'mature', 'maturity', 'shoesize', 'act' ),
-        6: ( '6', 'spam' ),
+        6: ( '6', 'spam', 'nonsense' ),
         7: ( '7', 'benice', 'nice' )
         }
 
@@ -105,35 +105,59 @@ class RulesCog():
 
     @commands.command(name='vote', aliases=['election', 'choice', 'choose'])
     async def _vote(self, ctx, *args):
+        # remoji finds custom emoji strings which have the form:
+        # <:trex:463347402242260993>
         remoji = re.compile('<:\w+:\d+>')
-        remojid = re.compile('\d+')
+
+        # remojid finds a string starting with :, having an arbitrary number
+        # of digits and ending with a >. In the example above this would be:
+        # :463347402242260993>
+        # We need the : and > in case the emoji code/name is all numbers.
+        remojid = re.compile(':\d+>')
+
         # skipping first line because we don't need it
-        lines = ctx.message.content.split()[1:]
+        if '\n' in ctx.message.content:
+            lines = ctx.message.content.split('\n')[1:]
+            single_line = False
+        else:
+            lines = ['error',]
+            single_line = True
 
-        # For each line we'll try to add a react of the first character,
-        # if that fails we'll look for a custom emoji of the form:
-        # <:\w+:\d+> (remoji)
-
+        # Step 1: Try to react with the first character on the line.
+        # Step 2: Use regex to try and find a custom emoji.
+        # Step 3: If one is found, extract the emoji ID and get the object.
+        added_reacts = list()
         success = False
         for line in lines:
+            # This try-except thing is step 1, i.e. for simple ISO standard emoji.
             try:
-                await ctx.message.add_reaction(line[0])
-                success = True
+                if line[0] not in added_reacts:
+                    await ctx.message.add_reaction(line[0])
+                    added_reacts.append(line[0])
+                    success = True
             except:
                 pass
 
+            # This try-except thing is step 2, which finds custom emoji.
             match = remoji.match(line)
             if not isinstance(match, type(None)):
-                match_id = int(remojid.search(match.group()).group())
+                # Because the remojiid also grabs the : and > we only want [1:-1]
+                match_id = int(remojid.search(match.group()).group()[1:-1])
                 emoji = discord.utils.get(ctx.guild.emojis, id=match_id)
                 try:
-                    await ctx.message.add_reaction(emoji)
-                    success = True
+                    if match_id not in added_reacts:
+                        await ctx.message.add_reaction(emoji)
+                        added_reacts.append(match_id)
+                        success = True
                 except:
                     pass
 
+        print(added_reacts)
         if success:
             replystr = '%s That\'s such a great proposition I voted for everything!'
+            await ctx.send(replystr % (ctx.author.mention))
+        elif single_line:
+            replystr = '%s You need at least two lines to create a vote you filthy smud.'
             await ctx.send(replystr % (ctx.author.mention))
         else:
             replystr = '%s There\'s literally nothing I can vote for in your smuddy little attempt at a vote! :rofl:'
