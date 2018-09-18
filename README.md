@@ -31,7 +31,7 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * Will automatically detect temperature statements and convert them with no user interaction required.
 * Will post a message to #mod-discussion when a user leaves.
 * Will quote a message that was just pinned so people don't have to check the list of pins.
-* * Caveat: The bot does a lot of loading when starting up for this to work. If a message was pinned while this loading occurred the next message to get pinned won't be posted, however the next one after that will.
+* * **Caveat:** The bot does a lot of loading when starting up for this to work. If a message was pinned while this loading occurred the next message to get pinned won't be posted, however the next one after that will.
 * Will give a rude response when mentioned without a command/temperature statement by someone else.
 
 ## Todo
@@ -40,7 +40,7 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * **!ban**       - (Mod) Bans the user from the server.
 * **!kick**      - (Mod) Kicks the user from the server.
 * **!mute**      - (Mod) Mutes the user.
-* * **!banish**  - (Mod) Sub-function to mute with a default mute time and custom message.
+* * **!banish**  - Sub-function to mute with a default mute time and custom message.
 * **!unmute**    - (Mod) Unmutes the user.
 * **!purge**     - (Mod) Purge a certain number of messages.
 * **!rps**       - Play rock, paper, scissors with the bot. With scores!
