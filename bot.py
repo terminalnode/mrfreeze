@@ -6,6 +6,7 @@ import traceback, sys, asyncio
 # Importing commands from ./botfunctions
 from botfunctions import *
 
+
 class MrFreezeClient(commands.Bot):
     # This modification of commands.Bot is based on the following example:
     # https://github.com/Rapptz/discord.py/blob/rewrite/examples/background_task.py
@@ -46,6 +47,8 @@ class MrFreezeClient(commands.Bot):
             await asyncio.sleep(10)
             # insert stuff to do here
 
+
+
 # Starting the bot, then removing help command
 # because we're going to implement our own help.
 bot = MrFreezeClient(command_prefix='!')
@@ -70,6 +73,8 @@ if __name__ == '__main__':
             print(f'Failed to load extension {cog}.', file=sys.stderr)
             traceback.print_exc()
 
+
+
 # Certain events, namely temp, depends on checking for temperature statements in
 # all messages sent to the chat. If a command is detected before that the command
 # will run instead.
@@ -93,6 +98,8 @@ async def on_message(message):
     elif (bot.user in message.mentions) and not (message.author == bot.user):
         await ctx.send(message.author.mention + ' wtf do you want smud?')
 
+
+
 # Message when people leave.
 @bot.event
 async def on_member_remove(member):
@@ -105,6 +112,8 @@ async def on_member_remove(member):
                      (member.name, str(member.discriminator), member.guild.name)) )
     await mod_channel.send(embed=embed)
 
+
+
 # Command errors
 @bot.event
 async def on_command_error(ctx, error):
@@ -115,6 +124,8 @@ async def on_command_error(ctx, error):
     else:
         print(error)
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+
+
 
 # A message was pinned.
 @bot.event
@@ -154,6 +165,8 @@ async def on_guild_channel_pins_update(channel, last_pin):
         pinned_message = discord.Embed(description = message.content, color=0x00dee9)
         pinned_message.set_author(name=message.author.display_name, icon_url=message.author.avatar_url)
         await channel.send('The following message was just pinned:\n', embed=pinned_message)
+
+
 
 ### Program ends here
 # Client.run with the bots token
