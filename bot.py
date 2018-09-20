@@ -23,6 +23,8 @@ class MrFreezeClient(commands.Bot):
         print ('-----------')
 
         # Creating dict of all pins in channels in the guilds.
+        # pinsDict is first set to None so we know that it's not done
+        # if there's a pin made while the bot is loading.
         global pinsDict
         pinsDict = None
         pinsDict = await pinlists.create_dict(bot.guilds)
