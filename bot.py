@@ -22,6 +22,9 @@ class MrFreezeClient(commands.Bot):
         print ('User ID: ' + str(bot.user.id))
         print ('-----------')
 
+        # Making sure that the userdb exists.
+        userdb.create()
+
         # Creating dict of all pins in channels in the guilds.
         # pinsDict is first set to None so we know that it's not done
         # if there's a pin made while the bot is loading.

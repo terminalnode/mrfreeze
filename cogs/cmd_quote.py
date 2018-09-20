@@ -32,9 +32,6 @@ class QuoteCmdCog:
         'help'   : ('help', 'how', 'howto', 'wtf', 'wut', 'halp')
         }
 
-        # Let's make sure the database exists.
-        userdb.create()
-
         # Below are the different functions which will execute once
         # we've figured out the desired command.
 
