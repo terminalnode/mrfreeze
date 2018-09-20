@@ -45,6 +45,7 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * **!purge**     - (Mod) Purge a certain number of messages.
 * **!rps**       - Play rock, paper, scissors with the bot. With scores!
 * **!dice**      - Roll a select number of dice. Intend to also implement option to select type of dice.
+* **!help**      - We're going to have a reimplemented version of !help.
 
 ### Far-Away ideas/commands
 * **!ink**       - Attempt to bring the ink look-up used on r/fountainpens to discord.

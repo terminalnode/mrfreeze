@@ -6,45 +6,60 @@ import traceback, sys, asyncio
 # Importing commands from ./botfunctions
 from botfunctions import *
 
-bot = commands.Bot(command_prefix='!')
+class MrFreezeClient(commands.Bot):
+    # This modification of commands.Bot is based on the following example:
+    # https://github.com/Rapptz/discord.py/blob/rewrite/examples/background_task.py
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Background task manager
+        self.bg_task = self.loop.create_task(self.bg_task_manager())
+
+    async def on_ready(self):
+        print ('We have logged in as {0.user}'.format(bot))
+        print ('User name: ' + str(bot.user.name))
+        print ('User ID: ' + str(bot.user.id))
+        print ('-----------')
+
+        # Creating dict of all pins in channels in the guilds.
+        global pinsDict
+        pinsDict = None
+        pinsDict = await pinlists.create_dict(bot.guilds)
+
+        # Set activity to "Listening to your commands"
+        await bot.change_presence(status=None, activity=
+            discord.Activity(name='your commands...', type=discord.ActivityType.listening))
+
+        # Greetings message for all the servers now that all is setup.
+        for i in bot.guilds:
+            try:
+                bot_trash = discord.utils.get(i.channels, name='bot-trash')
+                await bot_trash.send(':wave: ' + native.mrfreeze())
+            except:
+                print ('ERROR: No channel bot-trash in ' + i.name + '. Can\'t greet them.')
+
+    async def bg_task_manager(self):
+        await self.wait_until_ready()
+
+        channel = self.get_channel(466241532458958850)
+        while not self.is_closed():
+            await asyncio.sleep(10)
+            # insert stuff to do here
+
+# Starting the bot, then removing help command
+# because we're going to implement our own help.
+bot = MrFreezeClient(command_prefix='!')
+bot.remove_command('help')
 
 # Cogs starting with cmd contains only one command,
-# cogs starting with cmds has multiple commands sharing some common trait.
+# Cogs starting with cmds has multiple commands sharing some common trait.
 load_cogs = [ 'cogs.cmds_owner',    # Owner-only commands
               'cogs.cmds_mod',      # Mod-only commands.
               'cogs.cmds_links',    # !dummies, !readme, !source
               'cogs.cmd_quote',     # !quote
               'cogs.cmds_users',    # Various smaller commands: !rules, !vote, !mrfreeze
-              'cogs.help_temp' ]    # !temp, DM instructions for automatic temp conversion.
-
-# We don't use this.
-bot.remove_command("help")
-
-# This will be printed in the console once the
-# bot has been connected to discord.
-@bot.event
-async def on_ready():
-    print ('We have logged in as {0.user}'.format(bot))
-    print ('User name: ' + str(bot.user.name))
-    print ('User ID: ' + str(bot.user.id))
-    print ('-----------')
-
-    # Creating dict of all pins in channels in the guilds.
-    global pinsDict
-    pinsDict = None
-    pinsDict = await pinlists.create_dict(bot.guilds)
-
-    # Set activity to "Listening to your commands"
-    await bot.change_presence(status=None, activity=
-        discord.Activity(name='your commands...', type=discord.ActivityType.listening))
-
-    # Greetings message for all the servers now that all is setup.
-    for i in bot.guilds:
-        try:
-            bot_trash = discord.utils.get(i.channels, name='bot-trash')
-            await bot_trash.send(':wave: ' + native.mrfreeze())
-        except:
-            print ('ERROR: No channel bot-trash in ' + i.name + '. Can\'t greet them.')
+              'cogs.help_temp',     # !temp, DM instructions for automatic temp conversion.
+              'cogs.cmd_help', ]    # We have our own !help-function.
 
 # Here's where the actual loading of the cogs go.
 if __name__ == '__main__':
