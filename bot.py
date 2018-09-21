@@ -221,6 +221,12 @@ async def on_guild_channel_pins_update(channel, last_pin):
         message = channel_pins[0]
         pinned_message = discord.Embed(description = message.content, color=0x00dee9)
         pinned_message.set_author(name=message.author.display_name, icon_url=message.author.avatar_url)
+
+        # Attaching first attachment of the post, if there are any.
+        if message.attachments:
+            print(message.attachements)
+            pinned_message.set_image(url=message.attachments[0].url)
+
         await channel.send('The following message was just pinned:\n', embed=pinned_message)
 
 
