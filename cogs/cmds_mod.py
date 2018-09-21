@@ -64,11 +64,10 @@ class ModCmdsCog:
 
         # If they tried to kick a mod christmas is cancelled.
         for victim in todo_list:
-            if checks.is_mod(victim):
+            if await checks.is_mod(victim):
                 tried_to_kick_mod = True
                 mods_list.append(victim)
         ment_mods = native.mentions_list(mods_list)
-        print(ment_mods)
 
         # Start the kicking.
         if len(todo_list) > 0 and not tried_to_kick_mod:
