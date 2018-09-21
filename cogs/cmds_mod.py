@@ -52,10 +52,26 @@ class ModCmdsCog:
         todo_list = ctx.message.mentions
         success_list = list()
         fail_list = list()
+        mods_list = list()
         forbidden_error = False
         http_error = False
+        tried_to_kick_mod = False
 
-        if len(todo_list) > 0:
+
+
+        print(ctx.message.content)
+
+
+        # If they tried to kick a mod christmas is cancelled.
+        for victim in todo_list:
+            if checks.is_mod(victim):
+                tried_to_kick_mod = True
+                mods_list.append(victim)
+        ment_mods = native.mentions_list(mods_list)
+        print(ment_mods)
+
+        # Start the kicking.
+        if len(todo_list) > 0 and not tried_to_kick_mod:
             for victim in todo_list:
                 try:
                     await ctx.guild.kick(victim)
@@ -123,6 +139,15 @@ class ModCmdsCog:
             replystr += 'HTTP exception.'
         elif forbidden_error and not http_error:
             replystr += 'Insufficient privilegies.'
+
+        ### Finally, a special message to people who tried to kick a mod.
+        if tried_to_kick_mod:
+            if (len(mods_list) == 1) and ctx.author in mods_list:
+                replystr = '%s You can\'t kick yourself, silly.'
+                replystr = (replystr % (ctx.author.mention))
+            else:
+                replystr = '%s Not even you can kick the likes of %s.'
+                replystr = (replystr % (ctx.author.mention, ment_mods))
 
         await ctx.send(replystr)
 
