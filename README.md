@@ -9,6 +9,7 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * **!gitupdate** - Fetches latest updates from github.
 
 ### Mod commands
+* **!kick**      - Kicks the user from the server.
 * **!purge**     - Purge a certain number of messages. Upper limit is 100 messages.
 
 ### User utility commands
@@ -38,7 +39,6 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 ### Commands
 * **!unban**     - (Mod) Removes ban from the server.
 * **!ban**       - (Mod) Bans the user from the server.
-* **!kick**      - (Mod) Kicks the user from the server.
 * **!mute**      - (Mod) Mutes the user.
 * * **!banish**  - Sub-function to mute with a default mute time and custom message.
 * **!unmute**    - (Mod) Unmutes the user.
