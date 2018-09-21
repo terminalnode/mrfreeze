@@ -224,10 +224,18 @@ async def on_guild_channel_pins_update(channel, last_pin):
 
         # Attaching first attachment of the post, if there are any.
         if message.attachments:
-            print(message.attachements)
             pinned_message.set_image(url=message.attachments[0].url)
 
-        await channel.send('The following message was just pinned:\n', embed=pinned_message)
+        channel_history = message.channel.history(limit=10)
+        for i in range(10):
+            sys_msg = await channel_history.next()
+            if isinstance(sys_msg.type, type(discord.MessageType.pins_add)):
+                author = sys_msg.author.mention
+                await sys_msg.delete()
+                break
+
+        replystr = 'The following message was just pinned by %s:\n'
+        await channel.send(replystr % (author), embed=pinned_message)
 
 
 
