@@ -1,4 +1,4 @@
-import sqlite3, discord, random, discord
+import sqlite3, discord, random, discord, datetime
 from sqlite3 import Error
 from discord.ext import commands
 
@@ -333,6 +333,40 @@ def fix_mute(user, voluntary=False, until=None, delete=False):
                 reason = 'Failed to add new mute to database.'
 
     return (success, reason)
+
+# This function is used when revoking mutes. It does *not* delete the entries
+# as that is done via fix_mute(), but merely tells us 1) which users are on
+# the list, 2) if their time has expired, 3) if the action was voluntary.
+# This gives other functions enough information to know if they should unmute
+# the user. They can then try to remove the mute and if that works delete the entry
+# via fix_mute().
+#
+# The output is a tuple of dictionaries of the form:
+# [ {user: user1_id, server: server1_id, time: False, voluntary: False },
+#   {user: user2_id, server: server1_id, time: False, voluntary: True  } ]
+def list_mute():
+    conn = connect_to_db()
+    with conn:
+        c = conn.cursor()
+        sql = 'SELECT * FROM mutes'
+        c.execute(sql)
+        db_output = c.fetchall()
+        current_time = datetime.datetime.now()
+
+        output = list()
+        for entry in db_output:
+            entry_dict = dict()
+            time_entry = (datetime.datetime.strptime(entry[2], '%Y-%m-%d %H:%M') < current_time)
+
+            entry_dict['user']      = int(entry[0])
+            entry_dict['server']    = int(entry[1])
+            entry_dict['time']      = time_entry
+            entry_dict['voluntary'] = bool(entry[3])
+
+            output.append(entry_dict)
+
+    return output
+
 
 ### This function creates/updates the db entry for a certain
 ### user in a certain server.

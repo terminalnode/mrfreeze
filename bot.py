@@ -49,8 +49,60 @@ class MrFreezeClient(commands.Bot):
 
         channel = self.get_channel(466241532458958850)
         while not self.is_closed():
-            await asyncio.sleep(10)
-            # insert stuff to do here
+            await asyncio.sleep(15)
+
+            # First we fix mutes.
+            mute_status = userdb.list_mute()
+            for guild in self.guilds:
+                unmuted = list()
+                not_unmuted = list()
+
+                # Check that there's an antarctica role, otherwise set it to None.
+                try:
+                    antarctica_role = discord.utils.get(guild.roles, name='Antarctica')
+                except:
+                    antarctica_role = None
+
+                # Check that there's a bot-trash channel, otherwise set it to None.
+                try:
+                    bot_trash = discord.utils.get(guild.channels, name='bot-trash')
+                except:
+                    bot_trash = None
+
+                # Go through all the entries in mute_status.
+                for entry in mute_status:
+                    if entry['server'] == guild.id:
+                        user = discord.utils.get(guild.members, id=entry['user'])
+
+                        # If the user doesn't have the antarctica role (i.e. manually deleted)
+                        # we'll just delete the database entry silently.
+                        if antarctica_role and not (antarctica_role in user.roles):
+                            userdb.fix_mute(user, delete=True)
+
+                        # If the user does have the antarctica role and entry['time'] is
+                        # true, we will try to delete the role and add them to the list
+                        # of successfully unmuted people. Then we'll delete the db entry.
+                        elif antarctica_role and entry['time']:
+                            try:
+                                await user.remove_roles(antarctica_role, reason='Time, the sentence is served.')
+                                unmuted.append(user)
+                                userdb.fix_mute(user, delete=True)
+                            except:
+                                pass
+                                # not_unmuted.append(user)
+
+                if (len(unmuted) + len(not_unmuted)) > 0:
+                    unmuted_mentions = native.mentions_list(unmuted)
+                    # Currently these actually aren't used because I'm not sure
+                    # where to put them.
+                    # not_unmuted_mentions = native.mentions_list(not_unmuted)
+
+                    if bot_trash != None:
+                        replystr = 'It\'s with great regreat that I need to inform y\'all that the exile of %s has come to an end.'
+                        await bot_trash.send(replystr % (unmuted_mentions,))
+                    else:
+                        print ('There is no bot-trash.')
+
 
 
 
