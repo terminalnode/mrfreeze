@@ -214,7 +214,7 @@ class UserCmdsCog():
             spelling = 'antarctic(a)'
 
         ### See if the user is a mod, if they're not see if they're blacklisted.
-        is_mod = await checks.is_mod(ctx, no_error=True)
+        is_mod = await checks.is_mod(ctx.author)
         if not is_mod:
             is_blacklisted = userdb.is_blacklisted(ctx.author)
         else:
