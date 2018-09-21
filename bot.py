@@ -93,8 +93,8 @@ class MrFreezeClient(commands.Bot):
 
                 if (len(unmuted) + len(not_unmuted)) > 0:
                     unmuted_mentions = native.mentions_list(unmuted)
-                    # Currently these actually aren't used because I'm not sure
-                    # where to put them.
+
+                    # Currently these actually aren't used because I'm not sure where to put them.
                     # not_unmuted_mentions = native.mentions_list(not_unmuted)
 
                     if bot_trash != None:
