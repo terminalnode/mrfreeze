@@ -230,9 +230,9 @@ async def on_guild_channel_pins_update(channel, last_pin):
         for i in range(10):
             sys_msg = await channel_history.next()
             if isinstance(sys_msg.type, type(discord.MessageType.pins_add)):
-                author = sys_msg.author.mention
+                author = sys_msg.author.mention # This is the person who pinned the message.
                 await sys_msg.delete()
-                break
+                break # No need to look further.
 
         replystr = 'The following message was just pinned by %s:\n'
         await channel.send(replystr % (author), embed=pinned_message)
