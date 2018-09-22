@@ -48,4 +48,5 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 
 ### Far-Away ideas/commands
 * **!ink**       - Attempt to bring the ink look-up used on r/fountainpens to discord.
+* * About ink bot: https://www.reddit.com/r/fountainpens/comments/5egjsa/klundtasaurs_inkcyclopedia_for_rfountainpens/
 * **!blackjack** - A game of blackjack.
