@@ -42,7 +42,7 @@ class MrFreezeClient(commands.Bot):
                 bot_trash = discord.utils.get(i.channels, name='bot-trash')
                 await bot_trash.send(':wave: ' + native.mrfreeze())
             except:
-                print ('ERROR: No channel bot-trash in ' + i.name + '. Can\'t greet them.')
+                print ('ERROR: No channel bot-trash in ' + str(i.name) + '. Can\'t greet them.')
 
     async def bg_task_manager(self):
         await self.wait_until_ready()
