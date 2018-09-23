@@ -11,6 +11,8 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 ### Mod commands
 * **!kick**      - Kicks the user from the server.
 * **!purge**     - Purge a certain number of messages. Upper limit is 100 messages.
+* **!mute**      - Mutes the user.
+* * **!banish**  - Sub-function to mute with a default mute time and custom message.
 
 ### User utility commands
 * **!temp**     - DMs a help message regarding the automatic temperature conversion. Does no conversion of it's own.
@@ -39,8 +41,6 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 ### Commands
 * **!unban**     - (Mod) Removes ban from the server.
 * **!ban**       - (Mod) Bans the user from the server.
-* **!mute**      - (Mod) Mutes the user.
-* * **!banish**  - Sub-function to mute with a default mute time and custom message.
 * **!unmute**    - (Mod) Unmutes the user.
 * **!rps**       - Play rock, paper, scissors with the bot. With scores!
 * **!dice**      - Roll a select number of dice. Intend to also implement option to select type of dice.
