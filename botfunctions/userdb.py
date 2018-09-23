@@ -578,7 +578,6 @@ def delete_quote(id):
         d_quotes = ''' DELETE FROM quotes WHERE id = ? OR alias = ? '''
         c.execute(q_quotes, (id,id))
         fetch = c.fetchall()
-        print(fetch)
 
         # No hits
         if len(fetch) == 0:
