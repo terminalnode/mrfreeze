@@ -1,4 +1,4 @@
-import discord
+import discord, re
 from discord.ext import commands
 from botfunctions import checks, native
 
@@ -8,6 +8,35 @@ from botfunctions import checks, native
 class ModCmdsCog:
     def __init__(self, bot):
         self.bot = bot
+
+    def extract_reason(self, reason):
+        # This is a simple function that will return anything after the list of mentions.
+        # It's extremely clunky, but it gets the job done.
+
+        output = str()
+        in_mention = False
+        for letter in range(len(reason)):
+
+            # If the current and two following characters form <@ and a digit, we
+            # assume that we're in a mention.
+            if (reason[letter] == '<') and (reason[letter+1] == '@') and (reason[letter+2].isdigit()):
+                in_mention = True
+
+            # If we're in a mention and detect the closing >, we'll add all trailing
+            # characters to the output. These two steps are repeated until we have
+            # an output void of any mentions.
+            if in_mention and (reason[letter] == '>'):
+                in_mention = False
+                output = reason[(letter+1):]
+
+        # If there's nothing left after these steps we'll return None.
+        # Otherwise we'll return the output.
+        if len(output.strip()) == 0:
+            return None
+        else:
+            return output.strip()
+
+
 
     @commands.command(name='mute', aliases=['exile', 'banish', 'microexile', 'microbanish'])
     @commands.check(checks.is_mod)
@@ -47,7 +76,7 @@ class ModCmdsCog:
 
     @commands.command(name='kick')
     @commands.check(checks.is_mod)
-    async def _kick(self, ctx):
+    async def _kick(self, ctx, *args):
         # This function kicks the user out of the server in which it is issued.
         todo_list = ctx.message.mentions
         success_list = list()
@@ -56,11 +85,8 @@ class ModCmdsCog:
         forbidden_error = False
         http_error = False
         tried_to_kick_mod = False
-
-
-
-        print(ctx.message.content)
-
+        reason = self.extract_reason(' '.join(args))
+        ### TODO: Enter the reason into the kick command.
 
         # If they tried to kick a mod christmas is cancelled.
         for victim in todo_list:
@@ -73,7 +99,10 @@ class ModCmdsCog:
         if len(todo_list) > 0 and not tried_to_kick_mod:
             for victim in todo_list:
                 try:
-                    await ctx.guild.kick(victim)
+                    if len(reason) == 0:
+                        await ctx.guild.kick(victim)
+                    else:
+                        await ctx.guild.kick(victim, reason=reason)
                     success_list.append(victim)
 
                 except discord.Forbidden:
