@@ -104,6 +104,9 @@ def extract_time(args):
     add_time = datetime.timedelta(days=(time_dict['days'] + (time_dict['months']*30) + (time_dict['years']*365)), weeks=time_dict['weeks'],
                                   hours=time_dict['hours'], minutes=time_dict['minutes'], seconds=time_dict['seconds'])
     end_date = current_date + add_time
+    if end_date == current_date:
+        # In this scenario, no time statements have been found.
+        end_date = None
 
     # Finally, we're going to remove all the time expressions from the args we got.
     r_list = [r_seconds, r_minutes, r_hours, r_days, r_weeks, r_months, r_years]
