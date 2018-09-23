@@ -19,7 +19,8 @@ class ModCmdsCog:
 
             # If the current and two following characters form <@ and a digit, we
             # assume that we're in a mention.
-            if (reason[letter] == '<') and (reason[letter+1] == '@') and (reason[letter+2].isdigit()):
+            print(reason[letter:letter+1])
+            if (reason[letter:letter+2] == '<@') and (reason[letter+2].isdigit()):
                 in_mention = True
 
             # If we're in a mention and detect the closing >, we'll add all trailing
@@ -99,7 +100,7 @@ class ModCmdsCog:
         if len(todo_list) > 0 and not tried_to_kick_mod:
             for victim in todo_list:
                 try:
-                    if len(reason) == 0:
+                    if reason == None:
                         await ctx.guild.kick(victim)
                     else:
                         await ctx.guild.kick(victim, reason=reason)
