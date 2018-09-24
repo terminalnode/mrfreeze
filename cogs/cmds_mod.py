@@ -84,7 +84,6 @@ class ModCmdsCog:
         if end_date == None:
             new_args = list()
             integer_args = list()
-            pop_these = list()
             for i in range(len(args)):
                 if args[i].isdigit():
                     integer_args.append(int(args[i]))
