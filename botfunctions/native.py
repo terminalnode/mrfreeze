@@ -167,5 +167,4 @@ def parse_timedelta(time_delta):
             else:
                 time_str += ', '
 
-    print(time_str)
     return time_str
