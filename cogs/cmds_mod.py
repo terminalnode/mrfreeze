@@ -99,8 +99,7 @@ class ModCmdsCog:
             time_str = 'the forseeable future'
 
         if time_str == None:
-            time_str = str(add_time)
-
+            time_str = native.parse_timedelta(add_time)
 
         # You're not allowed to mute mods.
         # Unlike the kick command, this doesn't prevent

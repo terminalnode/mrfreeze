@@ -117,3 +117,55 @@ def extract_time(args):
 
     # Finally we can return our values.
     return args, add_time, end_date
+
+def parse_timedelta(time_delta):
+    # This function takes a time delta as it's argument and outputs
+    # a string such as "1 days, 2 hours, 3 minutes and 4 seconds".
+
+    # Time delta only gives us days and seconds, we have to calculate
+    # hours and minutes ourselves.
+    days = time_delta.days
+    seconds = time_delta.seconds
+
+    # Some simple calculations. Weeks are the last whole number we can get from
+    # days/7 i.e. int(days/7), then weeks*7 are subtracted from the remanining days
+    # and so on and so on for hours and minutes.
+    weeks = int(days / 7)
+    days = (days - (weeks * 7))
+    hours = int(seconds / 3600)
+    seconds = (seconds - (hours * 3600))
+    minutes = int(seconds / 60)
+    seconds = (seconds - (minutes * 60))
+
+    time_str = ''
+    size_order = ( ('week', weeks), ('day', days), ('hour', hours), ('minute', minutes), ('second', seconds) )
+
+    for value in range(len(size_order)):
+        # Number of trailing values are used to know if we should
+        # add an 'and' after the value.
+        trailing_values = 0
+
+        # Checking that this isn't the last value.
+        if value != (len(size_order) - 1):
+
+            # Going through all trailing values and checking which are non-zero.
+            for i in size_order[value+1:]:
+                if i[1] > 0:
+                    trailing_values += 1
+
+        # Adding the value to the string if it's more than zero.
+        if size_order[value][1] > 0:
+            if size_order[value][1] == 1:
+                time_str += str(size_order[value][1]) + ' ' + size_order[value][0]
+            else:
+                time_str += str(size_order[value][1]) + ' ' + size_order[value][0] + 's'
+
+            if trailing_values == 0:
+                pass
+            elif trailing_values == 1:
+                time_str += ' and '
+            else:
+                time_str += ', '
+
+    print(time_str)
+    return time_str
