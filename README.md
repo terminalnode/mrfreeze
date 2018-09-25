@@ -15,6 +15,7 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * * **!banish**  - Sub-function to mute with a default mute time and custom message.
 * **!unmute**    - Unmutes the user.
 * **!ban**       - Bans the user from the server.
+* **!listban**   - Lists all currently banned users. Can also be called by '!ban list'.
 
 ### User utility commands
 * **!temp**     - DMs a help message regarding the automatic temperature conversion. Does no conversion of it's own.
