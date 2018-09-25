@@ -68,7 +68,6 @@ class ModCmdsCog:
         mods_list = list()
         forbidden_error = False
         http_error = False
-        tried_to_mute_mod = False
         antarctica = discord.utils.get(ctx.guild.roles, name='Antarctica')
 
         # For this function we'll need to analyse the arguments to find out
@@ -104,11 +103,14 @@ class ModCmdsCog:
         # You're not allowed to mute mods.
         # Unlike the kick command, this doesn't prevent
         # muteing all the other users.
-        for victim in ctx.message.mentions:
-            if await checks.is_mod(victim):
-                tried_to_mute_mod = True
-                mods_list.append(victim)
+        mod_role = discord.utils.get(ctx.guild.roles, name='Administration')
+        mods_list = [ user for user in ctx.message.mentions if mod_role in user.roles ]
         ment_mods = native.mentions_list(mods_list)
+
+        if len(mods_list) == 0:
+            tried_to_mute_mod = False
+        else:
+            tried_to_mute_mod = True
 
         for victim in ctx.message.mentions:
             if (victim not in mods_list):
@@ -142,9 +144,9 @@ class ModCmdsCog:
         if forbidden_error and not http_error:
             error_str = 'Insufficient privilegies.'
         elif not forbidden_error and http_error:
-            error_str = 'HTTP troubles.'
+            error_str = 'HTTP issues.'
         else:
-            error_str = 'A mix of insufficient privilegies and HTTP troubles.'
+            error_str = 'A mix of insufficient privilegies and HTTP issues.'
 
         if is_banish:
             if tried_to_mute_mod:
@@ -366,10 +368,10 @@ class ModCmdsCog:
             error_str = 'Insufficient privilegies.'
 
         elif not forbidden_error and http_error:
-            error_str = 'HTTP troubles.'
+            error_str = 'HTTP issues.'
 
         elif forbidden_error and http_error:
-            error_str = 'A mix of insufficient privilegies and HTTP troubles.'
+            error_str = 'A mix of insufficient privilegies and HTTP issues.'
 
         # Finally it's time to post some responses.
         ment_success = native.mentions_list(success_list)
@@ -412,11 +414,100 @@ class ModCmdsCog:
         await ctx.send(replystr)
 
 
-    @commands.command(name='ban')
+    @commands.command(name='ban', aliases=['purgeban', 'banpurge'])
     @commands.check(checks.is_mod)
-    async def _ban(self, ctx):
+    async def _ban(self, ctx, *args):
         # This function simply bans a user from the server in which it's issued.
-        pass
+        reason = self.extract_reason(' '.join(args))
+        forbidden_error = False
+        http_error = False
+        success_list = list()
+        fail_list = list()
+
+        if ctx.invoked_with == 'ban':
+            do_purge = False
+        else:
+            do_purge = True
+
+        mod_role = discord.utils.get(ctx.guild.roles, name='Administration')
+        mods_list = [ user for user in ctx.message.mentions if mod_role in user.roles ]
+
+        if len(mods_list) > 0:
+            tried_to_ban_mod = True
+        else:
+            tried_to_ban_mod = False
+
+        for victim in [ user for user in ctx.message.mentions if user not in mods_list]:
+            try:
+                if not do_purge:
+                    await ctx.guild.ban(victim, reason=reason, delete_message_days=0)
+                else:
+                    await ctx.guild.ban(victim, reason=reason, delete_message_days=7)
+
+                success_list.append(victim)
+
+            except discord.Forbidden:
+                forbidden_error = True
+                fail_list.append(victim)
+
+            except discord.HTTPException:
+                http_error = True
+                fail_list.append(victim)
+
+        # And now we compile a response.
+        ment_success = native.mentions_list(success_list)
+        ment_fail = native.mentions_list(fail_list)
+
+        # Error list:
+        if forbidden_error and not http_error:
+            error_str = 'Insufficient privilegies.'
+        elif not forbidden_error and http_error:
+            error_str = 'HTTP issues.'
+        else:
+            error_str = 'A mix of insufficient privilegies and HTTP issues.'
+
+        if len(ctx.message.mentions) == 0:
+            # No mentions
+            replystr = 'Sure, I\'ll go right ahead and ban... wait who should I ban? You didn\'t mention anyone? Freeze in hell %s!'
+            replystr = (replystr % (ctx.author.mention,))
+
+        elif len(ctx.message.mentions) == len(mods_list):
+            # No mentions that weren't mods
+            replystr = '%s Every single person on that list of yours is a mod. This is mutiny!'
+            replystr = (replystr % (ctx.author.mention,))
+
+        elif (len(success_list) == 1) and (len(fail_list) == 0):
+            # Singular success
+            replystr = '%s The smuddy little smud %s won\'t bother us no more, if you know what I mean... :hammer:'
+            replystr = (replystr % (ctx.author.mention, ment_success))
+
+        elif (len(success_list) > 1) and (len(fail_list) == 0):
+            # Plural success
+            ban_hammer = (':hammer:' * len(success_list))
+            replystr = '%s Those smuddy little smuds %s won\'t bother us no more. Because they\'re all BANNED! %s'
+            replystr = (replystr % (ctx.author.mention, ment_success, ban_hammer))
+
+        elif (len(success_list) > 0) and (len(fail_list) > 0):
+            # Mixed results
+            error_str = error_str.lower().replace('.', '').replace('http', 'HTTP')
+            replystr = '%s My powers are disapating, due to %s I wasn\'t able to ban all of the users requested.'
+            replystr += '\nBanned: %s\nNot banned: %s'
+            replystr = (replystr % (ctx.author.mention, error_str, ment_success, ment_fail))
+
+        elif (len(success_list) == 0) and (len(fail_list) == 1):
+            # Singular fail
+            error_str = error_str.lower().replace('.', '').replace('http', 'HTTP')
+            replystr = '%s The smuddy little smud %s... will actually keep bothering us. I wasn\'t able to ban them due to %s.'
+            replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
+
+        elif (len(success_list) == 0) and (len(fail_list) > 1):
+            # Plural fail
+            ment_fail = ment_fail.replace(' and ', ' or ')
+            replystr = '%s I\'m deeply ashamed to say that my systems are malfunctioning and I wasn\'t able to ban %s.\n'
+            replystr += 'This seems to be due to: %s'
+            replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
+
+        await ctx.send(replystr)
 
 
     @commands.command(name='unban')
@@ -443,16 +534,16 @@ class ModCmdsCog:
         mods_list = list()
         forbidden_error = False
         http_error = False
-        tried_to_kick_mod = False
         reason = self.extract_reason(' '.join(args))
-        ### TODO: Enter the reason into the kick command.
 
         # If they tried to kick a mod christmas is cancelled.
-        for victim in ctx.message.mentions:
-            if await checks.is_mod(victim):
-                tried_to_kick_mod = True
-                mods_list.append(victim)
+        mod_role = discord.utils.get(ctx.guild.roles, name='Administration')
+        mods_list = [ user for user in ctx.message.mentions if mod_role in user.roles ]
         ment_mods = native.mentions_list(mods_list)
+        if len(mods_list) == 0:
+            tried_to_kick_mod = False
+        else:
+            tried_to_kick_mod = True
 
         # Start the kicking.
         if len(ctx.message.mentions) > 0 and not tried_to_kick_mod:

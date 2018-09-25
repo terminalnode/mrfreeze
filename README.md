@@ -14,6 +14,7 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * **!mute**      - Mutes the user.
 * * **!banish**  - Sub-function to mute with a default mute time and custom message.
 * **!unmute**    - Unmutes the user.
+* **!ban**       - Bans the user from the server.
 
 ### User utility commands
 * **!temp**     - DMs a help message regarding the automatic temperature conversion. Does no conversion of it's own.
@@ -41,7 +42,6 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 ## Todo
 ### Commands
 * **!unban**     - (Mod) Removes ban from the server.
-* **!ban**       - (Mod) Bans the user from the server.
 * **!rps**       - Play rock, paper, scissors with the bot. With scores!
 * **!dice**      - Roll a select number of dice. Intend to also implement option to select type of dice.
 * **!help**      - We're going to have a reimplemented version of !help.
