@@ -84,7 +84,7 @@ class ModCmdsCog:
         current_date = datetime.datetime.now()
         time_str = None
         if end_date == None and is_micro:
-            add_time = datetime.timedelta(seconds=30)
+            add_time = datetime.timedelta(seconds=45)
             end_date = current_date + add_time
             time_str = 'a very short time'
 
@@ -308,12 +308,109 @@ class ModCmdsCog:
         await ctx.send(replystr)
 
 
-    @commands.command(name='unmute', aliases=['unexile', 'unbanish'])
+    @commands.command(name='unmute', aliases=['unexile', 'unbanish', 'pardon'])
     @commands.check(checks.is_mod)
-    async def _unmute(self, ctx):
+    async def _unmute(self, ctx, *args):
         # This function deletes the user mute entry from userdb, and removes
         # the mute tag (antarctica tag) from the user.
-        pass
+        antarctica = discord.utils.get(ctx.guild.roles, name='Antarctica')
+
+        # list_mute() gives us lots of info, but we only need to retreieve the member
+        # objects of the people muted on the server where the command is issued.
+        # Since this is only used by mods the voluntary thing is irrelevant, and
+        # since we're forcing removal of the tag the time isn't interesting either.
+        felon_list = { discord.utils.get(ctx.guild.members, id=i['user']) for i in userdb.list_mute() if i['server'] == ctx.guild.id }
+
+        # Sometimes a user can be assigned a role manually and thus not end up in the database,
+        # and sometimes there may be an error in the database where the user wasn't removed.
+        # For this reason we make separate sets of users who are to be removed from the db
+        # and users who are gonna have their database entries removed. In most cases
+        # these sets are going to be identical.
+        remove_from_db = set(ctx.message.mentions).intersection(felon_list)
+        remove_role = { user for user in ctx.message.mentions if antarctica in user.roles }
+
+        # We'll start with removing roles since this is the step most likely to
+        # generate an error, if there is an error we won't remove them from db.
+        # Furthermore not removing them from the db is fairly inconsequential.
+        forbidden_error = False
+        http_error = False
+        success_list = list()
+        fail_list = list()
+        reason = self.extract_reason(' '.join(args))
+
+        for user in remove_role:
+            try:
+                if reason == None:
+                    await user.remove_roles(antarctica)
+                else:
+                    await user.remove_roles(antarctica, reason=reason)
+                success_list.append(user)
+
+            except discord.Forbidden:
+                forbidden_error = True
+                remove_from_db.discard(user)
+                fail_list.append(user)
+
+            except discord.HTTPException:
+                http_error = True
+                remove_from_db.discard(user)
+                fail_list.append(user)
+
+        # Next up we'll remove them from the db.
+        for user in remove_from_db:
+            # fix_mute(user, voluntary=False, until=None, delete=False)
+            userdb.fix_mute(user, delete=True)
+
+        # Let's explain what went wrong if anything:
+        if forbidden_error and not http_error:
+            error_str = 'Insufficient privilegies.'
+
+        elif not forbidden_error and http_error:
+            error_str = 'HTTP troubles.'
+
+        elif forbidden_error and http_error:
+            error_str = 'A mix of insufficient privilegies and HTTP troubles.'
+
+        # Finally it's time to post some responses.
+        ment_success = native.mentions_list(success_list)
+        ment_fail = native.mentions_list(fail_list)
+
+        if len(remove_role) == 0:
+            # No mentions.
+            replystr = '%s You failed to mention anyone muted, twat.'
+            replystr = (replystr % (ctx.author.mention,))
+
+        elif (len(success_list) == 1) and (len(fail_list) == 0):
+            # Singular success.
+            replystr = '%s Don\'t blame me when %s starts causing trouble again. That\'s on you.'
+            replystr = (replystr % (ctx.author.mention, ment_success))
+
+        elif (len(success_list) > 1) and (len(fail_list) == 0):
+            # Plural success.
+            replystr = '%s Just don\'t come crying to me when %s start causing mayhem again, as they most certainly will.'
+            replystr = (replystr % (ctx.author.mention, ment_success))
+
+        elif (len(success_list) == 0) and (len(fail_list) == 1):
+            # Singular fail.
+            replystr = '%s For some reason I wasn\'t able to unmute %s It\'s probably for the best, however this error '
+            replystr += 'was likely due to: %s'
+            replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
+
+        elif (len(success_list) == 0) and (len(fail_list) > 1):
+            # Plural fail.
+            ment_fail = ment_fail.replace(' and ', ' or ')
+            replystr = '%s We have a crisis on our hands, none of %s could be unmuted. While this is probably for the best, '
+            replystr += 'my diagnostics tell me this error has it roots in: %s'
+            replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
+
+        else:
+            # Mixed results.
+            replystr = '%s The operation came back with mixed results, I wasn\'t able to unmute all of the requested users.\n'
+            replystr += 'Unmuted: %s\nNot unmuted: %s\n The error(s) seem to have been due to: %s'
+            replystr = (replystr % (ctx.author.mention, ment_success, ment_fail, error_str))
+
+        await ctx.send(replystr)
+
 
     @commands.command(name='ban')
     @commands.check(checks.is_mod)
@@ -321,11 +418,13 @@ class ModCmdsCog:
         # This function simply bans a user from the server in which it's issued.
         pass
 
+
     @commands.command(name='unban')
     @commands.check(checks.is_mod)
     async def _unban(self, ctx):
         # This function simply remover the ban of a user from the server in which it's issued.
         pass
+
 
     @commands.command(name='listban')
     @commands.check(checks.is_mod)
@@ -333,6 +432,7 @@ class ModCmdsCog:
         # Because it's tricky to find the exact user name/id when you can't highlight people,
         # this function exists to get easy access to the list of bans in order to unban.
         pass
+
 
     @commands.command(name='kick')
     @commands.check(checks.is_mod)
