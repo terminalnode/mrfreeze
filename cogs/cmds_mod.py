@@ -560,6 +560,7 @@ class ModCmdsCog:
         if not general_error:
             if len(banlist) == 0:
                 replystr = '%s There are no banned users... yet. If you\'d like to change that just say the word!'
+                replystr = (replystr % (ctx.author.mention,))
 
             else:
                 replystr = 'The following users are currently banned:\n'
