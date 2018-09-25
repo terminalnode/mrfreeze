@@ -424,6 +424,11 @@ class ModCmdsCog:
         success_list = list()
         fail_list = list()
 
+        if 'list' in args:
+            banlist = True
+        else:
+            banlist = False
+
         if ctx.invoked_with == 'ban':
             do_purge = False
         else:
@@ -466,7 +471,10 @@ class ModCmdsCog:
         else:
             error_str = 'A mix of insufficient privilegies and HTTP issues.'
 
-        if len(ctx.message.mentions) == 0:
+        if banlist:
+            await self.bot.get_command('listban').callback(self, ctx)
+
+        elif len(ctx.message.mentions) == 0:
             # No mentions
             replystr = 'Sure, I\'ll go right ahead and ban... wait who should I ban? You didn\'t mention anyone? Freeze in hell %s!'
             replystr = (replystr % (ctx.author.mention,))
@@ -507,7 +515,8 @@ class ModCmdsCog:
             replystr += 'This seems to be due to: %s'
             replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
 
-        await ctx.send(replystr)
+        if not banlist:
+            await ctx.send(replystr)
 
 
     @commands.command(name='unban')
