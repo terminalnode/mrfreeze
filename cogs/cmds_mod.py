@@ -517,12 +517,58 @@ class ModCmdsCog:
         pass
 
 
-    @commands.command(name='listban')
+    @commands.command(name='listban', aliases=['banlist','listbans','banslist'])
     @commands.check(checks.is_mod)
-    async def _unban(self, ctx):
+    async def _listban(self, ctx):
         # Because it's tricky to find the exact user name/id when you can't highlight people,
         # this function exists to get easy access to the list of bans in order to unban.
-        pass
+
+        # Viewing list of bans requires mod permissions.
+        forbidden_error = False
+        http_error = False
+
+        try:
+            banlist = await ctx.guild.bans()
+        except discord.Forbidden:
+            forbidden_error = True
+        except discord.HTTPException:
+            http_error = True
+
+        general_error = (forbidden_error or http_error)
+
+        error_str = 'No error encountered.'
+
+        if forbidden_error and not http_error:
+            error_str = 'insufficient privilegies'
+        elif not forbidden_error and http_error:
+            error_str = 'HTTP issues'
+        else:
+            # This shouldn't happen, but you can never be too sure.
+            error_str = 'a mix of insufficient privilegies and HTTP issues'
+
+        if not general_error:
+            if len(banlist) == 0:
+                replystr = '%s There are no banned users... yet. If you\'d like to change that just say the word!'
+
+            else:
+                replystr = 'The following users are currently banned:\n'
+                for ban in banlist:
+                    if ban.reason == None:
+                        add_str = '**%s#%s** (id: %s)'
+                        add_str = (add_str % (ban.user.name, str(ban.user.discriminator), str(ban.user.id)))
+
+                    else:
+                        add_str = '**%s#%s** (id: %s)\n(%s was banned for: %s)'
+                        add_str = (add_str % (ban.user.name, str(ban.user.discriminator), str(ban.user.id), ban.user.name, ban.reason))
+
+                    if ban != banlist[-1]:
+                        add_str += '\n'
+                    replystr += add_str
+        else:
+            replystr = '%s Due to %s I wasn\'t able to retrieve the list of banned smuds.'
+            replystr = (replystr % (ctx.author.mention, error_str,))
+
+        await ctx.send(replystr)
 
 
     @commands.command(name='kick')
