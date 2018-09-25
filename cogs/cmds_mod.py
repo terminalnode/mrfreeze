@@ -425,6 +425,7 @@ class ModCmdsCog:
         fail_list = list()
 
         if 'list' in args:
+            # This is just a shortcut to invoke the listban command.
             banlist = True
         else:
             banlist = False
@@ -472,7 +473,8 @@ class ModCmdsCog:
             error_str = 'A mix of insufficient privilegies and HTTP issues.'
 
         if banlist:
-            await self.bot.get_command('listban').callback(self, ctx)
+            # This is just a shortcut to invoke the listban command.
+            await ctx.invoke(self.bot.get_command('listban'))
 
         elif len(ctx.message.mentions) == 0:
             # No mentions

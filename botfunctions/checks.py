@@ -21,3 +21,8 @@ async def is_mod(ctx):
             await ctx.send(ctx.author.mention + ' Only mods are allowed to use that command.')
 
     return mod_status
+
+async def always_deny(ctx):
+    # @commands.check(checks.always_deny)
+    # This is for debugging, always returns false.
+    return False
