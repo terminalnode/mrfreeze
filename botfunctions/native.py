@@ -54,7 +54,7 @@ def mentions_list(mentions):
 
     return text_list
 
-def extract_time(args):
+def extract_time(args, fallback_minutes=True):
     # This function is used to extract time statements to know for how long
     # people are going to be muted, banned etc.
     default_duration = False
@@ -104,6 +104,34 @@ def extract_time(args):
     add_time = datetime.timedelta(days=(time_dict['days'] + (time_dict['months']*30) + (time_dict['years']*365)), weeks=time_dict['weeks'],
                                   hours=time_dict['hours'], minutes=time_dict['minutes'], seconds=time_dict['seconds'])
     end_date = current_date + add_time
+
+    # If nothing was detected, we'll look for isolated integers, add them all
+    # up and assume those are minutes. Then remove them from the reply string.
+    if (end_date == current_date) and fallback_minutes:
+        resplit = args.split(' ')
+        int_list = list()
+
+        # Finding integers
+        for arg in resplit:
+            if arg.isdigit():
+                int_list.append(int(arg))
+
+        # Removing integers from original args and summing up minutes.
+        # Using re to know if there're spaces to remove as well.
+        no_minutes = 0
+        for number in int_list:
+            regexp = (' ?%s' % (str(number),))
+            re_results = re.findall(regexp, args)
+            for hit in re_results:
+                args = args.replace(hit, '')
+            no_minutes += number
+
+        # Finally creating the new add_time and end_date.
+        if no_minutes > 0:
+            add_time = datetime.timedelta(minutes = no_minutes)
+            end_date = current_date + add_time
+
+
     if end_date == current_date:
         # In this scenario, no time statements have been found.
         end_date = None

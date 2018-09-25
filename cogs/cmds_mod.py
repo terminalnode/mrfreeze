@@ -78,31 +78,7 @@ class ModCmdsCog:
         # been removed. add_time is how much time will be added. end_date
         # is the time at which the mute will come to an end local time.
         tstripped_args, add_time, end_date = native.extract_time(args)
-
-        # We'll try one more thing in case we weren't able to find a time statement.
-        # Searching for integers in the string.
-        if end_date == None:
-            new_args = list()
-            integer_args = list()
-            for i in range(len(args)):
-                if args[i].isdigit():
-                    integer_args.append(int(args[i]))
-                else:
-                    new_args.append(args[i])
-
-            minute_count = 0
-            for i in integer_args:
-                minute_count += i
-
-            if len(integer_args) != 0:
-                new_args.append(str(minute_count))
-                new_args.append('min')
-                print(new_args)
-                tstripped_args, add_time, end_date = native.extract_time(new_args)
-                print(tstripped_args)
-
         reason = self.extract_reason(tstripped_args)
-        print(reason)
 
         # If no time statements were found, we'll add our own.
         current_date = datetime.datetime.now()
