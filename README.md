@@ -1,7 +1,7 @@
 # MrFreeze (Rewrite)
 This is a rewrite of MrFreeze using cogs instead of mashing everything into a single file. I also hope my adventures in writing MrFreeze will result in a somewhat cleaner bot.
 
-**Requirements:** python 2.6.6, discord.py (rewrite), inflect
+**Requirements:** python 3.6.6, discord.py (rewrite), inflect
 
 ## Reimplemented functions:
 ### Owner commands
