@@ -16,7 +16,7 @@ class LinksCog():
         readme.set_thumbnail(url=native.get_image('ReadMe'))
         readme.add_field(name = 'Readme',
                          value = ('There may be more information here than you\'re looking for, ' +
-                                 'but my readme-file is available [here on Github](https://github.com/kaminix/MrFreezeRW/blob/master/README.md)'))
+                                 'but my readme-file is available [here on Github](https://github.com/terminalnode/MrFreezeRW/blob/master/README.md)'))
         await ctx.send(embed=readme)
 
 
@@ -26,7 +26,7 @@ class LinksCog():
         source.set_thumbnail(url=native.get_image('Source'))
         source.add_field(name='Source code',
                          value='My source code is available on ' +
-                               '[Github](https://github.com/kaminix/MrFreezeRW)!')
+                               '[Github](https://github.com/terminalnode/MrFreezeRW)!')
         await ctx.send(embed=source)
 
 
