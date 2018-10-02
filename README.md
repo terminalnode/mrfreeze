@@ -27,7 +27,7 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 
 ### Silly commands
 * **!activity**  - Changes the activity of the bot ('Playing [...]', 'Listening to [...]' etc). No mod requirement, have fun!
-* **!dummies**   - Invite links for the dummy bots Ba'athman and Robin.
+* **!dummies**   - Invite links for the two dummy bots.
 * **!mrfreeze**  - Posts a MrFreeze-quote with user instead of Batman and server instead of Gotham.
 * **!readme**    - Posts a link to the github page as well, but to the README.md file (this one!).
 * **!source**    - Posts a link to this github page.
