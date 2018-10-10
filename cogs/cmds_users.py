@@ -523,7 +523,7 @@ class UserCmdsCog():
                 replystr = '%s I can tell you want me to be **%s** something, but I don\'t know what.'
                 await ctx.send(replystr % (ctx.author.mention, reply_activity))
 
-        elif len(joint_args) >= max_activity_length:
+        elif len(joint_args) >= max_activity_length: # Too long.
             replystr = '%s That activity is stupidly long. Limit is %s characters, yours was %s.'
             replystr = (replystr % (ctx.author.mention, str(max_activity_length), str(len(joint_args))))
             await ctx.send(replystr)
