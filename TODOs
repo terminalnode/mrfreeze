@@ -12,3 +12,7 @@ Quotes:
 
 Activity:
   Add a limit of 30 characters or so.
+  Add a timeout for how often the activity can be changed.
+
+Gitupdate
+  Make the bot restart if it was updated.
