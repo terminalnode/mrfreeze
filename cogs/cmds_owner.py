@@ -36,5 +36,9 @@ class OwnerCmdsCog:
 
         await ctx.author.send(output)
 
+        # If an update was found, restart automatically.
+        if gitpull != 'Already up-to-date.':
+            os.execl(sys.executable, sys.executable, *sys.argv)
+
 def setup(bot):
     bot.add_cog(OwnerCmdsCog(bot))
