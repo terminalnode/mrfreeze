@@ -30,8 +30,10 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * **!activity**  - Changes the activity of the bot ('Playing [...]', 'Listening to [...]' etc). No mod requirement, have fun!
 * **!dummies**   - Invite links for the two dummy bots.
 * **!mrfreeze**  - Posts a MrFreeze-quote with user instead of Batman and server instead of Gotham.
-* **!readme**    - Posts a link to the github page as well, but to the README.md file (this one!).
-* **!source**    - Posts a link to this github page.
+* Commands which post (more or less) useful links
+* * **!readme**    - Posts a link to the github page as well, but to the README.md file (this one!).
+* * **!source**    - Posts a link to this github page.
+* * **!todo**      - Posts a link to the TODO list for the bot.
 
 ### Non-command features
 * Will greet a server when coming online.

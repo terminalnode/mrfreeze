@@ -42,5 +42,14 @@ class LinksCog():
 
         await ctx.send(embed=dummies)
 
+    @commands.command(name='todo', aliases=['TODO', 'TODOs', 'ToDo', 'ToDos', 'todos', 'whatsnext', 'whatnext'])
+    async def _todos(self, ctx):
+        todos = discord.Embed(color=0x00dee9)
+        todos.set_thumbnail(url=native.get_image('TODOs'))
+        todos.add_field(name='You\'re a nosy one! Here\'s a list of all the \'cool\' stuff Terminal\'s got planned for me... :sleeping:',
+                        value='https://github.com/terminalnode/MrFreezeRW/blob/master/TODOs')
+
+        await ctx.send(embed=todos)
+
 def setup(bot):
     bot.add_cog(LinksCog(bot))
