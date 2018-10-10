@@ -1,21 +1,44 @@
 This is a TODO list so I won't forget.
 Disclaimer: I tend to forget this document exists.
 
+################################
+Improvements to command functions
+################################
 Quotes:
   Name quotes:
     Merge 'read' and 'random' in cmd_quote.py
     Check for double name entries, all names must be unique.
     Check that the name isn't all numbers.
   Images in quotes:
-    imgurpython https://github.com/Imgur/imgurpython
-    BETTER IDEA!!!!!! Post all images used in quotes to a separate image channel in MrFreeze's Cave.
+    Post all images used in quotes to a separate image channel in MrFreeze's Cave.
 
 Activity:
   Add a limit of 30 characters or so.
   Add a timeout for how often the activity can be changed.
 
-Gitupdate
-  Make the bot restart if it was updated.
-
-Banish
+Banish:
   Punish non-mods trying to issue the command.
+
+Ban:
+  Distinguish between singular and plural attempt at mod ban.
+
+Purge:
+  Allow purging of a specific users posts.
+
+################################
+Improvements to automatic functions
+################################
+- New random responses for highlighted @MrFreeze
+
+################################
+New features
+################################
+Top priority: !help
+
+- Ink Lookup
+  https://www.reddit.com/r/fountainpens/comments/5egjsa/klundtasaurs_inkcyclopedia_for_rfountainpens/
+  Ask Klundo if it's OK to pull from Inkcyclopaedia
+- Move post (with a quote-like embed)
+- Blackjack
+- Rock, paper, scissors
+- Dice
