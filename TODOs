@@ -22,9 +22,6 @@ Banish:
 Ban:
   Distinguish between singular and plural attempt at mod ban.
 
-Purge:
-  Allow purging of a specific users posts.
-
 ################################
 Improvements to automatic functions
 ################################

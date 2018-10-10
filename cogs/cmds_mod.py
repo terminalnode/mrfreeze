@@ -818,30 +818,62 @@ class ModCmdsCog:
         await ctx.send(replystr)
 
 
-
     @commands.command(name='purge', aliases=['clean', 'cleanup'])
     @commands.check(checks.is_mod)
     async def _purge(self, ctx, *args):
-        # This function will remove the last X number of posts.
-        # Specifying a negative number or 0 won't do anything.
-        # It will also delete the !purge-message, i.e. the number specified + 1.
-        # It has a limit of 100 messages.
-        number = 0
-
+        # This function will remove the last X number of posts in the channel.
+        #
+        # Features:
+        # - If message contains mentions, it will only delete messages by
+        #   the people mentioned.
+        # - Limit is 100 messages.
+        # - Delets message which called the function.
         try:
-            number += int(args[0])
+            await ctx.message.delete()
         except:
             pass
 
-        # Deleting the requested number of messages AND the !purge message.
-        number += 1
+        # We'll use the first number we can find in the arguments.
+        delete_no = 0
+        for arg in args:
+            if arg.isdigit() and delete_no == 0:
+                delete_no = int(arg)
 
-        # We will never delete more than 100 messages.
-        if number > 100:
-            number == 100
+        if delete_no < 0:
+            delete_no = 0
+        elif delete_no > 100:
+            delete_no = 100
 
-        if (number > 1):
-            await ctx.channel.purge(limit=number)
+        def check_func(message):
+            # Author in mentions    True
+            # No mentions           True
+            # -> Otherwise          False
+            if message.author in ctx.message.mentions:
+                return True
+            elif len(ctx.message.mentions) == 0:
+                return True
+            else:
+                return False
+
+        try:
+            await ctx.channel.purge(limit=delete_no, check=check_func)
+
+        except discord.Forbidden:
+            replystr = '%s An error occured, it seems I\'m lacking the privilegies '
+            replystr += 'to carry out your Great Purge.'
+            replystr = (replystr % (ctx.author.mention,))
+            await ctx.send(replystr)
+
+        except discord.HTTPException:
+            replystr = '%s An error occured, it seems my HTTP sockets are glitching out '
+            replystr += 'and thus couldn\'t carry out your Great Purge.'
+            replystr = (replystr % (ctx.author.mention,))
+            await ctx.send(replystr)
+
+        except:
+            replystr = '%s Something went wrong with your Great Purge and I don\'t '
+            replystr += 'really know what. It\'s not related to HTTP or permissions...'
+            await ctx.send(replystr)
 
 def setup(bot):
     bot.add_cog(ModCmdsCog(bot))
