@@ -523,9 +523,141 @@ class ModCmdsCog:
 
     @commands.command(name='unban')
     @commands.check(checks.is_mod)
-    async def _unban(self, ctx):
+    async def _unban(self, ctx, *args):
         # This function simply remover the ban of a user from the server in which it's issued.
-        pass
+        forbidden_error = False
+        http_error = False
+        banlist = list()
+
+        # This is a shortcut to invoke the banlist command with !unban list.
+        if args == ('list',):
+            showbans = True
+        else:
+            showbans = False
+
+        try:
+            banlist = await ctx.guild.bans()
+        except discord.Forbidden:
+            forbidden_error = True
+        except discord.HTTPException:
+            http_error = True
+
+        # We will assume that all args that are digits are ids
+        # and all args of the form characters#fourdigits are
+        # user names.
+        usr_names = re.findall('(?<=\s)\S+#\d{4}(?=\s)', (' ' + ctx.message.content + ' '))
+        usr_ids = re.findall('(?<=\s)\d+(?=\s)', (' ' + ctx.message.content + ' '))
+
+        success_list = list()
+        fail_list = list()
+        found_anyone = False
+        for ban_entry in banlist:
+            user = ban_entry.user
+            user_str = ('%s#%s' % (user.name, str(user.discriminator)))
+
+            # Below is an easy and expandable way to add criterias for unbanning.
+            # Every if-statement corresponds to one criteria.
+            #
+            # For example we could easily add this as an extra criteria if we wanted to.
+            # This would match any username, not requiring the #identifier
+            # elif (' ' + user.name + ' ') in (' ' + ctx.message.content + ' '):
+            #     entry_hit = True
+
+            if user_str in usr_names:
+                entry_hit = True
+            elif (str(user.id) in usr_ids):
+                entry_hit = True
+            else:
+                entry_hit = False
+
+            # If any of the above resulted in a hit, we'll try to remove the ban.
+            if entry_hit:
+                found_anyone = True
+                try:
+                    await ctx.guild.unban(user)
+                    success_list.append(user)
+
+                except discord.Forbidden:
+                    forbidden_error = True
+                    fail_list.append(user)
+
+                except discord.HTTPException:
+                    http_error = True
+                    fail_list.append(user)
+
+        if forbidden_error or http_error:
+            any_error = True
+        else:
+            any_error = False
+
+        if forbidden_error and http_error:
+            error_str = 'a mix of insufficient privilegies and HTTP issues'
+        elif forbidden_error:
+            error_str = 'insufficient privilegies'
+        elif http_error:
+            error_str = 'HTTP issues'
+        else:
+            error_str = 'no errors? (why are you seeing this?)'
+
+        # Now all we need is a reply string.
+        ment_success = native.mentions_list(success_list)
+        ment_fail = native.mentions_list(fail_list)
+
+
+        if showbans:
+            # This is just a shortcut to invoke the listban command.
+            await ctx.invoke(self.bot.get_command('listban'))
+
+        elif not found_anyone and not any_error:
+            # No banned users were found in the message.
+            replystr = '%s I wasn\'t able to spot any banned usernames or IDs in that message of yours.'
+            replystr = (replystr % (ctx.author.mention,))
+
+        elif any_error and len(fail_list) == 0:
+            # Encountered an error during listing,
+            # no unban attempts have been made.
+            replystr = '%s Due to %s I wasn\'t able to retrieve the list of banned users. '
+            replystr += 'Without that list I can\'t even try to unban them.'
+            replystr = (replystr % (ctx.author.mention, error_str))
+
+        elif len(success_list) == 1 and len(fail_list) == 0:
+            # Singular success, no fails.
+            replystr = '%s Smuddy Mc Smudface AKA %s has been unbanned, happy now?'
+            replystr = (replystr % (ctx.author.mention, ment_success))
+
+        elif len(success_list) > 1 and len(fail_list) == 0:
+            # Plural success, no fails.
+            replystr = '%s The users known as %s have been unbanned... but why?'
+            replystr = (replystr % (ctx.author.mention, ment_success))
+
+        elif len(success_list) > 0 and len(fail_list) > 0:
+            # Mixed results.
+            replystr = '%s The unbanning was a success! Partially anyway...\n'
+            replystr += 'Unbanned user(s): %s\n'
+            replystr += 'Still banned user(s): %s'
+            replystr += 'Failure was caused by %s.'
+            replystr = (replystr % (ctx.author.mention, ment_success, ment_fail, error_str))
+
+        elif len(success_list) == 0 and len(fail_list) == 1:
+            # No success, singular fail.
+            replystr = '%s I wasn\'t able to unban %s due to %s.'
+            replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
+
+        elif len(success_list) == 0 and len(fail_list) > 1:
+            # No success, plural fails.
+            ment_fail = ment_fail.replace(' and ', ' or ')
+            replystr = '%s I wasn\'t able to unban %s due to %s.'
+            replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
+
+        else:
+            replystr = '%s Someone call <@!154516898434908160>! I don\'t know what\'s going on!!!\n'
+            replystr += 'len(success_list) == %s, len(fail_list) == %s\n'
+            replystr += 'http_error == %s, forbidden_error == %s'
+            replystr = (replystr % (ctx.author.mention, str(len(success_list))), str(len(fail_list)), str(http_error), str(forbidden_error))
+
+        if not showbans:
+            await ctx.send(replystr)
+
 
 
     @commands.command(name='listban', aliases=['banlist','listbans','banslist'])
@@ -546,8 +678,6 @@ class ModCmdsCog:
             http_error = True
 
         general_error = (forbidden_error or http_error)
-
-        error_str = 'No error encountered.'
 
         if forbidden_error and not http_error:
             error_str = 'insufficient privilegies'
