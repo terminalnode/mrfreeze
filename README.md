@@ -40,14 +40,3 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * Will quote a message that was just pinned so people don't have to check the list of pins. This deletes and replaces the system message.
 * * **Caveat:** The bot does a lot of loading when starting up for this to work. If a message was pinned while this loading occurred the next message to get pinned won't be posted, however the next one after that will.
 * Will give a rude response when mentioned without a command/temperature statement by someone else.
-
-## Todo
-### Commands
-* **!rps**       - Play rock, paper, scissors with the bot. With scores!
-* **!dice**      - Roll a select number of dice. Intend to also implement option to select type of dice.
-* **!help**      - We're going to have a reimplemented version of !help.
-
-### Far-Away ideas/commands
-* **!ink**       - Attempt to bring the ink look-up used on r/fountainpens to discord.
-* * About ink bot: https://www.reddit.com/r/fountainpens/comments/5egjsa/klundtasaurs_inkcyclopedia_for_rfountainpens/
-* **!blackjack** - A game of blackjack.
