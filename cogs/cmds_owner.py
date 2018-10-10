@@ -29,6 +29,11 @@ class OwnerCmdsCog:
         if gitfetch == '':
             gitfetch = 'No output.'
 
+        if gitpull != 'Already up-to-date.':
+            do_restart = True
+        else:
+            do_restart = False
+
         output += '**git fetch:**\n'
         output += gitfetch + '\n\n'
         output += '**git pull:**\n'
@@ -36,8 +41,11 @@ class OwnerCmdsCog:
 
         await ctx.author.send(output)
 
+        if do_restart:
+            await ctx.send('Updates retrieved, restarting.')
+
         # If an update was found, restart automatically.
-        if gitpull != 'Already up-to-date.':
+        if do_restart:
             os.execl(sys.executable, sys.executable, *sys.argv)
 
 def setup(bot):
