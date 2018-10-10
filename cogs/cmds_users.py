@@ -1,5 +1,6 @@
 import discord, re, datetime
 from discord.ext import commands
+from discord.ext.commands.cooldowns import BucketType
 from botfunctions import native, checks, userdb
 
 class UserCmdsCog():
@@ -441,6 +442,7 @@ class UserCmdsCog():
                     await ctx.send(replystr % (ctx.author.mention,))
 
     @commands.command(name='activity', aliases=['listen', 'listening', 'playing', 'play', 'game', 'gaming', 'gameing', 'stream', 'streaming', 'watch', 'watching'])
+    @commands.cooldown(1, (60*10), BucketType.default)
     async def _activity(self, ctx, *args):
         # Dictionary of all different activity types with keywords.
         # The keywords are defined in separate tuples so I can access
