@@ -16,3 +16,6 @@ Activity:
 
 Gitupdate
   Make the bot restart if it was updated.
+
+Banish
+  Punish non-mods trying to issue the command.
