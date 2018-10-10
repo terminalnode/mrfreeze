@@ -524,6 +524,10 @@ class UserCmdsCog():
                 await ctx.send(replystr % (ctx.author.mention, reply_activity))
 
         elif len(joint_args) >= max_activity_length:
+<<<<<<< HEAD
+=======
+            print('text')
+>>>>>>> 8a376620f25d3c0ec91d8d6c2fddc77a31615050
             replystr = '%s That activity is stupidly long. Limit is %s characters, yours was %s.'
             replystr = (replystr % (ctx.author.mention, str(max_activity_length), str(len(joint_args))))
             await ctx.send(replystr)
