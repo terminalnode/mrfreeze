@@ -481,22 +481,26 @@ class UserCmdsCog():
                         args = args[2:]
 
         success = False
+        max_activity_length = 30
         if len(args) != 0:
             joint_args = ' '.join(args)
+
             # If we haven't been able to identify an activity we'll default to listening:
             if chosen_activity == None:
                 chosen_activity = discord.ActivityType.listening
-            try:
-                await self.bot.change_presence(status=None, activity=
-                      discord.Activity(name=joint_args, type=chosen_activity))
-                success = True
-            except:
-                pass
+
+            if len(joint_args) <= max_activity_length:
+                try:
+                    await self.bot.change_presence(status=None, activity=
+                          discord.Activity(name=joint_args, type=chosen_activity))
+                    success = True
+                except:
+                    pass
 
         if chosen_activity == discord.ActivityType.playing:
             reply_activity = 'playing'
         elif chosen_activity == discord.ActivityType.streaming:
-            # streaming doesn't work as I want it, you need a url and shit
+            # streaming doesn't work as I want it, you need a URL and shit
             reply_activity = 'playing'
         elif chosen_activity == discord.ActivityType.listening:
             reply_activity = 'listening to'
@@ -518,6 +522,13 @@ class UserCmdsCog():
             else: # No name specified.
                 replystr = '%s I can tell you want me to be **%s** something, but I don\'t know what.'
                 await ctx.send(replystr % (ctx.author.mention, reply_activity))
+
+        elif len(joint_args) >= max_activity_length:
+            print('text')
+            replystr = '%s That activity is stupidly long. Limit is %s characters, yours was %s.'
+            replystr = (replystr % (ctx.author.mention, str(max_activity_length), str(len(joint_args))))
+            await ctx.send(replystr)
+
         else:
             replystr = '<@!154516898434908160> Something went wrong when trying to change my activity and I have no idea what. Come see!'
             await ctx.send(replystr)
