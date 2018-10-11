@@ -367,6 +367,37 @@ def list_mute():
 
     return output
 
+### The following function is used to ensure that any existing mutes are
+### not overwritten, but instead prolonged. The punishment is additive.
+def prolong_mute(user, voluntary=False, until=None):
+    conn = connect_to_db()
+    timedelta = until - datetime.datetime.now()
+
+    if timedelta > datetime.timedelta():
+        negative_td = False
+    else:
+        negative_td = True
+
+    with conn:
+        c = conn.cursor()
+        old_sql = ''' SELECT * FROM mutes WHERE  id = ? AND server = ? '''
+        c.execute(old_sql, (user.id, user.guild.id))
+        catch = c.fetchall()
+        is_muted = bool(len(catch))
+
+        # If the user is muted we'll compare the until times of the new
+        # and old mute. If they're not then clearly the new one is longer.
+        if is_muted and not negative_td:
+            old_until = datetime.datetime.strptime(catch[0][2], '%Y-%m-%d %H:%M')
+            until = old_until + timedelta
+
+    fix_mute(user, voluntary, until)
+
+    if is_muted and not negative_td:
+        return True # was prolonged.
+    else:
+        return False # wasn't prolonged.
+
 
 ### This function creates/updates the db entry for a certain
 ### user in a certain server.
