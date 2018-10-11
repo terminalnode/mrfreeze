@@ -208,16 +208,21 @@ async def punish_banish(ctx):
 
     try:
         await ctx.author.add_roles(discord.utils.get(ctx.guild.roles, name='Antarctica'))
-        userdb.fix_mute(ctx.author, until=end_time)
+        prolonged = userdb.prolong_mute(ctx.author, until=end_time)
         succeeded = True
-    except Exception as e:
-        print(e)
+    except:
         succeeded = False
 
+    if not prolonged:
+        replystr = '%s You ignorant smud, you want banish? I\'ll give you banish... '
+        replystr += '15 whole minutes of it! :rage:'
+        replystr = (replystr % (ctx.author.mention,))
 
-    replystr = '%s You ignorant smud, you want banish? I\'ll give you banish... '
-    replystr += '15 whole minutes of it! :rage:'
-    replystr = (replystr % (ctx.author.mention,))
+    else:
+        replystr = '%s You don\'t have the power to banish, only to be banished... '
+        replystr += 'but it seems you already know that. Your sentence has been '
+        replystr += '***extended*** by 15 minutes!'
+        replystr = (replystr % (ctx.author.mention,))
 
     if succeeded:
         await ctx.send(replystr)
