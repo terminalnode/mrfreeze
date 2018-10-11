@@ -178,10 +178,9 @@ async def on_command_error(ctx, error):
     command = get_command.match(ctx.message.content).group()
 
     if isinstance(error, commands.CheckFailure):
-        replystr = errorhandling.cooldown(ctx, error)
-        print(native.get_author(ctx) + 'tried to invoke command !' + str(ctx.command) + ' which resulted in a check failure.')
-
-    if isinstance(error, commands.errors.CommandOnCooldown):
+        errorhandling.checkfailure(ctx, error)
+        
+    elif isinstance(error, commands.errors.CommandOnCooldown):
         replystr = errorhandling.cooldown(ctx, error)
         await ctx.send(replystr)
 

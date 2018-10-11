@@ -1,10 +1,11 @@
 # This file is to avoid bloat in bot.py.
 # It creates responses for various errors that may occur.
 from discord.ext.commands.cooldowns import BucketType
+from . import native
 import inflect
 
 def checkfailure(ctx, error):
-    pass
+    print (native.get_author(ctx) + 'tried to invoke command !' + str(ctx.command) + ' which resulted in a check failure.')
 
 def cooldown(ctx, error):
     replystr = '%s The command **%s** can only be used %s every %s%s. Try again in %s.'
