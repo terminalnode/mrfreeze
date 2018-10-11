@@ -1,5 +1,6 @@
 # Here we define all of our custom checks.
 import discord
+from . import native
 
 async def is_owner(ctx):
     # @commands.check(checks.is_owner)
@@ -17,7 +18,11 @@ async def is_mod(ctx):
 
     elif isinstance(ctx, discord.ext.commands.context.Context):
         mod_status = (discord.utils.get(ctx.guild.roles, name='Administration') in ctx.author.roles)
-        if not mod_status:
+
+        if ctx.command.name == 'mute' and not mod_status:
+            await native.punish_banish(ctx)
+
+        elif not mod_status:
             await ctx.send(ctx.author.mention + ' Only mods are allowed to use that command.')
 
     return mod_status

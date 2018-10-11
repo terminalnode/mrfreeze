@@ -1,7 +1,8 @@
 # This file is used for a number of smaller functions which are used two
 # or more (perhaps many more) times in the bot.
 
-import random, re, datetime
+import random, re, datetime, discord
+from . import userdb
 
 def mrfreeze():
     with open('config/mrfreezequotes', 'r') as f:
@@ -196,3 +197,27 @@ def parse_timedelta(time_delta):
                 time_str += ', '
 
     return time_str
+
+async def punish_banish(ctx):
+    # The user has angered the gods by using a command reserved for mods.
+    # They will be banished to Antarctica for fifteen minutes.
+
+    current_time = datetime.datetime.now()
+    duration = datetime.timedelta(minutes=15)
+    end_time = current_time + duration
+
+    try:
+        await ctx.author.add_roles(discord.utils.get(ctx.guild.roles, name='Antarctica'))
+        userdb.fix_mute(ctx.author, until=end_time)
+        succeeded = True
+    except Exception as e:
+        print(e)
+        succeeded = False
+
+
+    replystr = '%s You ignorant smud, you want banish? I\'ll give you banish... '
+    replystr += '15 whole minutes of it! :rage:'
+    replystr = (replystr % (ctx.author.mention,))
+
+    if succeeded:
+        await ctx.send(replystr)
