@@ -176,8 +176,15 @@ async def on_member_remove(member):
 async def on_command_error(ctx, error):
     get_command = re.compile('!\w+')
     command = get_command.match(ctx.message.content).group()
+
     if isinstance(error, commands.CheckFailure):
+        replystr = errorhandling.cooldown(ctx, error)
         print(native.get_author(ctx) + 'tried to invoke command !' + str(ctx.command) + ' which resulted in a check failure.')
+
+    if isinstance(error, commands.errors.CommandOnCooldown):
+        replystr = errorhandling.cooldown(ctx, error)
+        await ctx.send(replystr)
+
     else:
         print(error)
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)

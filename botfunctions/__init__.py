@@ -1,1 +1,1 @@
-__all__ = ['native', 'temp', 'checks', 'pinlists', 'userdb']
+__all__ = ['native', 'temp', 'checks', 'pinlists', 'userdb', 'errorhandling']
