@@ -69,6 +69,7 @@ def create():
                         channel integer NOT NULL,
                         date_said text NOT NULL,
                         content text NOT NULL,
+                        attachment text,
                         alias text,
                         FOREIGN KEY (quoter) REFERENCES users (id),
                         FOREIGN KEY (quotee) REFERENCES users (id),
