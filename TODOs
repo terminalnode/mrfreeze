@@ -11,9 +11,9 @@ Quotes:
     Check that the name isn't all numbers.
   Images in quotes:
     Post all images used in quotes to a separate image channel in MrFreeze's Cave.
-
-Ban:
-  Distinguish between singular and plural attempt at mod ban.
+  Adding quotes:
+    Allow adding last post by a certain user with !quote add @username
+    Perhaps some kind of emoji-vote function which also adds quotes?
 
 ################################
 Improvements to automatic functions / general features
