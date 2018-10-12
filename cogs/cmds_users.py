@@ -276,23 +276,28 @@ class UserCmdsCog():
                 # If the user is not mod, they're not allowed to touch the blacklist.
                 # This will earn them 15 minutes in Antarctica.
                 end_time = datetime.datetime.now() + datetime.timedelta(minutes=15)
-                success, reason = userdb.fix_mute(ctx.author, until=end_time)
-                if success:
-                    try:
-                        await ctx.author.add_roles(self.region_ids[ctx.guild.id]['Antarctica'], reason=('User issued !region ' + spelling))
-                    except discord.Forbidden:
-                        success = False
-                        reason = ('Lacking permissions to change role.')
-                    except discord.HTTPException:
-                        success = False
-                        reason = ('Error connecting to discord.')
+                prolonged = userdb.prolong_mute(ctx.author, until=end_time)
+                try:
+                    await ctx.author.add_roles(self.region_ids[ctx.guild.id]['Antarctica'], reason=('User issued !region ' + spelling))
+                    success = True
+                except discord.Forbidden:
+                    success = False
+                    reason = ('Lacking permissions to change role.')
+                except discord.HTTPException:
+                    success = False
+                    reason = ('Error connecting to discord.')
 
                 if success:
-                    replystr = ('%s Smuds like you are not allowed to neither remove nor add entries to the blacklist. ' +
-                                'This misdemeanor has earned you about FIFTEEN minutes in Antarctica!')
-                    await ctx.send(replystr % (ctx.author.mention,))
+                    if prolonged:
+                        replystr = '%s Smuds like you are not allowed to edit the blacklist, this misdemeanor '
+                        replystr += 'has *prolonged* your time in Antarctica by FIFTEEN minutes!'
+                        await ctx.send(replystr % (ctx.author.mention,))
+                    else:
+                        replystr = ('%s Smuds like you are not allowed to edit the blacklist. ' +
+                                    'This misdemeanor has earned you about FIFTEEN minutes in Antarctica!')
+                        await ctx.send(replystr % (ctx.author.mention,))
                 else:
-                    replystr = ('%s Smuds like you are not allowed to neither remove nor add entries to the blacklist.\n\n' +
+                    replystr = ('%s Smuds like you are not allowed to neither remove nor add entries to the blacklist.\n' +
                                 'Normally this would earn you FIFTEEN minutes in Antarctica, but I failed to banish you due to:\n%s')
                     await ctx.send(replystr % (ctx.author.mention, reason))
 
