@@ -242,32 +242,43 @@ class UserCmdsCog():
 
             # Adding the user to is_muted table. This action is not voluntary.
             # fix_mute(user, voluntary=False, until=None, delete=False)
-            success, reason = userdb.fix_mute(ctx.author, until=end_time)
+            prolonged = userdb.prolong_mute(ctx.author, until=end_time)
 
-            if success:
-                # First thing to do if the mute table was updated successfull is to add the actual role.
-                try:
-                    await ctx.author.add_roles(self.region_ids[ctx.guild.id]['Antarctica'], reason=('User issued !region ' + spelling))
-                except discord.Forbidden:
-                    success = False
-                    reason = ('Lacking permissions to change role.')
-                except discord.HTTPException:
-                    success = False
-                    reason = ('Error connecting to discord.')
+            # Adding the role, if unsuccessful see what caused the error
+            try:
+                await ctx.author.add_roles(self.region_ids[ctx.guild.id]['Antarctica'], reason=('User issued !region ' + spelling))
+                success = True
+            except discord.Forbidden:
+                success = False
+                reason = ('Lacking permissions to change role.')
+            except discord.HTTPException:
+                success = False
+                reason = ('Error connecting to discord.')
 
             if success:
                 if not antarctica_spelling:
                     # Correct spelling.
-                    replystr = ('%s is a filthy smud claiming to live in Antarctica, ' +
-                                'their wish has been granted and they will be stuck there for about TEN minutes!')
+                    if prolonged:
+                        replystr = '%s is a filthy smud claiming to live in Antarctica... '
+                        replystr += 'oh and they do. Well if they like it so much I guess '
+                        replystr += 'prolonging their sentence another TEN minutes won\'t hurt?'
+                    else:
+                        replystr = ('%s is a filthy smud claiming to live in Antarctica, ' +
+                                    'their wish has been granted and they will be stuck there for about TEN minutes!')
                     await ctx.send(replystr % (ctx.author.mention,))
 
                 else:
-                    replystr = ('%s is a filthy smud claiming to live in \'%s\'! They couldn\'t even spell it right ' +
-                                'and because of that they\'ll be stuck there for about TWENTY minutes!')
+                    # Incorrect spelling
+                    if prolonged:
+                        replystr = '%s can\'t even spell \'%s\' right despite living there! Maybe an '
+                        replystr += 'extra TWENTY minutes in penguin school will set \'em straight? :penguin:'
+                    else:
+                        replystr = ('%s is a filthy smud claiming to live in \'%s\'! They couldn\'t even spell it right ' +
+                                    'and because of that they\'ll be stuck there for about TWENTY minutes!')
                     await ctx.send(replystr % (ctx.author.mention, spelling))
 
-            elif not success:
+            else:
+                # Failed to add role.
                 replystr = ('%s is a filthy smud claiming to live in Antarctica, but I couldn\'t banish them there due to:\n%s')
                 await ctx.send(replystr % (ctx.author.mention, reason))
 
