@@ -8,12 +8,14 @@ import traceback, sys
 # Users are able to have the bot cite random
 # quotes that have previously been added.
 
-class QuotesCog(commands.Cog):
+class QuotesCog(commands.Cog, name='Quotes'):
+    """The quotes database is a long and complicated piece of spaghetti. There's a non-trivial risk that you may get entangled and suffocate to death. Use at your own peril."""
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(name='quote', aliases=['quotes'])
     async def _quote(self, ctx, *args):
+        """Interract with the bastion of high culture that is our quote db."""
         # First we'll see if the user has entered a number
         # i.e. a message ID.
         got_id = False

@@ -6,13 +6,15 @@ from botfunctions import checks
 # This cog is for commands restricted to the owner of the bot (me!).
 # It has features like !restart and !gitupdate.
 
-class OwnerCog(commands.Cog):
+class MaintenanceCog(commands.Cog, name='Maintenance'):
+    """There is only one person who is allowed to execute these commands... and it's not you."""
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(name='restart')
     @commands.check(checks.is_owner)
     async def _restart(self, ctx, *args):
+        """Makes me restart if and only if you're Terminal."""
         await ctx.send(ctx.author.mention + " Yes Dear Leader... I will restart now.")
         print ('\n') # extra new line after the commandlog() output
         os.execl(sys.executable, sys.executable, *sys.argv)
@@ -20,6 +22,7 @@ class OwnerCog(commands.Cog):
     @commands.command(name='update')
     @commands.check(checks.is_owner)
     async def _gitupdate(self, ctx, *args):
+        """Makes me update myself if and only if you're Terminal."""
         # git fetch returns nothing if no updates were found
         # for some reason the output of git fetch is posted to stderr
         gitfetch = str(run(['git', 'fetch'], stderr=PIPE, encoding='utf_8').stderr)
@@ -49,4 +52,4 @@ class OwnerCog(commands.Cog):
             os.execl(sys.executable, sys.executable, *sys.argv)
 
 def setup(bot):
-    bot.add_cog(OwnerCog(bot))
+    bot.add_cog(MaintenanceCog(bot))

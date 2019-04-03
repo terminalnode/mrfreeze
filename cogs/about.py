@@ -6,12 +6,14 @@ from botfunctions import native
 # https://leovoel.github.io/embed-visualizer/
 # https://cog-creators.github.io/discord-embed-sandbox/
 
-class LinksCog(commands.Cog):
+class AboutCog(commands.Cog, name='About'):
+    """Use these commands to unlock my deepest, darkest inner secrets!"""
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(name='readme')
-    async def _readme(self, ctx, *args):
+    async def _readme(self, ctx):
+        """Hands you a link to the readme file over on Gitlab."""
         readme = discord.Embed(color=0x00dee9)
         readme.set_thumbnail(url=native.get_image('ReadMe'))
         readme.add_field(name = 'Readme',
@@ -21,7 +23,8 @@ class LinksCog(commands.Cog):
 
 
     @commands.command(name='source', aliases=['github', 'gitlab', 'git'])
-    async def _source(self, ctx, *args):
+    async def _source(self, ctx):
+        """Hands you a link to the MrFreeze repository over on Gitlab."""
         source = discord.Embed(color=0x00dee9)
         source.set_thumbnail(url=native.get_image('Source'))
         source.add_field(name='Source code',
@@ -32,6 +35,7 @@ class LinksCog(commands.Cog):
 
     @commands.command(name='dummies')
     async def _dummies(self, ctx, *args):
+        """Supplies you with links to invite Ba'athman and Robin."""
         dummies = discord.Embed(color=0x00dee9,
                                 description = ('Here are the links for inviting Ba\'athman and Robin, my arch enemies, to a server.\n\n' +
                                                'They don\'t do anything at all, but are very useful for testing kick and ban commands.'))
@@ -44,6 +48,7 @@ class LinksCog(commands.Cog):
 
     @commands.command(name='todo', aliases=['TODO', 'TODOs', 'ToDo', 'ToDos', 'todos', 'whatsnext', 'whatnext'])
     async def _todos(self, ctx):
+        """Supplies you with a list of my planned features."""
         todos = discord.Embed(color=0x00dee9)
         todos.set_thumbnail(url=native.get_image('TODOs'))
         todos.add_field(name='You\'re a nosy one! Here\'s a list of all the \'cool\' stuff Terminal\'s got planned for me... :sleeping:',
@@ -52,4 +57,4 @@ class LinksCog(commands.Cog):
         await ctx.send(embed=todos)
 
 def setup(bot):
-    bot.add_cog(LinksCog(bot))
+    bot.add_cog(AboutCog(bot))

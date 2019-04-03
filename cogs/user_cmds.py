@@ -3,7 +3,8 @@ from discord.ext import commands
 from discord.ext.commands.cooldowns import BucketType
 from botfunctions import native, checks, userdb
 
-class UserCmdsCog(commands.Cog):
+class UserCmdsCog(commands.Cog, name='Everyone'):
+    """These are the fun commands, everything else is boring and lame. Frankly there's no reason you should pay attention to anything that's not on this page."""
     def __init__(self, bot):
         self.bot = bot
 
@@ -25,6 +26,7 @@ class UserCmdsCog(commands.Cog):
 
     @commands.command(name='mrfreeze', aliases=['freeze'])
     async def _mrfreeze(self, ctx, *args):
+        """Get a quote from my timeless classic "Batman & Robin"!"""
         # If they're asking for help, we'll default to the help_reply.
         pls_help = ('help', 'wtf', 'what', 'what\'s', 'wut', 'woot')
         help_reply = False
@@ -71,6 +73,7 @@ class UserCmdsCog(commands.Cog):
 
     @commands.command(name='vote', aliases=['election', 'choice', 'choose'])
     async def _vote(self, ctx, *args):
+        """Create a handy little vote using reacts."""
         # remoji finds custom emoji strings which have the form:
         # <:trex:463347402242260993>
         remoji = re.compile('<:\w+:\d+>')
@@ -130,6 +133,7 @@ class UserCmdsCog(commands.Cog):
 
     @commands.command(name='region', aliases=['regions'])
     async def _region(self, ctx, *args):
+        """Assign yourself a colourful regional role."""
         region_ids = self.region_ids
         # List of regions
         regions = {
@@ -423,8 +427,9 @@ class UserCmdsCog(commands.Cog):
                     await ctx.send(replystr % (ctx.author.mention,))
 
     @commands.command(name='activity', aliases=['listen', 'listening', 'playing', 'play', 'game', 'gaming', 'gameing', 'stream', 'streaming', 'watch', 'watching'])
-    @commands.cooldown(1, (60*10), BucketType.default)
+    # @commands.cooldown(1, (60*10), BucketType.default)
     async def _activity(self, ctx, *args):
+        """Dictate what text should be displayed under my nick."""
         # Dictionary of all different activity types with keywords.
         # The keywords are defined in separate tuples so I can access
         # them without the dictionary.

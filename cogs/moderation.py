@@ -5,7 +5,8 @@ from botfunctions import checks, native, userdb
 # This cog is for commands restricted to mods on a server.
 # It features commands such as !ban, !mute, etc.
 
-class ModCmdsCog(commands.Cog):
+class ModCmdsCog(commands.Cog, name='Moderation'):
+    """Good mod! Read the manual! Or if you're not mod - sod off!"""
     def __init__(self, bot):
         self.bot = bot
 
@@ -39,6 +40,7 @@ class ModCmdsCog(commands.Cog):
 
     @commands.command(name='rules', aliases=['rule'])
     async def _rules(self, ctx, *args):
+        """Remind users of what the rules are."""
         request = str()
         for i in args:
             request += (i.lower())
@@ -79,6 +81,7 @@ class ModCmdsCog(commands.Cog):
     @commands.command(name='mute', aliases=['micromute', 'exile', 'banish', 'microexile', 'microbanish'])
     @commands.check(checks.is_mod)
     async def _banish(self, ctx, *args):
+        """Restrict a user to #antarctica for a short(?) period of time."""
         # (micro)banish and (micro)exile are functionally the same as mute, except with a custom message
         # and default time limit. The idea for the micro prefix is that it will work more as a statement
         # and only banish the user for a minute or so.
@@ -352,6 +355,7 @@ class ModCmdsCog(commands.Cog):
     @commands.command(name='unmute', aliases=['unexile', 'unbanish', 'pardon'])
     @commands.check(checks.is_mod)
     async def _unmute(self, ctx, *args):
+        """Give a voice to the silenced and repressed smuds of #antarctica."""
         # This function deletes the user mute entry from userdb, and removes
         # the mute tag (antarctica tag) from the user.
         antarctica = discord.utils.get(ctx.guild.roles, name='Antarctica')
@@ -456,6 +460,7 @@ class ModCmdsCog(commands.Cog):
     @commands.command(name='ban', aliases=['purgeban', 'banpurge'])
     @commands.check(checks.is_mod)
     async def _ban(self, ctx, *args):
+        """Remove a user from our sight - permanently."""
         # This function simply bans a user from the server in which it's issued.
         reason = self.extract_reason(' '.join(args))
         forbidden_error = False
@@ -563,6 +568,7 @@ class ModCmdsCog(commands.Cog):
     @commands.command(name='unban')
     @commands.check(checks.is_mod)
     async def _unban(self, ctx, *args):
+        """Unpermanent removal from sight of a previously banned user."""
         # This function simply remover the ban of a user from the server in which it's issued.
         forbidden_error = False
         http_error = False
@@ -702,6 +708,7 @@ class ModCmdsCog(commands.Cog):
     @commands.command(name='listban', aliases=['banlist','listbans','banslist'])
     @commands.check(checks.is_mod)
     async def _listban(self, ctx):
+        """Get a list of all banned users (useful for unbanning)."""
         # Because it's tricky to find the exact user name/id when you can't highlight people,
         # this function exists to get easy access to the list of bans in order to unban.
 
@@ -755,6 +762,7 @@ class ModCmdsCog(commands.Cog):
     @commands.command(name='kick')
     @commands.check(checks.is_mod)
     async def _kick(self, ctx, *args):
+        """Force a user to leave the server temporarily."""
         # This function kicks the user out of the server in which it is issued.
         success_list = list()
         fail_list = list()
@@ -860,6 +868,7 @@ class ModCmdsCog(commands.Cog):
     @commands.command(name='purge', aliases=['clean', 'cleanup'])
     @commands.check(checks.is_mod)
     async def _purge(self, ctx, *args):
+        """Delete a certain number of posts all at once."""
         # This function will remove the last X number of posts in the channel.
         #
         # Features:
@@ -884,10 +893,13 @@ class ModCmdsCog(commands.Cog):
             delete_no = 100
 
         def check_func(message):
-            # Author in mentions    True
-            # No mentions           True
-            # -> Otherwise          False
-            if message.author in ctx.message.mentions:
+            # If message is pinned -> False
+            # Author in mentions      True
+            # No mentions             True
+            # -> Otherwise            False
+            if message.pinned:
+                return False
+            elif message.author in ctx.message.mentions:
                 return True
             elif len(ctx.message.mentions) == 0:
                 return True
