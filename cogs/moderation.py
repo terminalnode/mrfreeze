@@ -44,15 +44,17 @@ class ModCmdsCog(commands.Cog):
             request += (i.lower())
 
         rules = {
-        1: ( '1', 'topic', 'ontopic', 'offtopic' ),
-        2: ( '2', 'civil', 'disagreement' ),
-        3: ( '3', 'dismissive', 'opinion', 'opinions' ),
-        4: ( '4', 'joke', 'jokes', 'joking', 'sex', 'sexual',
-             'orientation', 'weight', 'race', 'skin', 'color',
-             'gender', 'colour' ),
-        5: ( '5', 'shoe', 'shoes', 'age', 'mature', 'maturity', 'shoesize', 'act' ),
-        6: ( '6', 'spam', 'nonsense' ),
-        7: ( '7', 'benice', 'nice' )
+            # Rule 1: Be nice and decent to everyone. Hate speech will not be tolerated. 
+            1: ('1', 'joke', 'jokes', 'joking', 'sex', 'sexual', 'weight', 'race', 'skin',
+                'color', 'colour', 'gender', 'nice', 'decent', 'hate'),
+
+            # Rule 2: Keep discussions civil and mature.
+            2: ('2', 'civil', 'civility', 'mature', 'maturity', 'disagreement', 'dismissive',
+                'dismissal', 'opinion', 'opinions', 'shoe', 'shoes', 'shoesize', 'age', 'act',
+                'behave'),
+
+            # Rule 3: Stay on topic and avoid spamming.
+            3: ('3', 'topic', 'ontopic', 'offtopic', 'spam', 'nonsense')
         }
 
         called_rules = list()
@@ -60,7 +62,7 @@ class ModCmdsCog(commands.Cog):
         # If 'all' is in the request we'll just call all rules.
         # If not we'll see if any of the keywords are in the request.
         if 'all' in request:
-            called_rules = [ 1, 2, 3, 4, 5, 6, 7 ]
+            called_rules = [ 1, 2, 3 ]
         else:
             for rule_no in rules:
                 for keyword in rules[rule_no]:
@@ -71,7 +73,7 @@ class ModCmdsCog(commands.Cog):
             replystr = 'Sorry %s, your terms don\'t seem to match any rules. :thinking:'
             await ctx.send(replystr % (ctx.author.mention,))
         else:
-            await ctx.send(ctx.author.mention + '\n' + native.get_rule(called_rules))
+            await ctx.send(native.get_rule(called_rules))
 
 
     @commands.command(name='mute', aliases=['micromute', 'exile', 'banish', 'microexile', 'microbanish'])
