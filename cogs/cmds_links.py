@@ -16,17 +16,17 @@ class LinksCog(commands.Cog):
         readme.set_thumbnail(url=native.get_image('ReadMe'))
         readme.add_field(name = 'Readme',
                          value = ('There may be more information here than you\'re looking for, ' +
-                                 'but my readme-file is available [here on Github](https://github.com/terminalnode/MrFreezeRW/blob/master/README.md)'))
+                                 'but my readme-file is available [here on Gitlab](https://gitlab.com/terminalnode/MrFreeze/blob/master/README.md)'))
         await ctx.send(embed=readme)
 
 
-    @commands.command(name='source', aliases=['github'])
+    @commands.command(name='source', aliases=['github', 'gitlab', 'git'])
     async def _source(self, ctx, *args):
         source = discord.Embed(color=0x00dee9)
         source.set_thumbnail(url=native.get_image('Source'))
         source.add_field(name='Source code',
                          value='My source code is available on ' +
-                               '[Github](https://github.com/terminalnode/MrFreezeRW)!')
+                               '[Gitlab](https://gitlab.com/terminalnode/MrFreeze/)!')
         await ctx.send(embed=source)
 
 
@@ -47,7 +47,7 @@ class LinksCog(commands.Cog):
         todos = discord.Embed(color=0x00dee9)
         todos.set_thumbnail(url=native.get_image('TODOs'))
         todos.add_field(name='You\'re a nosy one! Here\'s a list of all the \'cool\' stuff Terminal\'s got planned for me... :sleeping:',
-                        value='https://github.com/terminalnode/MrFreezeRW/blob/master/TODOs')
+                        value='https://gitlab.com/terminalnode/MrFreeze/blob/master/TODOs')
 
         await ctx.send(embed=todos)
 
