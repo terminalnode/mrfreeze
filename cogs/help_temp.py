@@ -1,4 +1,4 @@
-import discord, re
+import discord
 from discord.ext import commands
 
 # Unlike it's predecessor, this one will look through all messages for
