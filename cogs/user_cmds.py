@@ -1,6 +1,6 @@
 import discord, re, datetime
 from discord.ext import commands
-from discord.ext.commands.cooldowns import BucketType
+# from discord.ext.commands.cooldowns import BucketType
 from botfunctions import native, checks, userdb
 
 class UserCmdsCog(commands.Cog, name='Everyone'):
