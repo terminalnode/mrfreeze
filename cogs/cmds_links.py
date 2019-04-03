@@ -6,7 +6,7 @@ from botfunctions import native
 # https://leovoel.github.io/embed-visualizer/
 # https://cog-creators.github.io/discord-embed-sandbox/
 
-class LinksCog():
+class LinksCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
