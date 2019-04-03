@@ -8,7 +8,7 @@ import traceback, sys
 # Users are able to have the bot cite random
 # quotes that have previously been added.
 
-class QuoteCmdCog:
+class QuoteCmdCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -280,8 +280,6 @@ class QuoteCmdCog:
         # Finally, if nothing has triggered by now we have no idea wtf they're trying to do.
         if (command == None) and (sent_reply == False):
             await ctx.send(('%s Please consult the help file using **!help quote** because I have no idea wtf you\'re trying to do.' % (ctx.author.mention,)))
-
-
 
 def setup(bot):
     bot.add_cog(QuoteCmdCog(bot))
