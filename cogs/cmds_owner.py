@@ -6,7 +6,7 @@ from botfunctions import checks
 # This cog is for commands restricted to the owner of the bot (me!).
 # It has features like !restart and !gitupdate.
 
-class OwnerCmdsCog:
+class OwnerCmdsCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -17,7 +17,7 @@ class OwnerCmdsCog:
         print ('\n') # extra new line after the commandlog() output
         os.execl(sys.executable, sys.executable, *sys.argv)
 
-    @commands.command(name='gitupdate', aliases=['git'])
+    @commands.command(name='update')
     @commands.check(checks.is_owner)
     async def _gitupdate(self, ctx, *args):
         # git fetch returns nothing if no updates were found
