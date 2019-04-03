@@ -37,6 +37,12 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         else:
             return output.strip()
 
+    @commands.command(name='say', aliases=['speak', 'chat'])
+    @commands.check(checks.is_mod)
+    async def _say(self, ctx, channel : discord.TextChannel, *args):
+        """Let me be your voice!"""
+        await channel.send(' '.join(args))
+
 
     @commands.command(name='rules', aliases=['rule'])
     async def _rules(self, ctx, *args):
