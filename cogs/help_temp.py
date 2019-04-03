@@ -4,7 +4,7 @@ from discord.ext import commands
 # Unlike it's predecessor, this one will look through all messages for
 # temperatures and convert them.
 
-class TempConverterCog():
+class TempConverterCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
