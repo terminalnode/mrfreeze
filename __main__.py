@@ -117,7 +117,7 @@ load_cogs = [ 'cogs.owner',         # Owner-only commands
               'cogs.moderation',      # Mod-only commands.
               'cogs.links',         # !dummies, !readme, !source
               'cogs.quotes',        # !quote
-              'cogs.cmds_users',    # Various smaller commands: !rules, !vote, !mrfreeze
+              'cogs.user_cmds',    # Various smaller commands: !rules, !vote, !mrfreeze
               'cogs.cmd_help', ]    # We have our own !help-function.
 
 # Here's where the actual loading of the cogs go.
