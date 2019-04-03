@@ -5,7 +5,7 @@ from botfunctions import checks, native, userdb
 # This cog is for commands restricted to mods on a server.
 # It features commands such as !ban, !mute, etc.
 
-class ModCmdsCog:
+class ModCmdsCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
