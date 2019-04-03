@@ -6,7 +6,7 @@ from botfunctions import checks
 # This cog is for commands restricted to the owner of the bot (me!).
 # It has features like !restart and !gitupdate.
 
-class OwnerCmdsCog(commands.Cog):
+class OwnerCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -49,4 +49,4 @@ class OwnerCmdsCog(commands.Cog):
             os.execl(sys.executable, sys.executable, *sys.argv)
 
 def setup(bot):
-    bot.add_cog(OwnerCmdsCog(bot))
+    bot.add_cog(OwnerCog(bot))

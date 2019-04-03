@@ -113,12 +113,11 @@ bot.remove_command('help')
 
 # Cogs starting with cmd contains only one command,
 # Cogs starting with cmds has multiple commands sharing some common trait.
-load_cogs = [ 'cogs.cmds_owner',    # Owner-only commands
-              'cogs.cmds_mod',      # Mod-only commands.
-              'cogs.cmds_links',    # !dummies, !readme, !source
-              'cogs.cmd_quote',     # !quote
+load_cogs = [ 'cogs.owner',         # Owner-only commands
+              'cogs.moderation',      # Mod-only commands.
+              'cogs.links',         # !dummies, !readme, !source
+              'cogs.quotes',        # !quote
               'cogs.cmds_users',    # Various smaller commands: !rules, !vote, !mrfreeze
-              'cogs.help_temp',     # !temp, DM instructions for automatic temp conversion.
               'cogs.cmd_help', ]    # We have our own !help-function.
 
 # Here's where the actual loading of the cogs go.
