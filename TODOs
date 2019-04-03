@@ -1,6 +1,12 @@
 This is a TODO list so I won't forget.
 Disclaimer: I tend to forget this document exists.
 
+###########################################
+# RIPperoni, discord.py update breakage!! #
+###########################################
+!region is lacking region_ids or something.
+
+
 ################################
 Improvements to command functions
 ################################
@@ -15,16 +21,18 @@ Quotes:
     Allow adding last post by a certain user with !quote add @username
     Perhaps some kind of emoji-vote function which also adds quotes?
 
+
 ################################
 Improvements to automatic functions / general features
 ################################
 - New random responses for highlighted @MrFreeze
 
+
 ################################
 New features
 ################################
 Top priority: !help
-
+- !say command
 - Ink Lookup
   https://www.reddit.com/r/fountainpens/comments/5egjsa/klundtasaurs_inkcyclopedia_for_rfountainpens/
   Ask Klundo if it's OK to pull from Inkcyclopaedia
