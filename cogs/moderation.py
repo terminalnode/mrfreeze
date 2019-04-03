@@ -37,11 +37,24 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         else:
             return output.strip()
 
+
     @commands.command(name='say', aliases=['speak', 'chat'])
     @commands.check(checks.is_mod)
     async def _say(self, ctx, channel : discord.TextChannel, *args):
         """Let me be your voice!"""
-        await channel.send(' '.join(args))
+        replystr = ' '.join(args)
+
+        # Now let's find all the custom emoji.
+        remoji = re.compile('(<:\w+:(\d+)>)')
+        emoji_tags = remoji.findall(replystr)
+        for i in emoji_tags:
+            replystr = replystr.replace(i[0], '{}')
+        emojis = [ self.bot.get_emoji(int(i[1])) for i in emoji_tags ]
+
+        if None in emojis:
+            await ctx.channel.send('I don\'t have access to all your snazzy nitro emoji.')
+        else:
+            await channel.send(replystr.format(*emojis))
 
 
     @commands.command(name='rules', aliases=['rule'])

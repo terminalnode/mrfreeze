@@ -20,8 +20,6 @@ Quotes:
   Adding quotes:
     Allow adding last post by a certain user with !quote add @username
     Perhaps some kind of emoji-vote function which also adds quotes?
-Say:
-  Allow custom emoji.
 
 ################################
 Improvements to automatic functions / general features
