@@ -1,5 +1,9 @@
+# Your token is secret, do not upload to GitHub.
 token
-.DS_Store
-cogs/__pycache__
-botfunctions/__pycache__
+
+# File to test various code snippets.
 experimentation.py
+
+# Garbage files.
+.DS_Store
+__pycache__
