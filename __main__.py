@@ -105,20 +105,18 @@ class MrFreezeClient(commands.Bot):
 
 
 
-
 # Starting the bot, then removing help command
 # because we're going to implement our own help.
 bot = MrFreezeClient(command_prefix='!')
-bot.remove_command('help')
 
 # Cogs starting with cmd contains only one command,
 # Cogs starting with cmds has multiple commands sharing some common trait.
-load_cogs = [ 'cogs.owner',         # Owner-only commands
-              'cogs.moderation',      # Mod-only commands.
-              'cogs.links',         # !dummies, !readme, !source
+load_cogs = [ 'cogs.maintenance',         # Owner-only commands
+              'cogs.moderation',    # Mod-only commands.
+              'cogs.about',         # !dummies, !readme, !source
               'cogs.quotes',        # !quote
-              'cogs.user_cmds',    # Various smaller commands: !rules, !vote, !mrfreeze
-              'cogs.cmd_help', ]    # We have our own !help-function.
+              'cogs.user_cmds',     # Various smaller commands: !rules, !vote, !mrfreeze
+              ]
 
 # Here's where the actual loading of the cogs go.
 if __name__ == '__main__':
@@ -178,10 +176,13 @@ async def on_command_error(ctx, error):
 
     if isinstance(error, commands.CheckFailure):
         errorhandling.checkfailure(ctx, error)
-        
+
     elif isinstance(error, commands.errors.CommandOnCooldown):
         replystr = errorhandling.cooldown(ctx, error)
         await ctx.send(replystr)
+
+    elif isinstance(error, discord.ext.commands.errors.BadArgument):
+        await ctx.send(ctx.author.mention + ' That\'s not quite the information I need to execute that command.')
 
     else:
         print(error)
