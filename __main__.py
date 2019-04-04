@@ -120,12 +120,13 @@ bot = MrFreezeClient(command_prefix='!')
 
 # Cogs starting with cmd contains only one command,
 # Cogs starting with cmds has multiple commands sharing some common trait.
-load_cogs = [ 'cogs.maintenance',   # Owner-only commands
-              'cogs.moderation',    # Mod-only commands.
-              'cogs.about',         # !dummies, !readme, !source
-              'cogs.quotes',        # !quote
-              'cogs.user_cmds',     # Various smaller commands: !rules, !vote, !mrfreeze
-              'cogs.inkcyclopedia', # Listen for inkzzz.
+load_cogs = [ 'cogs.maintenance',    # Owner-only commands
+              'cogs.moderation',     # Mod-only commands.
+              'cogs.about',          # !dummies, !readme, !source
+              'cogs.quotes',         # !quote
+              'cogs.user_cmds',      # Various smaller commands: !rules, !vote, !mrfreeze
+              'cogs.inkcyclopedia',  # Listen for inkzzz.
+              'cogs.error_handling', # How the bot deals with errors.
               ]
 
 # Here's where the actual loading of the cogs go.
@@ -173,29 +174,6 @@ async def on_member_remove(member):
                      value=('**%s#%s** is a trechorous smud who\'s turned their back on %s. We now have %s members.' %
                      (member.name, str(member.discriminator), member.guild.name, member_count)) )
     await mod_channel.send(embed=embed)
-
-
-
-# Command errors
-@bot.event
-async def on_command_error(ctx, error):
-    get_command = re.compile('!\w+')
-    command = get_command.match(ctx.message.content).group()
-
-    if isinstance(error, commands.CheckFailure):
-        errorhandling.checkfailure(ctx, error)
-
-    elif isinstance(error, commands.errors.CommandOnCooldown):
-        replystr = errorhandling.cooldown(ctx, error)
-        await ctx.send(replystr)
-
-    elif isinstance(error, discord.ext.commands.errors.BadArgument):
-        await ctx.send(ctx.author.mention + ' That\'s not quite the information I need to execute that command.')
-
-    else:
-        print(error)
-        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
-
 
 
 # A message was pinned.
