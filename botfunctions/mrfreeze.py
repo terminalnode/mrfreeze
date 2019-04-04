@@ -18,7 +18,7 @@ class MrFreezeClient(commands.Bot):
         print('\033[0;36m' + 'User ID:             \033[1m{}'.format(self.user.id))
         print('\033[0;36m' + 'Number of servers:   \033[1m{}'.format(len(self.guilds)))
         print('\033[0;36m' + 'Number of users:     \033[1m{}'.format(len(self.users)))
-        print('\033[0m')
+        print('\033[0m', end='')
 
         # Making sure that the userdb exists.
         userdb.create()
