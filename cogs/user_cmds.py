@@ -7,10 +7,11 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
     """These are the fun commands, everything else is boring and lame. Frankly there's no reason you should pay attention to anything that's not on this page."""
     def __init__(self, bot):
         self.bot = bot
+        self.region_ids = dict()
 
+    @commands.Cog.listener()
     async def on_ready(self):
         # Creating dict of all the region role ids
-        self.region_ids = dict()
         for guild in self.bot.guilds:
             self.region_ids[guild.id] = {
             'Africa':           discord.utils.get(guild.roles, name='Africa'),
@@ -229,21 +230,21 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
                     # Correct spelling.
                     if prolonged:
                         replystr = '%s is a filthy smud claiming to live in Antarctica... '
-                        replystr += 'oh and they do. Well if they like it so much I guess '
-                        replystr += 'prolonging their sentence another TEN minutes won\'t hurt?'
+                        replystr += 'oh and they do. \nWell if they like it so much I guess '
+                        replystr += 'prolonging their sentence another **TEN minutes** won\'t hurt?'
                     else:
                         replystr = ('%s is a filthy smud claiming to live in Antarctica, ' +
-                                    'their wish has been granted and they will be stuck there for about TEN minutes!')
+                                    'their wish has been granted and they will be stuck there for about **TEN minutes**!')
                     await ctx.send(replystr % (ctx.author.mention,))
 
                 else:
                     # Incorrect spelling
                     if prolonged:
                         replystr = '%s can\'t even spell \'%s\' right despite living there! Maybe an '
-                        replystr += 'extra TWENTY minutes in penguin school will set \'em straight? :penguin:'
+                        replystr += 'extra **TWENTY minutes** in penguin school will set \'em straight? :penguin:'
                     else:
                         replystr = ('%s is a filthy smud claiming to live in \'%s\'! They couldn\'t even spell it right ' +
-                                    'and because of that they\'ll be stuck there for about TWENTY minutes!')
+                                'and because of that they\'ll be stuck there for about **TWENTY minutes**! :penguin:')
                     await ctx.send(replystr % (ctx.author.mention, spelling))
 
             else:

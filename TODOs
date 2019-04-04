@@ -1,12 +1,6 @@
 This is a TODO list so I won't forget.
 Disclaimer: I tend to forget this document exists.
 
-###########################################
-# RIPperoni, discord.py update breakage!! #
-###########################################
-!region is lacking region_ids or something.
-
-
 ################################
 Improvements to command functions
 ################################
