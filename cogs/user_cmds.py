@@ -458,14 +458,14 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
         # possibly identifying a type of activity.
 
         if chosen_activity == None:
-            for type in activity_types:
-                for alias in activity_types[type]:
+            for activity in activity_types:
+                for alias in activity_types[activity]:
                     if (len(args) >= 1) and (args[0] == alias):
-                        chosen_activity = type
+                        chosen_activity = activity
                         args = args[1:]
 
                     elif (len(args) >= 2) and (args[0] == 'is') and (args[1] == alias):
-                        chosen_activity = type
+                        chosen_activity = activity
                         args = args[2:]
 
         success = False
@@ -479,8 +479,9 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
 
             if len(joint_args) <= max_activity_length:
                 try:
-                    await self.bot.change_presence(status=None, activity=
-                          discord.Activity(name=joint_args, type=chosen_activity))
+                    activity_obj = discord.Activity(name=joint_args,
+                                                    type=chosen_activity)
+                    await self.bot.change_presence(activity=activity_obj)
                     success = True
                 except:
                     pass
@@ -488,7 +489,7 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
         if chosen_activity == discord.ActivityType.playing:
             reply_activity = 'playing'
         elif chosen_activity == discord.ActivityType.streaming:
-            # streaming doesn't work as I want it, you need a URL and shit
+            # streaming doesn't work as I want it, always says playing not streaming.
             reply_activity = 'playing'
         elif chosen_activity == discord.ActivityType.listening:
             reply_activity = 'listening to'
@@ -512,8 +513,8 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
                 await ctx.send(replystr % (ctx.author.mention, reply_activity))
 
         elif len(joint_args) >= max_activity_length: # Too long.
-            replystr = '%s That activity is stupidly long. Limit is %s characters, yours was %s.'
-            replystr = (replystr % (ctx.author.mention, str(max_activity_length), str(len(joint_args))))
+            replystr = '%s That activity is stupidly long (%s characters). Limit is %s characters.'
+            replystr = (replystr % (ctx.author.mention, str(len(joint_args)), str(max_activity_length)))
             await ctx.send(replystr)
 
         else:
