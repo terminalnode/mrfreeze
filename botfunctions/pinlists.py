@@ -13,15 +13,16 @@ async def create_dict(botguilds):
             if isinstance(channel, discord.channel.TextChannel):
                 try:
                     pinsDict[guild.id][channel.id] = len(await channel.pins())
-                    print ('PinsDict: fetched ' + guild.name + ' #' + channel.name)
+                    name = '\033[31;1m{} \033[32m#{}'.format(guild.name, channel.name)
+                    print ('\033[0;36m' + 'Fetched pins from {}\033[0m'.format(name))
 
                     # This is for debugging purposes because the dict takes
                     # forever to build.
-                    if channel.name == 'bot-trash':
+                    if channel.id == 466241532458958850 and len(botguilds) == 1:
+                        print ('\033[36;1m' + 'PinsDict all done!' + '\033[0m')
                         return pinsDict
-                        print ('PinsDict all done!')
 
                 except:
                     pass # Channel probably got deleted.
-    print ('PinsDict all done!')
+    print ('\033[36;1m' + 'PinsDict all done!' + '\033[0m')
     return pinsDict
