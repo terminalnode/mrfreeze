@@ -7,7 +7,7 @@ import traceback, sys, asyncio
 from botfunctions import *
 
 # Instantiate the bot.
-bot = mrfreeze.MrFreezeClient(command_prefix='!')
+bot = mrfreeze.MrFreezeClient(command_prefix=[ '!', '<@471904058270154754> ' ])
 
 # Loading all the cogs.
 # One line for each cog makes it easy to disable.
