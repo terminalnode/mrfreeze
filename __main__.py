@@ -32,10 +32,6 @@ class MrFreezeClient(commands.Bot):
         pinsDict = None
         pinsDict = await pinlists.create_dict(bot.guilds)
 
-        # Set activity to "Listening to your commands"
-        await bot.change_presence(status=None, activity=
-            discord.Activity(name='your commands...', type=discord.ActivityType.listening))
-
         # Greetings message for all the servers now that all is setup.
         for i in bot.guilds:
             try:
@@ -43,6 +39,11 @@ class MrFreezeClient(commands.Bot):
                 await bot_trash.send(':wave: ' + native.mrfreeze())
             except:
                 print ('ERROR: No channel bot-trash in ' + str(i.name) + '. Can\'t greet them.')
+
+        # Set activity to "Listening to your commands"
+        await bot.change_presence(status=None, activity=
+            discord.Activity(name='your commands...', type=discord.ActivityType.listening))
+
 
     async def bg_task_manager(self):
         await self.wait_until_ready()
