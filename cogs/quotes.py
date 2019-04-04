@@ -25,11 +25,11 @@ class QuotesCog(commands.Cog, name='Quotes'):
 
         # For ease of use there are a number of aliases for each command.
         commands_dict = {
-        'add'    : ('add', 'ajouter', 'ajoute', 'ajoutez', 'ajoutons', 'adda'),
+        'add'    : ('add', 'new', 'create', 'a'),
         'alias'  : ('name', 'shortcut', 'alias'),
-        'delete' : ('remove', 'delete', 'erase', 'del', 'rmv', 'undo'),
+        'delete' : ('remove', 'delete', 'erase', 'del', 'rmv', 'undo', 'd', 'r'),
         'random' : ('random', 'rnd', 'any', 'whatever', 'anything'),
-        'read'   : ('read', 'cite', 'lookup', 'number', 'name', 'by', 'from'),
+        'read'   : ('read', 'cite', 'lookup', 'number', 'name', 'by', 'from', 'check', 'look'),
         'count'  : ('count', 'number', 'quantity'),
         'help'   : ('help', 'how', 'howto', 'wtf', 'wut', 'halp')
         }
