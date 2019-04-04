@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-import collections, random, signal, re
+import collections, random, signal
 import traceback, sys, asyncio
 
 # Importing commands from ./botfunctions
