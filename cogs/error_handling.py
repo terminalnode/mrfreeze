@@ -1,4 +1,4 @@
-import discord, re, traceback
+import discord, re, traceback, sys
 from discord.ext import commands
 from botfunctions import errorhandling
 
@@ -9,9 +9,6 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        get_command = re.compile('!\w+')
-        command = get_command.match(ctx.message.content).group()
-
         if isinstance(error, commands.CheckFailure):
             errorhandling.checkfailure(ctx, error)
 
