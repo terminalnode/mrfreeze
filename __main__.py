@@ -142,29 +142,6 @@ if __name__ == '__main__':
             traceback.print_exc()
 
 
-
-# Certain events, namely temp, depends on checking for temperature statements in
-# all messages sent to the chat. If a command is detected before that the command
-# will run instead.
-# @bot.event
-# async def on_message(message):
-#     ctx = await bot.get_context(message)
-#     # the trailing space let's us match temperatures at the end of the message.
-#     tempstatement = re.search('(( -)?\d+[,.]?(\d+)?) ?(?:°?d(eg)?(egrees)?|°?c(elcius)?(elsius)?(ivilized( units)?)?(ivilised( units)?)?(u)?|' +
-#                               '°?f(ahrenheit)?(reedom( units)?)?(u)?|°?k(elvin)?|°?r(ankine)?)[^\w]',
-#                               ' ' + message.content.lower() + ' ')
-# 
-#     if ctx.valid: # this is a command, we should invoke it.
-#         await bot.invoke(ctx)
-# 
-#     elif tempstatement != None:
-#         await temp.convert(ctx, tempstatement)
-# 
-#     elif (bot.user in message.mentions) and not (message.author == bot.user):
-#         await ctx.send(message.author.mention + ' wtf do you want smud?')
-
-
-
 # Message when people leave.
 @bot.event
 async def on_member_remove(member):
