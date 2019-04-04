@@ -24,8 +24,11 @@ class MessageHandlerCog(commands.Cog, name='MessageHandler'):
         elif tempstatement != None:
             await temp.convert(ctx, tempstatement)
 
-        elif (self.bot.user in message.mentions):
-            await ctx.send(message.author.mention + ' wtf do you want smud?')
+        elif message.content[:21] == '<@471904058270154754>':
+            # If you want the bot to respond when someone directs a message to him,
+            # this is where you would do that. But nah, that's creepy.
+            # await ctx.send(message.author.mention + ' wtf do you want smud?')
+            pass
 
 def setup(bot):
     bot.add_cog(MessageHandlerCog(bot))
