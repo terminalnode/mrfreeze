@@ -2,7 +2,6 @@ import discord, asyncio
 from discord.ext import commands
 from botfunctions import userdb
 from botfunctions import native
-from botfunctions import pinlist
 
 class MrFreezeClient(commands.Bot):
     def __init__(self, *args, **kwargs):
@@ -23,13 +22,6 @@ class MrFreezeClient(commands.Bot):
 
         # Making sure that the userdb exists.
         userdb.create()
-
-        # Creating dict of all pins in channels in the guilds.
-        # pinsDict is first set to None so we know that it's not done
-        # if there's a pin made while the bot is loading.
-        global pinsDict
-        pinsDict = None
-        pinsDict = await pinlist.create_dict(self.guilds)
 
         # Greetings message for all the servers now that all is setup.
         # This has been disabled due to being annoying as fuck.
