@@ -17,10 +17,13 @@ class MrFreezeClient(commands.Bot):
         self.bg_task = self.loop.create_task(self.bg_task_manager())
 
     async def on_ready(self):
-        print ('We have logged in as {0.user}'.format(bot))
-        print ('User name: ' + str(bot.user.name))
-        print ('User ID: ' + str(bot.user.id))
-        print ('-----------')
+        # Escape sequences:
+        # 0 reset, 1 bold, 36 cyan
+        print('\033[36;1m' + 'We have logged in as {0.user}'.format(bot))
+        print('\033[0;36m' + 'User name:           \033[1m{}'.format(bot.user.name))
+        print('\033[0;36m' + 'User ID:             \033[1m{}'.format(bot.user.id))
+        print('\033[0;36m' + 'Number of servers:   \033[1m{}'.format(len(bot.guilds)))
+        print('\033[0m')
 
         # Making sure that the userdb exists.
         userdb.create()
@@ -33,12 +36,16 @@ class MrFreezeClient(commands.Bot):
         pinsDict = await pinlists.create_dict(bot.guilds)
 
         # Greetings message for all the servers now that all is setup.
-        for i in bot.guilds:
-            try:
-                bot_trash = discord.utils.get(i.channels, name='bot-trash')
-                await bot_trash.send(':wave: ' + native.mrfreeze())
-            except:
-                print ('ERROR: No channel bot-trash in ' + str(i.name) + '. Can\'t greet them.')
+        # This has been disabled due to being annoying as fuck.
+        # Replaced with writing a single line to the terminal instead.
+        print('\033[37;1m\n' + 'READY WHEN YOU ARE CAP\'N!' + '\033[0m')
+        #
+        # for i in bot.guilds:
+        #     try:
+        #         bot_trash = discord.utils.get(i.channels, name='bot-trash')
+        #         await bot_trash.send(':wave: ' + native.mrfreeze())
+        #     except:
+        #         print ('ERROR: No channel bot-trash in ' + str(i.name) + '. Can\'t greet them.')
 
         # Set activity to "Listening to your commands"
         await bot.change_presence(status=None, activity=
