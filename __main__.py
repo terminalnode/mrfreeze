@@ -23,6 +23,7 @@ class MrFreezeClient(commands.Bot):
         print('\033[0;36m' + 'User name:           \033[1m{}'.format(bot.user.name))
         print('\033[0;36m' + 'User ID:             \033[1m{}'.format(bot.user.id))
         print('\033[0;36m' + 'Number of servers:   \033[1m{}'.format(len(bot.guilds)))
+        print('\033[0;36m' + 'Number of users:     \033[1m{}'.format(len(bot.users)))
         print('\033[0m')
 
         # Making sure that the userdb exists.
