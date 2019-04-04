@@ -23,22 +23,12 @@ class MrFreezeClient(commands.Bot):
         # Making sure that the userdb exists.
         userdb.create()
 
-        # Greetings message for all the servers now that all is setup.
-        # This has been disabled due to being annoying as fuck.
-        # Replaced with writing a single line to the terminal instead.
-        print('\033[37;1m\n' + 'READY WHEN YOU ARE CAP\'N!' + '\033[0m')
-        #
-        # for i in bot.guilds:
-        #     try:
-        #         bot_trash = discord.utils.get(i.channels, name='bot-trash')
-        #         await bot_trash.send(':wave: ' + native.mrfreeze())
-        #     except:
-        #         print ('ERROR: No channel bot-trash in ' + str(i.name) + '. Can\'t greet them.')
-
         # Set activity to "Listening to your commands"
         await self.change_presence(status=None, activity=
             discord.Activity(name='your commands...', type=discord.ActivityType.listening))
 
+        # Signal to the terminal that the bot is ready.
+        print('\033[37;1m\n' + 'READY WHEN YOU ARE CAP\'N!' + '\033[0m')
 
     async def bg_task_manager(self):
         await self.wait_until_ready()
