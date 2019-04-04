@@ -119,11 +119,12 @@ bot = MrFreezeClient(command_prefix='!')
 
 # Cogs starting with cmd contains only one command,
 # Cogs starting with cmds has multiple commands sharing some common trait.
-load_cogs = [ 'cogs.maintenance',         # Owner-only commands
+load_cogs = [ 'cogs.maintenance',   # Owner-only commands
               'cogs.moderation',    # Mod-only commands.
               'cogs.about',         # !dummies, !readme, !source
               'cogs.quotes',        # !quote
               'cogs.user_cmds',     # Various smaller commands: !rules, !vote, !mrfreeze
+              'cogs.inkcyclopedia', # Listen for inkzzz.
               ]
 
 # Here's where the actual loading of the cogs go.
@@ -148,10 +149,7 @@ async def on_message(message):
                               '°?f(ahrenheit)?(reedom( units)?)?(u)?|°?k(elvin)?|°?r(ankine)?)[^\w]',
                               ' ' + message.content.lower() + ' ')
 
-    if message.author == bot.user:
-        pass # never do anything the bot says.
-
-    elif ctx.valid: # this is a command, we should invoke it.
+    if ctx.valid: # this is a command, we should invoke it.
         await bot.invoke(ctx)
 
     elif tempstatement != None:
