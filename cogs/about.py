@@ -52,7 +52,7 @@ class AboutCog(commands.Cog, name='About'):
         todos = discord.Embed(color=0x00dee9)
         todos.set_thumbnail(url=native.get_image('TODOs'))
         todos.add_field(name='You\'re a nosy one! Here\'s a list of all the \'cool\' stuff Terminal\'s got planned for me... :sleeping:',
-                        value='https://gitlab.com/terminalnode/MrFreeze/blob/master/TODOs')
+                        value='https://gitlab.com/terminalnode/MrFreeze/blob/master/TODO.md')
 
         await ctx.send(embed=todos)
 
