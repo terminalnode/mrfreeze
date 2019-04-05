@@ -1,37 +1,63 @@
+# TODOs
 This is a TODO list so I won't forget.
 Disclaimer: I tend to forget this document exists.
 
-################################
-Improvements to command functions
-################################
-Quotes:
-  Name quotes:
-    Merge 'read' and 'random' in cmd_quote.py
-    Check for double name entries, all names must be unique.
-    Check that the name isn't all numbers.
-  Images in quotes:
-    Post all images used in quotes to a separate image channel in MrFreeze's Cave.
-  Adding quotes:
-    Allow adding last post by a certain user with !quote add @username
-    Perhaps some kind of emoji-vote function which also adds quotes?
+## Improvements
+### Database split
+The database is too large, sort of. It holds a lot of different types of information which makes it kind of cool in a way, but also means it's a possible point of failure for a ton of different features. This is what we in the industry call NG or だめだよ - it sucks.
 
-################################
-Improvements to automatic functions / general features
-################################
-None
+Primary split ideas:
+- One for mutes/banishes etc.
+- One for quotes.
+- One for !region blacklists.
 
-################################
-New features
-################################
-Top priority: !help
-- Ink Lookup
-  https://www.reddit.com/r/fountainpens/comments/5egjsa/klundtasaurs_inkcyclopedia_for_rfountainpens/
-  Ask Klundo if it's OK to pull from Inkcyclopaedia
+Secondary split ideas (functions not implemented yet):
+- One for server settings.
+- One for rock, paper, scissors score tables.
 
-- Move post (with a quote-like embed)
+### Quotes
+Quotes is a travesty and will probably be disabled in the first release of MrFreeze 2.0. Before disabling there are a few changes however that need to be made to the database, though that's mostly included in the database split above.
 
-- Blackjack
+After MF 2.0 (codename "badass mf") is released, probably, these are the things that need fixing.
 
-- Rock, paper, scissors
+Priority 1:
+* Make it work with the new DB structure.
+* Check that the name isn't all numbers.
+* Check for double name entries, all names must be unique.
 
-- Dice
+Priority 2:
+* Allow adding last post by a certain user with !quote add @username
+
+Priority 3:
+* Merge 'read' and 'random' in cmd_quote.py.
+* Some way of saving image attachments.
+* Perhaps some kind of emoji-vote function which also adds quotes? React with some obscure(?) emoji, if enough people do it it becomes a quote.
+
+## New features
+New features are listed in order of priority.
+
+### Inkcyclopedia
+Semi-automatic ink lookup based on klundtasaur's inkcyclopedia:
+https://www.reddit.com/r/fountainpens/comments/5egjsa/klundtasaurs_inkcyclopedia_for_rfountainpens/
+
+### !move <ID> #channel
+Move one or more posts to a specified channel
+* Use post IDs to specify which posts.
+* Use a quote-like embed for reposting.
+
+### !disable <ID>
+Owner-only command. Disable a certain MrFreeze in one server (enabling multiple concurrent versions to be present).
+This is useful because MrFreeze can pull info from multiple servers, enabling *some* support for certain nitro emojis and the like.
+
+
+## New features (fun times)
+Games and other very low priority features/ideas.
+
+### !blackjack
+Multiplayer game of blackjack.
+
+### !rps (Rock, paper, scissors)
+Rock, paper scissors with a scoreboard.
+
+### !dice
+Command for dice throws. Should be able to parse multiple dice and multiple types of dice.
