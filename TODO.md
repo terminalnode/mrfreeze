@@ -1,63 +1,75 @@
-# TODOs
-This is a TODO list so I won't forget.
-Disclaimer: I tend to forget this document exists.
+# MrFreeze 2.0
+The next big thing, this is gonna be huuuuge! At time of writing, most things I want in place are already in place. However some early design choices, it has dawned on me, are kind of shitty and needs fixing. The features and tasks that made this cut are such that I feel they need adressing before release. The criterias for this can be any of the following:
+* The feature is trivial to implement or is at least low effort compared to potential gains.
+* The feature is absolutely essential to the release and not including it will cause problems down the line.
+
+The reason why 2.0 and 2.1+ are split is that this project has been in the works for so long it's becoming a meme. Version 1 has been hotfixed multiple times during development and really needs to be retired ASAP. 
 
 ## Improvements
-### Database split
+### Database split 2.0
+Status: work not started
+
 The database is too large, sort of. It holds a lot of different types of information which makes it kind of cool in a way, but also means it's a possible point of failure for a ton of different features. This is what we in the industry call NG or だめだよ - it sucks.
 
-Primary split ideas:
+New database files:
 - One for mutes/banishes etc.
-- One for quotes.
-- One for !region blacklists.
+- One for !region blacklisting.
 
-Secondary split ideas (functions not implemented yet):
-- One for server settings.
-- One for rock, paper, scissors score tables.
-
-### Quotes
-Quotes is a travesty and will probably be disabled in the first release of MrFreeze 2.0. Before disabling there are a few changes however that need to be made to the database, though that's mostly included in the database split above.
-
-After MF 2.0 (codename "badass mf") is released, probably, these are the things that need fixing.
-
-Priority 1:
-* Make it work with the new DB structure.
-* Check that the name isn't all numbers.
-* Check for double name entries, all names must be unique.
-
-Priority 2:
-* Allow adding last post by a certain user with !quote add @username
-
-Priority 3:
-* Merge 'read' and 'random' in cmd_quote.py.
-* Some way of saving image attachments.
-* Perhaps some kind of emoji-vote function which also adds quotes? React with some obscure(?) emoji, if enough people do it it becomes a quote.
+This drops support for quotes (getting to this in a bit) and rock, paper, scissors (an MF 1 feature that's never used anyway).
 
 ## New features
 New features are listed in order of priority.
 
 ### Inkcyclopedia
+Status: work in progress
+
 Semi-automatic ink lookup based on klundtasaur's inkcyclopedia:
 https://www.reddit.com/r/fountainpens/comments/5egjsa/klundtasaurs_inkcyclopedia_for_rfountainpens/
 
 ### !move <ID> #channel
+Status: work not started
+
 Move one or more posts to a specified channel
 * Use post IDs to specify which posts.
 * Use a quote-like embed for reposting.
 
 ### !disable <ID>
+Status: work not started
+
 Owner-only command. Disable a certain MrFreeze in one server (enabling multiple concurrent versions to be present).
 This is useful because MrFreeze can pull info from multiple servers, enabling *some* support for certain nitro emojis and the like.
 
+## Bug testing
+All these features and improvements will need to be tested once implemented.
 
-## New features (fun times)
-Games and other very low priority features/ideas.
+# MrFreeze 2.1+
+This is the post-release plans for MrFreeze that will likely not make it in for version 2.0 (but might)
+
+## New features
+Features that will not be present in MF 2.0.
+
+### Quotes
+Status: somewhat completed, but going to need a lot of reworking.
+
+* Make a new database for it it.
+* Check that the name isn't all numbers.
+* Check for double name entries, all names must be unique.
+* Allow adding last post by a certain user with !quote add @username
+* Merge 'read' and 'random' in cmd_quote.py.
+* Some way of saving image attachments.
+* Perhaps some kind of emoji-vote function which also adds quotes? React with some obscure(?) emoji, if enough people do it it becomes a quote.
 
 ### !blackjack
+Status: work not started
+
 Multiplayer game of blackjack.
 
 ### !rps (Rock, paper, scissors)
+Status: work not started
+
 Rock, paper scissors with a scoreboard.
 
 ### !dice
+Status: work not started
+
 Command for dice throws. Should be able to parse multiple dice and multiple types of dice.
