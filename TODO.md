@@ -42,6 +42,8 @@ This is useful because MrFreeze can pull info from multiple servers, enabling *s
 ## Bug testing
 All these features and improvements will need to be tested once implemented.
 
+----------
+
 # MrFreeze 2.1+
 This is the post-release plans for MrFreeze that will likely not make it in for version 2.0 (but might)
 
