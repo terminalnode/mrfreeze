@@ -15,7 +15,7 @@ class DepartureHandlerCog(commands.Cog, name='DepartureHandler'):
         embed = discord.Embed(color=0x00dee9)
         embed.set_thumbnail(url=member.avatar_url)
         embed.add_field( name='A member has left the server! :sob:',
-                         value=('**%s#%s** is a smudgerous trech who\'s turned their back on %s. We now have %s members.' %
+                         value=('**%s#%s** is a smudgerous trech who\'s turned their back on %s. We now have only %s members.' %
                          (member.name, str(member.discriminator), member.guild.name, member_count)) )
         await mod_channel.send(embed=embed)
 
