@@ -17,6 +17,9 @@ New database files:
 
 This drops support for quotes (getting to this in a bit) and rock, paper, scissors (an MF 1 feature that's never used anyway).
 
+### Make !banish etc work with @ MrFreeze
+Support for using @ MrFreeze for highlights has been added. And now he banishes himself..... GREAT.
+
 ## New features
 New features are listed in order of priority.
 
