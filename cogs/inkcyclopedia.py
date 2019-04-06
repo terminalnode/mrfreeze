@@ -15,7 +15,7 @@ class InkcyclopediaCog(commands.Cog, name='Inkcyclopedia'):
     @commands.Cog.listener()
     async def on_ready(self):
         # Load up the ink db!
-        with open('databases/inkcyclopedia.csv', encoding='utf-8-sig') as inkfile:
+        with open('databases/dbfiles/inkcyclopedia.csv', encoding='utf-8-sig') as inkfile:
             inkdb = csv.reader(inkfile)
 
             for row in inkdb:
