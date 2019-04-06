@@ -45,15 +45,23 @@ This is useful because MrFreeze can pull info from multiple servers, enabling *s
 ## Bug testing
 All these features and improvements will need to be tested once implemented.
 
+Some points not to forget:
+* Check that users who are manually unmuted don't get prolonged mutes when remuted.
+
 ----------
 
 # MrFreeze 2.1+
 This is the post-release plans for MrFreeze that will likely not make it in for version 2.0 (but might)
 
 ## New features
-Features that will not be present in MF 2.0.
+Features that will (probably) not be present in MF 2.0.
 
-### Quotes
+### !settings
+Status: work not started.
+
+A database saving a certain number of settings keys that can be modified without going into the bot source code. The disable feature planned for 2.0 should be one of those, and thus the database may be delivered earlier.
+
+### !quotes
 Status: somewhat completed, but going to need a lot of reworking.
 
 * Make a new database for it it.
