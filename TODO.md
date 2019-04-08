@@ -49,6 +49,7 @@ All these features and improvements will need to be tested once implemented.
 
 Some points not to forget:
 * Check that users who are manually unmuted don't get prolonged mutes when remuted.
+* Check that Yoss' helldog spawns for sufficiently high temperatures.
 
 ----------
 
