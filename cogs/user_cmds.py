@@ -1,7 +1,7 @@
 import discord, re, datetime
 from discord.ext import commands
-# from discord.ext.commands.cooldowns import BucketType
 from botfunctions import native, checks, userdb
+from databases import regionbl
 
 class UserCmdsCog(commands.Cog, name='Everyone'):
     """These are the fun commands, everything else is boring and lame. Frankly there's no reason you should pay attention to anything that's not on this page."""
@@ -187,7 +187,7 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
         ### See if the user is a mod, if they're not see if they're blacklisted.
         is_mod = await checks.is_mod(ctx.author)
         if not is_mod:
-            is_blacklisted = userdb.is_blacklisted(ctx.author)
+            is_blacklisted = regionbl.check_blacklist(ctx.author)
         else:
             is_blacklisted = False
 
@@ -197,7 +197,7 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
         # - antarctica
         # - conflicting blacklist (if we have both)
         # - remove blacklist
-        # - add blacklist,
+        # - add blacklist
         # - block user due to blacklisting
         # - list regions
         # - assign a region
@@ -302,17 +302,18 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
 
                 # userdb.fix_blacklist takes the boolean argument 'add'
                 # to know if it's gonna add or delete entries.
+                add_bl, remove_bl = False, False
                 if add_blacklist:
-                    action = True
+                    add_bl = True
                 else:
-                    action = False
+                    remove_bl = True
 
                 # Who was added and who wasn't?
                 list_of_fails = list()
                 list_of_successes = list()
 
                 for user in ctx.message.mentions:
-                    success, blacklisted = userdb.fix_blacklist(user, add=action)
+                    success, blacklisted = regionbl.blacklist(user, add=add_bl, remove=remove_bl)
                     if success:
                         list_of_successes.append(user)
                     else:
@@ -371,8 +372,8 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
                         await ctx.send(replystr % (ctx.author.mention, success_str, fails_str))
 
         elif is_blacklisted:
-            replystr = ('%s Smuds like you are why we can\'t have nice things, or rather...' +
-                       'why you can\'t have nice things. The *privilege* of changing your own' +
+            replystr = ('%s Smuds like you are why we can\'t have nice things, or rather... ' +
+                       'why you can\'t have nice things. The *privilege* of changing your own ' +
                        'region has been revoked from you.')
             await ctx.send(replystr % (ctx.author.mention))
 

@@ -13,6 +13,8 @@ The database is too large, sort of. It holds a lot of different types of informa
 
 New database files:
 - One for mutes/banishes etc.
+
+Already finished database files:
 - One for !region blacklisting.
 
 This drops support for quotes (getting to this in a bit) and rock, paper, scissors (an MF 1 feature that's never used anyway).

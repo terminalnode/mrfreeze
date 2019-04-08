@@ -1,7 +1,7 @@
 import discord, asyncio
 from discord.ext import commands
-from botfunctions import userdb
-from botfunctions import native
+from botfunctions import native, userdb
+from databases import *
 
 class MrFreezeClient(commands.Bot):
     def __init__(self, *args, **kwargs):
@@ -22,6 +22,7 @@ class MrFreezeClient(commands.Bot):
 
         # Making sure that the userdb exists.
         userdb.create()
+        regionbl.create()
 
         # Set activity to "Listening to your commands"
         await self.change_presence(status=None, activity=
