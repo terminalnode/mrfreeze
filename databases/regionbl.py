@@ -34,10 +34,6 @@ def create():
         except sqlite3.Error as e:
             print('{}Database creation failed:     {}Region blacklist\n{}{}'.format('\033[0;36m', '\033[31;1m', str(e), '\033[0m'))
 
-# This module needs the following features:
-# userdb.is_blacklisted(ctx.author)
-# userdb.fix_blacklist(user, add=True/False) -- True for add and False for remove.
-
 def user_info(user):
     """Returns ((user, server) username) based on a user object."""
     member = user.id
