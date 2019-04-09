@@ -2,10 +2,7 @@ import sqlite3
 
 # A few variables used throughout the module
 dbname  = 'Region blacklist'
-cyan    = '\033[0;36m'
-green   = '\033[32;1m'
-red     = '\033[31;1m'
-reset   = '\033[0m'
+from internals import var # Colors
 
 def connect_to_db():
     """Creates a connection to the regionbl database."""
@@ -36,10 +33,10 @@ def create():
         try:
             c = conn.cursor()
             c.execute(blacklists)
-            print(f'{cyan}Database creation successful: {green}{dbname}{reset}')
+            print(f'{var.cyan}Database creation successful: {var.green}{dbname}{var.reset}')
 
         except sqlite3.Error as e:
-            print(f'{cyan}Database creation failed:     {red}{dbname}\n{e}{reset}')
+            print(f'{var.cyan}Database creation failed:     {var.red}{dbname}\n{e}{var.reset}')
 
 def user_info(user):
     """Returns ((user, server) username) based on a user object."""
@@ -61,7 +58,7 @@ def check(user):
     if len(fetch) == 0:
         return False
     else:
-        print(f'{red}{name}{cyan} was caught trying to change their region!{reset}')
+        print(f'{var.red}{name}{var.cyan} was caught trying to change their region!{var.reset}')
         return True
 
 # Split into blacklist(), add() and remove() as we're doing with mutes.
@@ -86,20 +83,20 @@ def blacklist(user, add=False, remove=False):
             try:
                 c.execute(sql, member)
                 if add:
-                    print(f'{green}{name}{cyan} was added to the region blacklist.{reset}')
+                    print(f'{var.green}{name}{var.cyan} was added to the region blacklist.{var.reset}')
                     return (True, True)
                 elif remove:
-                    print(f'{green}{name}{cyan} was removed from the region blacklist.{reset}')
+                    print(f'{var.green}{name}{var.cyan} was removed from the region blacklist.{var.reset}')
                     return (True, False)
             except sqlite3.Error as e:
                 if "UNIQUE constraint" in str(e):
-                    print(f'{red}{name}{cyan} is already in the region blacklist.{reset}')
+                    print(f'{var.red}{name}{var.cyan} is already in the region blacklist.{var.reset}')
                 else:
-                    print(f'{cyan}An sqlite3 exception occured when editing {red}{name}{cyan} in the region blacklist:\n{e}{reset}')
+                    print(f'{var.cyan}An sqlite3 exception occured when editing {var.red}{name}{var.cyan} in the region blacklist:\n{e}{var.reset}')
                 return (False, add)
 
             except Exception as e:
-                print(f'{cyan}A general exception occured when editing {red}{name}{cyan} in the region blacklist:\n{e}{reset}')
+                print(f'{var.cyan}A general exception occured when editing {var.red}{name}{var.cyan} in the region blacklist:\n{e}{var.reset}')
                 return (False, add)
 
 
