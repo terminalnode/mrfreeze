@@ -1,15 +1,8 @@
 import discord, asyncio
 from discord.ext import commands
 from botfunctions import native
-from databases import *
-
-# Color variables used in various messages.
-cyan        = '\033[0;36m'
-boldcyan    = '\033[36;1m'
-boldwhite   = '\033[37;1m'
-green       = '\033[32;1m'
-red         = '\033[31;1m'
-reset       = '\033[0m'
+from databases import mutes, regionbl
+from internals import var # Colors
 
 class MrFreeze(commands.Bot):
     def __init__(self, *args, **kwargs):
@@ -19,11 +12,11 @@ class MrFreeze(commands.Bot):
         self.bg_task = self.loop.create_task(self.bg_task_manager())
 
     async def on_ready(self):
-        print(f'{boldcyan}We have logged in as {self.user}')
-        print(f'{cyan}User name:           {boldcyan}{self.user.name}')
-        print(f'{cyan}User ID:             {boldcyan}{self.user.id}')
-        print(f'{cyan}Number of servers:   {boldcyan}{len(self.guilds)}')
-        print(f'{cyan}Number of users:     {boldcyan}{len(self.users)}{reset}')
+        print(f'{var.boldcyan}We have logged in as {self.user}')
+        print(f'{var.cyan}User name:           {var.boldcyan}{self.user.name}')
+        print(f'{var.cyan}User ID:             {var.boldcyan}{self.user.id}')
+        print(f'{var.cyan}Number of servers:   {var.boldcyan}{len(self.guilds)}')
+        print(f'{var.cyan}Number of users:     {var.boldcyan}{len(self.users)}{var.reset}')
 
         # Making sure that the userdb exists.
         # userdb.create()   # This is being replaced.
@@ -35,7 +28,7 @@ class MrFreeze(commands.Bot):
             discord.Activity(name='your commands...', type=discord.ActivityType.listening))
 
         # Signal to the terminal that the bot is ready.
-        print(f'{boldwhite}\nREADY WHEN YOU ARE CAP\'N!{reset}')
+        print(f'{var.boldwhite}\nREADY WHEN YOU ARE CAP\'N!{var.reset}')
 
     async def bg_task_manager(self):
         await self.wait_until_ready()
@@ -94,6 +87,6 @@ class MrFreeze(commands.Bot):
                         try:
                             await bot_trash.send(f"It's with great regreat that I need to inform y'all that the exile of {unmuted_mentions} has come to an end.")
                         except Exception as e:
-                            print(f"{cyan}Can't post unbanished notification: {red}{e}{reset}")
+                            print(f"{var.cyan}Can't post unbanished notification: {var.red}{e}{var.reset}")
                     else:
-                        print (f"{cyan}Can't post unbanished notification: {red}There is no bot-trash.{reset}")
+                        print (f"{var.cyan}Can't post unbanished notification: {var.red}There is no bot-trash.{var.reset}")
