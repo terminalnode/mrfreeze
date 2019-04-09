@@ -1,4 +1,4 @@
-import discord, re, datetime
+import discord, re, datetime, random
 from discord.ext import commands
 from botfunctions import native, checks, userdb
 from databases import regionbl
@@ -67,7 +67,8 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
             replystr = '%s You\'re not sending *ME* to the *COOLER*!'
             await ctx.send(replystr % (ctx.author.mention,))
         else:
-            quote = native.mrfreeze()
+            with open('config/mrfreezequotes', 'r') as f:
+                quote = random.choice(f.read().strip().split('\n'))
             quote = quote.replace('Batman', ctx.author.mention)
             quote = quote.replace('Gotham', ('**' + ctx.guild.name + '**'))
             await ctx.send(quote)
