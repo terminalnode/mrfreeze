@@ -46,7 +46,6 @@ def user_info(user):
     member = user.id
     server = user.guild.id
     name = f'{user.name}#{user.discriminator}'
-
     return ((member, server), name)
 
 def check(user):
