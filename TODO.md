@@ -47,9 +47,26 @@ This is useful because MrFreeze can pull info from multiple servers, enabling *s
 ## Bug testing
 All these features and improvements will need to be tested once implemented.
 
-Some points not to forget:
-* Check that users who are manually unmuted don't get prolonged mutes when remuted.
-* Check that Yoss' helldog spawns for sufficiently high temperatures.
+Some points not to forget. Check that...
+**Temp conversion**
+* ...Yoss' helldog spawns for sufficiently high temperatures.
+
+**Region**
+* ...blacklisted users can't and non-blacklisted users can change regions.
+* ...mods can and non-mods can't edit the blacklist.
+* ...listing of regions work.
+* ...mods can and non-mods can't produce a list of blacklisted people.
+
+**Mute/banish etc**
+* ...users who are manually unmuted don't get prolonged mutes when remuted.
+
+**Vote**
+* ...number emoji work.
+* ...animated emoji work.
+* ...out of server emoji work as long as Freeze is in that server.
+
+**Say**
+* ...out of server emoji work as long as Freeze is in that server.
 
 ----------
 
