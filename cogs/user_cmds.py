@@ -187,7 +187,7 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
         ### See if the user is a mod, if they're not see if they're blacklisted.
         is_mod = await checks.is_mod(ctx.author)
         if not is_mod:
-            is_blacklisted = regionbl.check_blacklist(ctx.author)
+            is_blacklisted = regionbl.check(ctx.author)
         else:
             is_blacklisted = False
 

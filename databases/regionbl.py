@@ -49,7 +49,7 @@ def user_info(user):
 
     return ((member, server), name)
 
-def check_blacklist(user):
+def check(user):
     """Returns true if the user is blacklisted. False otherwise."""
     member, name = user_info(user)
 
@@ -64,6 +64,8 @@ def check_blacklist(user):
     else:
         print(f'{red}{name}{cyan} was caught trying to change their region!{reset}')
         return True
+
+# Split into add_blacklist and remove_blacklist.
 
 def blacklist(user, add=False, remove=False):
     """Adds and removes users from the blacklist.
