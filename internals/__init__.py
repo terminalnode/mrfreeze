@@ -1,1 +1,1 @@
-__all__ = ['vars', 'mrfreeze']
+__all__ = ['var', 'mrfreeze']
