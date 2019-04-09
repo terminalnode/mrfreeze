@@ -65,7 +65,7 @@ def check(user):
         print(f'{red}{name}{cyan} was caught trying to change their region!{reset}')
         return True
 
-# Split into add_blacklist and remove_blacklist.
+# Split into blacklist(), add() and remove() as we're doing with mutes.
 
 def blacklist(user, add=False, remove=False):
     """Adds and removes users from the blacklist.
