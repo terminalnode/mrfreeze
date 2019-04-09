@@ -1,6 +1,6 @@
 import discord, asyncio
 from discord.ext import commands
-from botfunctions import native, userdb
+from botfunctions import native
 from databases import *
 
 # Color variables used in various messages.
@@ -11,7 +11,7 @@ green       = '\033[32;1m'
 red         = '\033[31;1m'
 reset       = '\033[0m'
 
-class MrFreezeClient(commands.Bot):
+class MrFreeze(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -26,8 +26,9 @@ class MrFreezeClient(commands.Bot):
         print(f'{cyan}Number of users:     {boldcyan}{len(self.users)}{reset}')
 
         # Making sure that the userdb exists.
-        userdb.create()
+        # userdb.create()   # This is being replaced.
         regionbl.create()
+        mutes.create()
 
         # Set activity to "Listening to your commands"
         await self.change_presence(status=None, activity=

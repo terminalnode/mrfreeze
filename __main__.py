@@ -1,13 +1,10 @@
 import discord
-from discord.ext import commands
-import collections, random, signal
-import traceback, sys, asyncio
-
-# Importing commands from ./botfunctions
-from botfunctions import *
+import traceback, sys, signal
+# from bot import *
+from internals import *
 
 # Instantiate the bot.
-bot = mrfreeze.MrFreezeClient(command_prefix=['!'])
+bot = mrfreeze.MrFreeze(command_prefix=['!'])
 
 # Loading all the cogs.
 # One line for each cog makes it easy to disable.
