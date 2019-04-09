@@ -1,11 +1,11 @@
 import sqlite3
 
 # A few variables used throughout the module
-dbname = 'Region blacklist'
-cyan = '\033[0;36m'
-green = '\033[32;1m'
-red = '\033[31;1m'
-reset = '\033[0m'
+dbname  = 'Region blacklist'
+cyan    = '\033[0;36m'
+green   = '\033[32;1m'
+red     = '\033[31;1m'
+reset   = '\033[0m'
 
 def connect_to_db():
     """Creates a connection to the regionbl database."""
