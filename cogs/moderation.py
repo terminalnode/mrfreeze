@@ -52,7 +52,7 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         emojis = [ self.bot.get_emoji(int(i[1])) for i in emoji_tags ]
 
         if None in emojis:
-            await ctx.channel.send('I don\'t have access to all your snazzy nitro emoji.')
+            await ctx.channel.send("I don't have access to all your snazzy nitro emoji.")
         else:
             await channel.send(replystr.format(*emojis))
 
@@ -91,8 +91,7 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
                         called_rules.append(rule_no)
 
         if len(called_rules) == 0:
-            replystr = 'Sorry %s, your terms don\'t seem to match any rules. :thinking:'
-            await ctx.send(replystr % (ctx.author.mention,))
+            await ctx.send(f"Sorry {ctx.author.mention}, your terms don't seem to match any rules. :thinking:")
         else:
             await ctx.send(native.get_rule(called_rules))
 
@@ -213,81 +212,71 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
             if tried_to_mute_mod:
                 if (len(ctx.message.mentions) == 1) and (ctx.author in ctx.message.mentions):
                     # Only tried to mute themselves.
-                    replystr = '%s You tried to banish yourself! SAD!'
-                    replystr = (replystr % (ctx.author.mention,))
+                    replystr = f'{ctx.author.mention} You tried to banish yourself! SAD!'
 
                 elif len(mods_list) == len(ctx.message.mentions):
                     # Only tried to mute mods.
-                    replystr = '%s All the users you tried to banish are mods! Please try to get along...'
-                    replystr = (replystr % (ctx.author.mention,))
+                    replystr = f'{ctx.author.mention} All the users you tried to banish are mods! Please try to get along...'
 
                 else:
                     # Tried to mute people other than mods, but also mods.
 
                     if (len(fail_list) == 0) and (len(success_list) == 1):
                         # No fails, singular success.
-                        replystr = '%s It goes without saying that *mods are unbanishable*, however the smud %s will be banished to Antarctica for %s! :penguin:'
-                        replystr = (replystr % (ctx.author.mention, ment_success, time_str))
+                        replystr = (f'{ctx.author.mention} It goes without saying that *mods are unbanishable*, ' +
+                            f'however the smud {ment_success} will be banished to Antarctica for {time_str}! :penguin:')
 
                     elif (len(fail_list) == 0) and (len(success_list) > 1):
                         # No fails, plural success.
-                        replystr = '%s *I\'m unable to banish mods*, however the smuds known as %s will be banished to Antarctica for %s! :penguin:'
-                        replystr = (replystr % (ctx.author.mention, ment_success, time_str))
+                        replystr = (f"{ctx.author.mention} *I'm unable to banish mods*, however the smuds known " +
+                            f" as {ment_success} will be banished to Antarctica for {time_str}! :penguin:")
 
                     elif (len(fail_list) > 0) and (len(success_list) > 0):
                         # Mixed results: at least one fail and at least one success.
-                        replystr = '%s *I know I can\'t banish mods*, but it seems I was only able to banish some of the smuds mentioned.'
-                        replystr += '\n**Banished:** %s\n**Not Banished:** %s'
-                        replystr += 'The banished will be stuck there for %s'
-                        replystr += '\nMy diagnostics tell the error(s) were due to: %s'
-                        replystr = (replystr % (ctx.author.mention, ment_success, ment_fail, time_str, error_str))
+                        replystr  = f"{ctx.author.mentions} *I know I can't banish mods*, but it seems I was only able to banish some of the smuds mentioned.\n"
+                        replystr += f"**Banished:** {ment_success}\n**Not Banished:** {ment_fail}\n"
+                        replystr += f"The banished will be stuck there for {time_str}\n"
+                        replystr += f"My diagnostics tell the error(s) were due to: {error_str}"
 
                     elif (len(fail_list) == 1) and (len(success_list) == 0):
                         # Singular fail, no success.
-                        replystr = '%s I\'m so confused. Of course *I can\'t banish mods* but why couldn\'t I banish %s?\nIt might be due to: %s'
-                        replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
+                        replystr  = f"{ctx.author.mention} I'm so confused. Of course *I can't banish mods* but why couldn't I banish {ment_fail}?\n"
+                        replystr += f"**It might be due to:** {error_str}"
 
                     elif (len(fail_list) > 1) and (len(success_list) == 0):
                         # Plural fail, no success.
-                        replystr = '%s Some higher power seems to have stripped me of my powers! *Mods are of course unbanishable*, but I was also '
-                        replystr += 'unable to banish any of %s!\nMy diagnostics tells me this was due to: %s'
-                        replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
+                        replystr  = f"{ctx.author.mention} Some higher power seems to have stripped me of my powers!"
+                        replystr += f"*Mods are of course unbanishable*, but I was also unable to banish any of {ment_fail}!\n"
+                        replystr += f"**It might be due to:** {error_str}"
 
             elif not tried_to_mute_mod:
                 if (len(ctx.message.mentions) == 0):
                     # Failed to mention anyone.
-                    replystr = '%s You need to mention the people you want me to banish, fool.'
-                    replystr = (replystr % (ctx.author.mention,))
+                    replystr = f'{ctx.author.mention} You need to mention the people you want me to banish, fool.'
 
                 elif (len(fail_list) == 0) and (len(success_list) == 1):
                     # No fail, singular success.
-                    replystr = '%s Excellent, %s is a smud who should\'ve been banished a long time ago if you ask me. They\'ll be stuck at '
-                    replystr += 'sub-zero temperatures for %s. :penguin:'
-                    replystr = (replystr % (ctx.author.mention, ment_success, time_str))
+                    replystr  = f"{ctx.author.mention} Excellent, {ment_success} is a smud who should've been banished a long time ago if you ask me. "
+                    replystr += f"They'll be stuck at sub-zero temperatures for {time_str}. :penguin:"
 
                 elif (len(fail_list) == 0) and (len(success_list) > 1):
                     # No fail, plural success.
-                    replystr = '%s Excellent, %s are smuds who should\'ve been banished a long time ago if you ask me. They\'ll be stuck at '
-                    replystr += 'sub-zero temperatures for %s. :penguin:'
-                    replystr = (replystr % (ctx.author.mention, ment_success, time_str))
+                    replystr  = f"{ctx.author.mention} Excellent, {ment_success} are smuds who should've been banished a long time ago if you ask me. "
+                    replystr += f"They'll be stuck at sub-zero temperatures for {time_str}. :penguin:"
 
                 elif (len(fail_list) > 0) and (len(success_list) > 0):
                     # At least one fail and at least one success.
-                    replystr = '%s I wasn\'t able to banish all of the users requested, however those that were banished will be stuck in Antarctica '
-                    replystr += 'for %s. :penguin:\n**Banished:** %s\n**Not banished:** %s\nErrors were due to: %s'
-                    replystr = (replystr % (ctx.author.mention, time_str, ment_success, ment_fail, error_str))
-
-                elif (len(fail_list) == 1) and (len(success_list) == 0):
-                    # Singular fail, no success.
-                    error_str = error_str.lower().replace('.', '')
-                    replystr = '%s Excellent decision! ...but nope. Due to %s %s will continue to roam free.'
-                    replystr = (replystr % (ctx.author.mention, error_str, ment_fail))
+                    replystr  = f"{ctx.author.mention} I wasn't able to banish all of the users requested, "
+                    replystr += f"however those that were banished will be stuck in Antarctica for {time_str}. :penguin:\n"
+                    replystr += f"**Banished:** {ment_success}\n**Not banished:** {ment_fail}\n"
+                    replystr += f"Errors were due to: {error_str}"
 
                 elif (len(fail_list) > 0) and (len(success_list) == 0):
+                    # Singular fail, no success.
                     # Plural fail, no success.
                     error_str = error_str.lower().replace('.', '')
-                    replystr = '%s Excellent decision! ...but nope. Due to %s %s will continue to roam free.'
-                    replystr = (replystr % (ctx.author.mention, error_str, ment_fail))
+                    replystr  = f"{ctx.author.mention} **Excellent decision!**\n"
+                    replystr += f"...but nope. Due to {error_str} {ment_fail} will continue to roam free."
 
         elif not is_banish:
             if tried_to_mute_mod:
