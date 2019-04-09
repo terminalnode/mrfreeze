@@ -14,13 +14,14 @@ def create():
 
     # Complete list of tables and their rows in this database.
     # Primary key(s) is marked with an asterisk (*).
-    # TABLE         ROWS        FUNCTION
-    # blacklists    id*         User ID
-    #               server*     Server ID
+    # Mandatory but not primary keys are marked with a pling (!).
+    # TABLE         ROWS        TYPE        FUNCTION
+    # blacklists    id*         integer     User ID
+    #               server*     integer     Server ID
 
     blacklists = """CREATE TABLE IF NOT EXISTS region_bl(
-        id integer NOT NULL,
-        server integer NOT NULL,
+        id          integer NOT NULL,
+        server      integer NOT NULL,
         CONSTRAINT server_user PRIMARY KEY (id, server));"""
 
     # Now we'll create the database.
