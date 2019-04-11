@@ -14,7 +14,7 @@ load_cogs = [   # Mostly for owner/mods.
                 'cogs.about',          # !dummies, !readme, !source
 
                 # Functions directed towards regular users.
-                'cogs.quotes',         # !quote
+                # 'cogs.quotes',         # !quote
                 'cogs.user_cmds',      # Various smaller commands: !vote, !mrfreeze
 
                 # Silent(ish) bot functions.
