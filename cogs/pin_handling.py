@@ -1,6 +1,6 @@
 import discord, asyncio
 from discord.ext import commands
-from botfunctions import pinlist
+from internals import pinlist
 
 class PinHandlerCog(commands.Cog, name='PinHandler'):
     """Posts the content of a message that was just pinned to chat."""
