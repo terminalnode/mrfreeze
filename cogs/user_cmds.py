@@ -1,6 +1,6 @@
 import discord, re, datetime, random
 from discord.ext import commands
-from botfunctions import native, checks, userdb
+from internals import native, checks
 from databases import regionbl
 
 class UserCmdsCog(commands.Cog, name='Everyone'):
