@@ -1,8 +1,7 @@
 import discord, asyncio
 from discord.ext import commands
-from botfunctions import native
 from databases import mutes, regionbl
-from internals import var # Colors
+from internals import var, native # Colors
 
 class MrFreeze(commands.Bot):
     def __init__(self, *args, **kwargs):
