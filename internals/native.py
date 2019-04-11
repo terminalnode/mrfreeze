@@ -2,10 +2,24 @@
 # or more (perhaps many more) times in the bot.
 
 import re, datetime, discord
-from . import userdb
+from databases import mutes
 
 def get_author(ctx):
     return str(ctx.author.name + '#' + str(ctx.author.discriminator) + ' ')
+
+def get_antarctica_role(guild):
+    """Currently just gives the role with the name antarctica.
+    In the future this may be expanded so servers can designate whatever role they want as Antarctica."""
+    for role in guild.roles:
+        if role.name.lower() == "antarctica":
+            return role
+
+def get_antarctica_channel(guild):
+    """Currently just gives the channel with the name antarctica.
+    In the future this may be expanded so servers can designate whatever channel they want as Antarctica."""
+    for channel in guild.text_channels:
+        if channel.name.lower() == "antarctica":
+            return channel
 
 def get_image(desired):
     with open('config/files', 'r') as f:
@@ -31,6 +45,7 @@ def get_rule(rules):
     return value
 
 def mentions_list(mentions):
+    """Create a list of mentions from a list of user objects."""
     text_list = str()
 
     if len(mentions) == 0:
@@ -141,7 +156,7 @@ def extract_time(args, fallback_minutes=True):
             args = args.replace(match[0], '')
 
     # Finally we can return our values.
-    return args, add_time, end_date
+    return add_time, end_date
 
 def parse_timedelta(time_delta):
     # This function takes a time delta as it's argument and outputs
@@ -193,32 +208,3 @@ def parse_timedelta(time_delta):
                 time_str += ', '
 
     return time_str
-
-async def punish_banish(ctx):
-    # The user has angered the gods by using a command reserved for mods.
-    # They will be banished to Antarctica for fifteen minutes.
-
-    current_time = datetime.datetime.now()
-    duration = datetime.timedelta(minutes=15)
-    end_time = current_time + duration
-
-    try:
-        await ctx.author.add_roles(discord.utils.get(ctx.guild.roles, name='Antarctica'))
-        prolonged = userdb.prolong_mute(ctx.author, until=end_time)
-        succeeded = True
-    except:
-        succeeded = False
-
-    if not prolonged:
-        replystr = '%s You ignorant smud, you want banish? I\'ll give you banish... '
-        replystr += '15 whole minutes of it! :rage:'
-        replystr = (replystr % (ctx.author.mention,))
-
-    else:
-        replystr = '%s You don\'t have the power to banish, only to be banished... '
-        replystr += 'but it seems you already know that. Your sentence has been '
-        replystr += '***extended*** by 15 minutes!'
-        replystr = (replystr % (ctx.author.mention,))
-
-    if succeeded:
-        await ctx.send(replystr)

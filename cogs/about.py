@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from botfunctions import native
+from internals import native
 
 # Useful links for testing out embeds:
 # https://leovoel.github.io/embed-visualizer/

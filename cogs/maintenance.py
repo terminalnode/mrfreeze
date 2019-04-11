@@ -1,7 +1,7 @@
 import discord, sys, os
 from subprocess import run, PIPE
 from discord.ext import commands
-from botfunctions import checks
+from internals import checks
 
 # This cog is for commands restricted to the owner of the bot (me!).
 # It has features like !restart and !gitupdate.

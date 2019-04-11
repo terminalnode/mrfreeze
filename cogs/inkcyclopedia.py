@@ -1,6 +1,6 @@
 import discord, csv
 from discord.ext import commands
-from botfunctions import native
+from internals import native
 
 # Small script listening to all incoming messages looking for
 # mentions of inks. Based on The Inkcyclopedia by klundtasaur:
