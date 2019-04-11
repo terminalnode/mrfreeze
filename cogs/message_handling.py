@@ -1,6 +1,6 @@
 import discord, re
 from discord.ext import commands
-from botfunctions import temp
+from internals import temp
 
 class MessageHandlerCog(commands.Cog, name='MessageHandler'):
     """How the bot acts when messages are posted."""
