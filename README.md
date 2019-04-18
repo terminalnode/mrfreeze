@@ -19,17 +19,18 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * **!unban**     - Removes ban from the server.
 
 ### User utility commands
-* **!temp**     - DMs a help message regarding the automatic temperature conversion. Does no conversion of it's own.
-* **!rules**    - Displays one, several or all rules depending on how the command is executed.
+* **!temp**      - DMs a help message regarding the automatic temperature conversion. Does no conversion of it's own.
+* **!rules**     - Displays one, several or all rules depending on how the command is executed.
 * **!quote**     - Add, delete, and read random quotes.
 * **!vote**      - Creates a vote where users vote by reacting with specified emoji.
 * * **Caveat:** This does not work with nitro emojis, but does work with server emojis.
 * **!region**    - Allows a user to assign themselves a regional role.
+* **!coin**      - Flips a coin. (!coinflip and !cointoss also work)
 
 ### Silly commands
-* **!activity**  - Changes the activity of the bot ('Playing [...]', 'Listening to [...]' etc). No mod requirement, have fun!
-* **!dummies**   - Invite links for the two dummy bots.
-* **!mrfreeze**  - Posts a MrFreeze-quote with user instead of Batman and server instead of Gotham.
+* **!activity**   - Changes the activity of the bot ('Playing [...]', 'Listening to [...]' etc). No mod requirement, have fun!
+* **!dummies**    - Invite links for the two dummy bots.
+* **!mrfreeze**   - Posts a MrFreeze-quote with user instead of Batman and server instead of Gotham.
 * Commands which post (more or less) useful links
 * * **!readme**    - Posts a link to the github page as well, but to the README.md file (this one!).
 * * **!source**    - Posts a link to this github page.
