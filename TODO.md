@@ -65,7 +65,11 @@ Some points not to forget. Check that...
 * ...out of server emoji work as long as Freeze is in that server.
 
 **Say**
-* ...out of server emoji work as long as Freeze is in that server.
+* ...out of server emoji work.
+* ...out of server emoji MrFreeze doesn't have access to should stop the operation.
+* ...animated emoji work.
+* ...conversion of user ID to user mention works.
+* ...copying of existing user IDs work.
 
 ----------
 

@@ -48,13 +48,22 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
 
         # Now let's find all the custom emoji to make sure they all work.
         # If any of them don't, halt operations.
-        remoji = re.compile('<a?:\w+:(\d+)(?=>)')
-        emoji = remoji.findall(replystr)
+        emoji = re.findall('<a?:\w+:(\d+)(?=>)', replystr)
         impossible = False
         for i in emoji:
             if self.bot.get_emoji(int(i)) == None:
                 impossible = True
                 break
+
+        # If a string of numbers is found, see if it's a user ID.
+        # 1. Find strings of numbers not belonging to a mention.
+        users = re.findall('(?:\s|^)(\d+)', replystr)
+        # 2. See if that number is a user ID for anyone we know.
+        users = [ discord.utils.find(lambda m: m.id == int(user), ctx.guild.members) for user in users ]
+        for user in users:
+            if user == None: continue
+            replystr = replystr.replace(str(user.id), user.mention)
+            replystr = replystr.replace(f'<@!<@!{user.id}>>', user.mention)
 
         if impossible:  await ctx.channel.send(f"{ctx.author.mention} Abort! Abort! There are emoji in your message that I can't use..")
         else:           await channel.send(replystr)
