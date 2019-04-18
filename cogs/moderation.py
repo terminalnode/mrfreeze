@@ -59,9 +59,8 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         # 1. Find strings of numbers not belonging to a mention.
         users = re.findall('(?:\s|^)(\d+)', replystr)
         # 2. See if that number is a user ID for anyone we know.
-        users = [ discord.utils.find(lambda m: m.id == int(user), ctx.guild.members) for user in users ]
+        users = [ ctx.guild.get_member(int(user)) for user in users if ctx.guild.get_member(int(user)) != None ]
         for user in users:
-            if user == None: continue
             replystr = replystr.replace(str(user.id), user.mention)
             replystr = replystr.replace(f'<@!<@!{user.id}>>', user.mention)
 
