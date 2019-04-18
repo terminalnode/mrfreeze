@@ -27,8 +27,20 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
 
     @commands.command(name='praise')
     async def _praise(self, ctx, *args):
+        """Praise me!!"""
         author = ctx.author.mention
         await ctx.send(f"{author} Your praises have been heard, and in return I bestow upon you... nothing!")
+
+    @commands.command(name='icon', aliases=['logo'])
+    async def _logo(self, ctx, *args):
+        """Post the logo of the current server."""
+        author = ctx.author.mention
+        server = ctx.guild.name
+        word = ctx.invoked_with
+
+        logo = discord.Embed()
+        logo.set_image(url=ctx.guild.icon_url_as(format='png'))
+        await ctx.send(f"{author} Here's the server {word} for {server}!", embed=logo)
 
     @commands.command(name='mrfreeze', aliases=['freeze'])
     async def _mrfreeze(self, ctx, *args):

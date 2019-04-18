@@ -26,6 +26,7 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 * * **Caveat:** This does not work with nitro emojis, but does work with server emojis.
 * **!region**    - Allows a user to assign themselves a regional role.
 * **!coin**      - Flips a coin. (!coinflip and !cointoss also work)
+* **!icon**      - Shows the icon/logo for the current server (!logo also works)
 
 ### Silly commands
 * **!activity**   - Changes the activity of the bot ('Playing [...]', 'Listening to [...]' etc). No mod requirement, have fun!
