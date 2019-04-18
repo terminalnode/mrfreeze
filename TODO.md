@@ -6,22 +6,6 @@ The next big thing, this is gonna be huuuuge! At time of writing, most things I 
 The reason why 2.0 and 2.1+ are split is that this project has been in the works for so long it's becoming a meme. Version 1 has been hotfixed multiple times during development and really needs to be retired ASAP. 
 
 ## Improvements
-### Database split 2.0
-Status: work not started
-
-The database is too large, sort of. It holds a lot of different types of information which makes it kind of cool in a way, but also means it's a possible point of failure for a ton of different features. This is what we in the industry call NG or だめだよ - it sucks.
-
-New database files:
-- One for mutes/banishes etc.
-
-Already finished database files:
-- One for !region blacklisting.
-
-This drops support for quotes (getting to this in a bit) and rock, paper, scissors (an MF 1 feature that's never used anyway).
-
-## New features
-New features are listed in order of priority.
-
 ### Inkcyclopedia
 Status: work in progress
 
