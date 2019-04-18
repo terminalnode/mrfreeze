@@ -60,6 +60,8 @@ Some points not to forget. Check that...
 **Vote**
 * ...number emoji work.
 * ...animated emoji work.
+* ...flags, letters and number emojis work.
+* ...skin colour emoji work.
 * ...out of server emoji work as long as Freeze is in that server.
 
 **Say**
