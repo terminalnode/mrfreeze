@@ -25,15 +25,22 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
             'Antarctica':       discord.utils.get(guild.roles, name='Antarctica')
             }
 
+    @commands.command(name='praise')
+    async def _praise(self, ctx, *args):
+        author = ctx.author.mention
+        await ctx.send(f"{author} Your praises have been heard, and in return I bestow upon you... nothing!")
 
     @commands.command(name='mrfreeze', aliases=['freeze'])
     async def _mrfreeze(self, ctx, *args):
         """Get a quote from my timeless classic "Batman & Robin"!"""
+        author = ctx.author.mention
+        server = ctx.guild.name
+
         with open('config/mrfreezequotes', 'r') as f:
             quote = random.choice(f.read().strip().split('\n'))
 
-        quote = quote.replace('Batman', ctx.author.mention)
-        quote = quote.replace('Gotham', ('**' + ctx.guild.name + '**'))
+        quote = quote.replace('Batman', author)
+        quote = quote.replace('Gotham', f"**{server}**")
         await ctx.send(quote)
 
 
