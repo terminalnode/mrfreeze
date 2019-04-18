@@ -6,6 +6,11 @@ The next big thing, this is gonna be huuuuge! At time of writing, most things I 
 The reason why 2.0 and 2.1+ are split is that this project has been in the works for so long it's becoming a meme. Version 1 has been hotfixed multiple times during development and really needs to be retired ASAP. 
 
 ## Improvements
+### Remake the !region command
+Status: work not started
+
+The !region command was deleted because it was terribly written and needs to be redone.
+
 ### Inkcyclopedia
 Status: work in progress
 
