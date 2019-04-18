@@ -48,7 +48,7 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
     async def _vote(self, ctx, *args):
         """Create a handy little vote using reacts."""
         def find_custom_emoji(line):
-            emoji = re.match('<:\w+:(\d+)>', line)
+            emoji = re.match('<a?:\w+:(\d+)>', line)
 
             if emoji == None:
                 # Non-custom emoji can be up to three characters long.
@@ -82,10 +82,10 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
             if react_error:
                 print(f"{var.red}!vote{var.cyan} Not allowed to add react in {ctx.guild.name}{var.reset}")
                 await ctx.send(f"{ctx.author.mention} The moderators dun goofed I think. I encountered some sort of anomaly when trying to vote.")
-            elif not at_least_one:
-                await ctx.send(f"{ctx.author.mention} There's literally nothing I can vote for you little smudmeister!")
             elif nitro_error:
                 await ctx.send(f"{ctx.author.mention} There seem to be some emoji there I don't have access to.\nI need to be in the server the emoji is from.")
+            elif not at_least_one:
+                await ctx.send(f"{ctx.author.mention} There's literally nothing I can vote for you little smudmeister!")
 
         rows = ctx.message.content.split('\n')
         rows[0] = rows[0].replace('!vote ', '')
