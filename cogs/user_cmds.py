@@ -73,6 +73,14 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
             quote = quote.replace('Gotham', ('**' + ctx.guild.name + '**'))
             await ctx.send(quote)
 
+
+    @commands.command(name='cointoss', aliases=['coin', 'coinflip'])
+    async def _cointoss(self, ctx, *args):
+        """Toss a coin, results are 50/50."""
+        if random.randint(0,1): await ctx.send(f"{ctx.author.mention} Heads")
+        else:                   await ctx.send(f"{ctx.author.mention} Tails")
+
+
     @commands.command(name='vote', aliases=['election', 'choice', 'choose'])
     async def _vote(self, ctx, *args):
         """Create a handy little vote using reacts."""
