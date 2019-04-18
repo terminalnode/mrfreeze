@@ -1,4 +1,5 @@
 import discord, re, datetime, random
+from internals import var
 from discord.ext import commands
 from internals import native, checks
 from databases import regionbl
@@ -46,62 +47,50 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
     @commands.command(name='vote', aliases=['election', 'choice', 'choose'])
     async def _vote(self, ctx, *args):
         """Create a handy little vote using reacts."""
-        # remoji finds custom emoji strings which have the form:
-        # <:trex:463347402242260993>
-        remoji = re.compile('<:\w+:\d+>')
+        def find_custom_emoji(line):
+            emoji = re.match('<:\w+:(\d+)>', line)
 
-        # remojid finds a string starting with :, having an arbitrary number
-        # of digits and ending with a >. In the example above this would be:
-        # :463347402242260993>
-        # We need the : and > in case the emoji code/name is all numbers.
-        remojid = re.compile(':\d+>')
+            if emoji == None:
+                # Non-custom emoji can be up to three characters long.
+                return line[0:3]
+            else:
+                emo_id = emoji.group(1)
+                return self.bot.get_emoji(int(emo_id))
 
-        # skipping first line because we don't need it
-        if '\n' in ctx.message.content:
-            lines = ctx.message.content.split('\n')[1:]
-            single_line = False
-        else:
-            lines = ['error',]
-            single_line = True
+        async def add_reacts(reacts):
+            react_error = False
+            at_least_one = False
+            if None in reacts:  nitro_error = True
+            else:               nitro_error = False
 
-        # Step 1: Try to react with the first character on the line.
-        # Step 2: Use regex to try and find a custom emoji.
-        # Step 3: If one is found, extract the emoji ID and get the object.
-        added_reacts = list()
-        success = False
-        for line in lines:
-            # This try-except thing is step 1, i.e. for simple ISO standard emoji.
-            try:
-                if line[0] not in added_reacts:
-                    await ctx.message.add_reaction(line[0])
-                    added_reacts.append(line[0])
-                    success = True
-            except:
-                pass
+            for react in reacts:
+                if isinstance(react, discord.Emoji):
+                    try:
+                        await ctx.message.add_reaction(react)
+                        at_least_one = True
+                    except: react_error = True
 
-            # This try-except thing is step 2, which finds custom emoji.
-            match = remoji.match(line)
-            if not isinstance(match, type(None)):
-                # Because the remojiid also grabs the : and > we only want [1:-1]
-                match_id = int(remojid.search(match.group()).group()[1:-1])
-                emoji = discord.utils.get(ctx.guild.emojis, id=match_id)
-                try:
-                    if match_id not in added_reacts:
-                        await ctx.message.add_reaction(emoji)
-                        added_reacts.append(match_id)
-                        success = True
-                except:
-                    pass
+                elif isinstance(react, str):
+                    string_options = (react, react[0:2], react[0])
+                    for option in string_options:
+                        try:
+                            await ctx.message.add_reaction(option)
+                            at_least_one = True
+                            break
+                        except: pass
 
-        if success:
-            replystr = '%s That\'s such a great proposition I voted for everything!'
-            await ctx.send(replystr % (ctx.author.mention))
-        elif single_line:
-            replystr = '%s You need at least two lines to create a vote you filthy smud.'
-            await ctx.send(replystr % (ctx.author.mention))
-        else:
-            replystr = '%s There\'s literally nothing I can vote for in your smuddy little attempt at a vote! :rofl:'
-            await ctx.send(replystr % (ctx.author.mention,))
+            if react_error:
+                print(f"{var.red}!vote{var.cyan} Not allowed to add react in {ctx.guild.name}{var.reset}")
+                await ctx.send(f"{ctx.author.mention} The moderators dun goofed I think. I encountered some sort of anomaly when trying to vote.")
+            elif not at_least_one:
+                await ctx.send(f"{ctx.author.mention} There's literally nothing I can vote for you little smudmeister!")
+            elif nitro_error:
+                await ctx.send(f"{ctx.author.mention} There seem to be some emoji there I don't have access to.\nI need to be in the server the emoji is from.")
+
+        rows = ctx.message.content.split('\n')
+        rows[0] = rows[0].replace('!vote ', '')
+        reacts = [ find_custom_emoji(row) for row in rows ]
+        await add_reacts(reacts)
 
     @commands.command(name='region', aliases=['regions'])
     async def _region(self, ctx, *args):
