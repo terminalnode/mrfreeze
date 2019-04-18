@@ -1,6 +1,8 @@
 import discord, re, datetime
 from discord.ext import commands
-from botfunctions import checks, native, userdb
+from string import Template
+from internals import native, checks
+from databases import mutes
 
 # This cog is for commands restricted to mods on a server.
 # It features commands such as !ban, !mute, etc.
@@ -44,426 +46,272 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         """Let me be your voice!"""
         replystr = ' '.join(args)
 
-        # Now let's find all the custom emoji.
-        remoji = re.compile('(<:\w+:(\d+)>)')
-        emoji_tags = remoji.findall(replystr)
-        for i in emoji_tags:
-            replystr = replystr.replace(i[0], '{}')
-        emojis = [ self.bot.get_emoji(int(i[1])) for i in emoji_tags ]
+        # Now let's find all the custom emoji to make sure they all work.
+        # If any of them don't, halt operations.
+        remoji = re.compile('<a?:\w+:(\d+)(?=>)')
+        emoji = remoji.findall(replystr)
+        impossible = False
+        for i in emoji:
+            if self.bot.get_emoji(int(i)) == None:
+                impossible = True
+                break
 
-        if None in emojis:
-            await ctx.channel.send("I don't have access to all your snazzy nitro emoji.")
-        else:
-            await channel.send(replystr.format(*emojis))
+        if impossible:  await ctx.channel.send(f"{ctx.author.mention} Abort! Abort! There are emoji in your message that I can't use..")
+        else:           await channel.send(replystr)
 
 
     @commands.command(name='rules', aliases=['rule'])
     async def _rules(self, ctx, *args):
         """Remind users of what the rules are."""
-        request = str()
-        for i in args:
-            request += (i.lower())
-
         rules = {
-            # Rule 1: Be nice and decent to everyone. Hate speech will not be tolerated. 
+            1: "Rule 1: Be nice and decent to everyone. Hate speech will not be tolerated.",
+            2: "Rule 2: Keep discussions civil and mature.",
+            3: "Rule 3: Stay on topic and avoid spamming.",
+        }
+
+        rule_triggers = {
             1: ('1', 'joke', 'jokes', 'joking', 'sex', 'sexual', 'weight', 'race', 'skin',
                 'color', 'colour', 'gender', 'nice', 'decent', 'hate'),
-
-            # Rule 2: Keep discussions civil and mature.
             2: ('2', 'civil', 'civility', 'mature', 'maturity', 'disagreement', 'dismissive',
                 'dismissal', 'opinion', 'opinions', 'shoe', 'shoes', 'shoesize', 'age', 'act',
                 'behave'),
-
-            # Rule 3: Stay on topic and avoid spamming.
             3: ('3', 'topic', 'ontopic', 'offtopic', 'spam', 'nonsense')
         }
 
-        called_rules = list()
+        request = ' '.join(args).lower()
+        called_rules = str()
 
-        # If 'all' is in the request we'll just call all rules.
-        # If not we'll see if any of the keywords are in the request.
         if 'all' in request:
-            called_rules = [ 1, 2, 3 ]
+            for rule in rules:
+                called_rules += f"{rules[rule]}\n"
         else:
-            for rule_no in rules:
-                for keyword in rules[rule_no]:
-                    if keyword in request and rule_no not in called_rules:
-                        called_rules.append(rule_no)
+            for rule in rule_triggers:
+                for keyword in rule_triggers[rule]:
+                    if keyword in request and str(rule) not in called_rules:
+                        called_rules += f"{rules[rule]}\n"
 
-        if len(called_rules) == 0:
-            await ctx.send(f"Sorry {ctx.author.mention}, your terms don't seem to match any rules. :thinking:")
-        else:
-            await ctx.send(native.get_rule(called_rules))
+        if len(called_rules) == 0:  await ctx.send(f"Sorry {ctx.author.mention}, your terms don't seem to match any rules. :thinking:")
+        else:                       await ctx.send(called_rules.strip())
 
 
-    @commands.command(name='mute', aliases=['micromute', 'exile', 'banish', 'microexile', 'microbanish'])
+    @commands.command(name='mute', aliases=['banish', 'micromute', 'microbanish',
+        'superbanish', 'SUPERBANISH', 'supermute', 'SUPERMUTE',
+        'unbanish', 'unmute', 'pardon', 'forgive'])
     @commands.check(checks.is_mod)
     async def _banish(self, ctx, *args):
-        """Restrict a user to #antarctica for a short(?) period of time."""
-        # (micro)banish and (micro)exile are functionally the same as mute, except with a custom message
-        # and default time limit. The idea for the micro prefix is that it will work more as a statement
-        # and only banish the user for a minute or so.
-        # Because the mechanics of these functions are so similar - i.e. add a tag and edit the database,
-        # I've chosen to clump them into the same function.
+        """Restrict a user to #antarctica for a short(?) period of time or frees them from that hell."""
 
-        # Calling this with the (micro)exile or (micro)banish commands sets
-        # is_banish to True and activates the custom message that comes with it.
-        if ('exile' in ctx.invoked_with) or ('banish' in ctx.invoked_with):
-            is_banish = True
-        else:
-            is_banish = False
+        # This function is carried out through the following subfunctions:
+        # muteparse(context, arguments)     Parse the command.
+        # mutecount()                       Count number of mutes.
+        # mutecheck()                       Check if one or more users are already muted.
+        # muteadd()                         Mute one or more users.
+        # muteremove()                      Unmute one or more users
 
-        # Using any of the commands prefixed with micro or adding micro to the command
-        # will make the action mostly symbolic, i.e. unmuteing them within about half a
-        # minute or so (depending on where in the mute check cycle we are when the cmd is fired).
-        if 'micro' in ctx.invoked_with:
-            is_micro = True
-        elif 'micro' in args:
-            is_micro = True
-        else:
-            is_micro = False
+        async def muteparse(context, arguments):
+            """Uses context and arguments to determine what is to be done.
+            Returns a dictionary with information for what the rest of the function should do.
 
-        success_list = list()
-        fail_list = list()
-        mods_list = list()
-        forbidden_error = False
-        http_error = False
-        antarctica = discord.utils.get(ctx.guild.roles, name='Antarctica')
+            It outputs a dictionary with the following data:
+                { 'command':     string with command category (mute or unmute)
+                  'flavor':      if applicable the flavor or the command, subcommand if you will. otherwise None.
+                  'mods':        list item with all, if any, mods that were mentioned.
+                  'users':       list item with all, if any, non-mod/bot/author users that were mentioned.
+                  'self':        True if ctx.author was mentioned, otherwise None.
+                  'time':        datetime object if micro or super commands were used, otherwise None.
+                  'duration':    specifies how long the mute is in words
+                  'server':      the guild object
+                }"""
 
-        # For this function we'll need to analyse the arguments to find out
-        # for how long they're gonna be muted. This function returns these values:
-        # args, add_time, end_date
-        # args are the args put into a string where the time statements have
-        # been removed. add_time is how much time will be added. end_date
-        # is the time at which the mute will come to an end local time.
-        tstripped_args, add_time, end_date = native.extract_time(args)
-        reason = self.extract_reason(tstripped_args)
+            # Initialize the dict we're going to return.
+            mission = {
+            'command'  : None,
+            'flavor'   : None,
+            'mods'     : list(),
+            'users'    : list(),
+            'self'     : (context.author in context.message.mentions),
+            'mrfreeze' : (self.bot.user in context.message.mentions),
+            'time'     : None,
+            'duration' : str(),
+            'server'   : context.guild
+            }
 
-        # If no time statements were found, we'll add our own.
-        current_date = datetime.datetime.now()
-        time_str = None
-        if end_date == None and is_micro:
-            add_time = datetime.timedelta(seconds=45)
-            end_date = current_date + add_time
-            time_str = 'a very short time'
+            # Command categories:
+            # check             Checks if user or users are banished.
+            # count             Check how many users are in the banish DB
+            # mute              Adds the Antarctica role to a user.
+            # unmute            Removes the Antarctica role from a user.
+            # Command flavors:  mute, banish
+            if 'banish' in context.invoked_with:    mission['flavor'] = 'banish'
+            else:                                   mission['flavor'] = 'mute'
 
-        elif end_date== None and is_banish:
-            add_time = datetime.timedelta(minutes=10)
-            end_date = current_date + add_time
-            time_str = '10 minutes'
+            if 'check' in arguments:
+                mission['command'] = 'check'
 
-        elif end_date == None:
-            # Setting until=None makes the mute indefinite.
-            end_date = None
-            time_str = 'the forseeable future'
+            elif 'count' in arguments:
+                mission['command'] = 'count'
 
-        if time_str == None:
-            time_str = native.parse_timedelta(add_time)
+            elif context.invoked_with.lower() in ('banish', 'mute', 'micromute', 'microbanish', 'superbanish'):
+                mission['command'] = 'mute'
+                if 'micro' in context.invoked_with:
+                    mission['time'] = datetime.datetime.now()
+                    mission['duration'] = '15 seconds at most'
+                elif 'super' in context.invoked_with:
+                    nextyear = datetime.datetime.now().year + 1
+                    mission['time'] = datetime.datetime.now().replace(year=nextyear)
+                    mission['duration'] = 'ONE FULL YEAR'
 
-        # You're not allowed to mute mods.
-        # Unlike the kick command, this doesn't prevent
-        # muteing all the other users.
-        mod_role = discord.utils.get(ctx.guild.roles, name='Administration')
-        mods_list = [ user for user in ctx.message.mentions if mod_role in user.roles ]
-        ment_mods = native.mentions_list(mods_list)
+            elif context.invoked_with in ('unbanish', 'unmute', 'pardon', 'forgive'):
+                mission['command'] = 'unmute'
 
-        if len(mods_list) == 0:
-            tried_to_mute_mod = False
-        else:
-            tried_to_mute_mod = True
+            # Mention categories: mods, bots, users
+            for mention in context.message.mentions:
+                if mention == self.bot.user:        pass # Don't banish the bot.
+                elif await checks.is_mod(mention):  mission['mods'].append(mention)
+                else:                               mission['users'].append(mention)
+            return mission
 
-        for victim in ctx.message.mentions:
-            if (victim not in mods_list):
-                try:
-                    if reason == None:
-                        await victim.add_roles(antarctica)
-                        userdb.fix_mute(victim, until=end_date)
-                        success_list.append(victim)
+        async def mutecount(mission):
+            pass
 
+        async def mutecheck(mission):
+            """Checks if one or more users are muted/banished."""
+            if len(ctx.message.mentions) == 0:
+                await ctx.send(f"{ctx.author.mention} You didn't mention anyone you smud.")
+            else:
+                if mission['flavor'] == 'banish': verb = "banished"
+                elif mission['flavor'] == 'mute': verb = "muted"
+                else:                             verb = "muted"
+
+                reply = str()
+                for user in ctx.message.mentions:
+                    checkresult = mutes.check(user)
+                    if isinstance(checkresult, bool):
+                        if checkresult:
+                            reply += f"{user.mention} is {verb} for life.\n"
+                        else:
+                            reply += f"{user.mention} is not {verb}.\n"
+                    elif isinstance(checkresult, datetime.datetime):
+                        until = native.parse_timedelta(checkresult - datetime.datetime.now())
+                        reply += f"{user.mention} is going to be {verb} for another {until}.\n"
                     else:
-                        await victim.add_roles(antarctica, reason=reason)
-                        userdb.fix_mute(victim, until=end_date)
-                        success_list.append(victim)
-
-                except discord.Forbidden:
-                    fail_list.append(victim)
-                    forbidden_error = True
-
-                except discord.HTTPException:
-                    fail_list.append(victim)
-                    http_error = True
-
-        ### Now all we need to do is fix a reply.
-        # There are two large categories of replies, banish and non-banish.
-        # There are also two large categorios of errors, exceptions and mod errors.
-        ment_success = native.mentions_list(success_list)
-        ment_fail    = native.mentions_list(fail_list)
-        ment_mods    = native.mentions_list(mods_list)
-
-        # Error list:
-        if forbidden_error and not http_error:
-            error_str = 'Insufficient privilegies.'
-        elif not forbidden_error and http_error:
-            error_str = 'HTTP issues.'
-        else:
-            error_str = 'A mix of insufficient privilegies and HTTP issues.'
-
-        if is_banish:
-            if tried_to_mute_mod:
-                if (len(ctx.message.mentions) == 1) and (ctx.author in ctx.message.mentions):
-                    # Only tried to mute themselves.
-                    replystr = f'{ctx.author.mention} You tried to banish yourself! SAD!'
-
-                elif len(mods_list) == len(ctx.message.mentions):
-                    # Only tried to mute mods.
-                    replystr = f'{ctx.author.mention} All the users you tried to banish are mods! Please try to get along...'
-
-                else:
-                    # Tried to mute people other than mods, but also mods.
-
-                    if (len(fail_list) == 0) and (len(success_list) == 1):
-                        # No fails, singular success.
-                        replystr = (f'{ctx.author.mention} It goes without saying that *mods are unbanishable*, ' +
-                            f'however the smud {ment_success} will be banished to Antarctica for {time_str}! :penguin:')
-
-                    elif (len(fail_list) == 0) and (len(success_list) > 1):
-                        # No fails, plural success.
-                        replystr = (f"{ctx.author.mention} *I'm unable to banish mods*, however the smuds known " +
-                            f" as {ment_success} will be banished to Antarctica for {time_str}! :penguin:")
-
-                    elif (len(fail_list) > 0) and (len(success_list) > 0):
-                        # Mixed results: at least one fail and at least one success.
-                        replystr  = f"{ctx.author.mentions} *I know I can't banish mods*, but it seems I was only able to banish some of the smuds mentioned.\n"
-                        replystr += f"**Banished:** {ment_success}\n**Not Banished:** {ment_fail}\n"
-                        replystr += f"The banished will be stuck there for {time_str}\n"
-                        replystr += f"My diagnostics tell the error(s) were due to: {error_str}"
-
-                    elif (len(fail_list) == 1) and (len(success_list) == 0):
-                        # Singular fail, no success.
-                        replystr  = f"{ctx.author.mention} I'm so confused. Of course *I can't banish mods* but why couldn't I banish {ment_fail}?\n"
-                        replystr += f"**It might be due to:** {error_str}"
-
-                    elif (len(fail_list) > 1) and (len(success_list) == 0):
-                        # Plural fail, no success.
-                        replystr  = f"{ctx.author.mention} Some higher power seems to have stripped me of my powers!"
-                        replystr += f"*Mods are of course unbanishable*, but I was also unable to banish any of {ment_fail}!\n"
-                        replystr += f"**It might be due to:** {error_str}"
-
-            elif not tried_to_mute_mod:
-                if (len(ctx.message.mentions) == 0):
-                    # Failed to mention anyone.
-                    replystr = f'{ctx.author.mention} You need to mention the people you want me to banish, fool.'
-
-                elif (len(fail_list) == 0) and (len(success_list) == 1):
-                    # No fail, singular success.
-                    replystr  = f"{ctx.author.mention} Excellent, {ment_success} is a smud who should've been banished a long time ago if you ask me. "
-                    replystr += f"They'll be stuck at sub-zero temperatures for {time_str}. :penguin:"
-
-                elif (len(fail_list) == 0) and (len(success_list) > 1):
-                    # No fail, plural success.
-                    replystr  = f"{ctx.author.mention} Excellent, {ment_success} are smuds who should've been banished a long time ago if you ask me. "
-                    replystr += f"They'll be stuck at sub-zero temperatures for {time_str}. :penguin:"
-
-                elif (len(fail_list) > 0) and (len(success_list) > 0):
-                    # At least one fail and at least one success.
-                    replystr  = f"{ctx.author.mention} I wasn't able to banish all of the users requested, "
-                    replystr += f"however those that were banished will be stuck in Antarctica for {time_str}. :penguin:\n"
-                    replystr += f"**Banished:** {ment_success}\n**Not banished:** {ment_fail}\n"
-                    replystr += f"Errors were due to: {error_str}"
-
-                elif (len(fail_list) > 0) and (len(success_list) == 0):
-                    # Singular fail, no success.
-                    # Plural fail, no success.
-                    error_str = error_str.lower().replace('.', '')
-                    replystr  = f"{ctx.author.mention} **Excellent decision!**\n"
-                    replystr += f"...but nope. Due to {error_str} {ment_fail} will continue to roam free."
-
-        elif not is_banish:
-            if tried_to_mute_mod:
-                if (len(ctx.message.mentions) == 1) and (ctx.author in ctx.message.mentions):
-                    # Only tried to mute themselves.
-                    replystr = '%s You tried to mute yourself! SAD!'
-                    replystr = (replystr % (ctx.author.mention,))
-
-                elif len(mods_list) == len(ctx.message.mentions):
-                    # Only tried to mute mods.
-                    replystr = '%s All the users you tried to mute are mods! Mods have diplomatic immunity...'
-                    replystr = (replystr % (ctx.author.mention,))
-
-                else:
-                    # Tried to mute people other than mods, but also mods.
-
-                    if (len(fail_list) == 0) and (len(success_list) == 1):
-                        # No fails, singular success.
-                        replystr = '%s The mod(s) mentioned can\'t be muted, but %s isn\'t a mod and will therefore be silenced for %s.'
-                        replystr = (replystr % (ctx.author.mention, ment_success, time_str))
-
-                    elif (len(fail_list) == 0) and (len(success_list) > 1):
-                        # No fails, plural success.
-                        replystr = '%s The mod(s) mentioned can\'t be muted for what I hope is obvious reasons, but %s aren\'t mods and will therefore be silenced for %s.'
-                        replystr = (replystr % (ctx.author.mention, ment_success, time_str))
-
-                    elif (len(fail_list) > 0) and (len(success_list) > 0):
-                        # Mixed results: at least one fail and at least one success.
-                        replystr = '%s You can\'t mute mods silly, and apparently not all of the smuds mentioned either...\n'
-                        replystr += '**Muted:** %s\n**Not muted:** %s\n'
-                        replystr += 'The error(s) seem to have been due to: %s\n'
-                        replystr += 'The muted people will be muted for %s.'
-                        replystr = (replystr % (ctx.author.mention, ment_success, ment_fail, error_str, time_str))
-
-                    elif (len(fail_list) == 1) and (len(success_list) == 0):
-                        # Singular fail, no success.
-                        replystr = '%s The mod(s) mentioned can\'t be muted... but apparently neither can %s.\n'
-                        replystr += 'This seems to be due to: %s'
-                        replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
-
-                    elif (len(fail_list) > 1) and (len(success_list) == 0):
-                        # Plural fail, no success.
-                        replystr = '%s The mod(s) mentioned can\'t be muted... but apparently neither can %s.\n'
-                        replystr += 'This seems to be due to: %s'
-                        replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
-
-            elif not tried_to_mute_mod:
-                if (len(ctx.message.mentions) == 0):
-                    # Failed to mention anyone.
-                    replystr = '%s You foolish smud, how am I supposed to know who to mute if you fail to mention anyone?'
-                    replystr = (replystr % (ctx.author.mention,))
-
-                elif (len(fail_list) == 0) and (len(success_list) == 1):
-                    # No fail, singular success.
-                    replystr = '%s Fantastic, now we won\'t have to listen to %s for %s.'
-                    replystr = (replystr % (ctx.author.mention, ment_success, time_str))
-
-                elif (len(fail_list) == 0) and (len(success_list) > 1):
-                    # No fail, plural success.
-                    replystr = '%s Absolutely wonderful, %s are smuds whose freedom of speech has been revoked for %s.'
-                    replystr = (replystr % (ctx.author.mention, ment_success, time_str))
-
-                elif (len(fail_list) > 0) and (len(success_list) > 0):
-                    # At least one fail and at least one success.
-                    replystr = '%s Not all people mentioned could be muted. While %s will be shut up for %s, it seems %s will still roam free.\n'
-                    replystr += 'The error seems to have been due to: %s'
-                    replystr = (replystr % (ctx.author.mention, ment_success, time_str, ment_fail))
-
-                elif (len(fail_list) == 1) and (len(success_list) == 0):
-                    # Singular fail, no success.
-                    error_str = error_str.lower().replace('.', '')
-                    replystr = '%s Excellent decision! ...but nope. Due to %s %s will continue to roam free.'
-                    replystr = (replystr % (ctx.author.mention, error_str, ment_fail))
-
-                elif (len(fail_list) > 0) and (len(success_list) == 0):
-                    # Plural fail, no success.
-                    error_str = error_str.lower().replace('.', '')
-                    replystr = '%s Excellent decision! ...but nope. Due to %s %s will continue to roam free.'
-                    replystr = (replystr % (ctx.author.mention, error_str, ment_fail))
-
-        await ctx.send(replystr)
+                        reply += f"I'm not sure about {user.mention} actually. :shrug:\n"
+                await ctx.send(reply)
 
 
-    @commands.command(name='unmute', aliases=['unexile', 'unbanish', 'pardon'])
-    @commands.check(checks.is_mod)
-    async def _unmute(self, ctx, *args):
-        """Give a voice to the silenced and repressed smuds of #antarctica."""
-        # This function deletes the user mute entry from userdb, and removes
-        # the mute tag (antarctica tag) from the user.
-        antarctica = discord.utils.get(ctx.guild.roles, name='Antarctica')
+        async def muteadd(mission):
+            """Adds one or more users to the mute database and assigns them the antarctica role"""
+            antarctica = native.get_antarctica_role(mission['server'])
+            unmuteables = mission['mods']
+            muteables = mission['users']
 
-        # list_mute() gives us lots of info, but we only need to retreieve the member
-        # objects of the people muted on the server where the command is issued.
-        # Since this is only used by mods the voluntary thing is irrelevant, and
-        # since we're forcing removal of the tag the time isn't interesting either.
-        felon_list = { discord.utils.get(ctx.guild.members, id=i['user']) for i in userdb.list_mute() if i['server'] == ctx.guild.id }
+            if len(muteables) != 0:
+                mute_status = { 'new': list(), 'prolonged': list(), 'failed': list() }
+                if mission['time'] == None and mission['flavor'] == 'banish':
+                    mission['time'] = datetime.datetime.now() + datetime.timedelta(minutes=5)
 
-        # Sometimes a user can be assigned a role manually and thus not end up in the database,
-        # and sometimes there may be an error in the database where the user wasn't removed.
-        # For this reason we make separate sets of users who are to be removed from the db
-        # and users who are gonna have their database entries removed. In most cases
-        # these sets are going to be identical.
-        remove_from_db = set(ctx.message.mentions).intersection(felon_list)
-        remove_role = { user for user in ctx.message.mentions if antarctica in user.roles }
+                for victim in muteables:
+                    has_role = antarctica in victim.roles
+                    in_db    = mutes.check(victim) != False
+                    prolong  = has_role and in_db
 
-        # We'll start with removing roles since this is the step most likely to
-        # generate an error, if there is an error we won't remove them from db.
-        # Furthermore not removing them from the db is fairly inconsequential.
-        forbidden_error = False
-        http_error = False
-        success_list = list()
-        fail_list = list()
-        reason = self.extract_reason(' '.join(args))
+                    if not has_role:
+                        try:                    await victim.add_roles(antarctica, reason=f"!{ctx.invoked_with} by {ctx.author.name}")
+                        except Exception as e:  mute_status['failed'].append([victim, e])
 
-        for user in remove_role:
-            try:
-                if reason == None:
-                    await user.remove_roles(antarctica)
-                else:
-                    await user.remove_roles(antarctica, reason=reason)
-                success_list.append(user)
+                    if prolong:
+                        mutes.prolong(victim, voluntary=False, end_date=mission['time'])
+                    else:
+                        mutes.add(victim, voluntary=False, end_date=mission['time'])
 
-            except discord.Forbidden:
-                forbidden_error = True
-                remove_from_db.discard(user)
-                fail_list.append(user)
+            # Setting flavor texts.
+            if mission['flavor'] == 'banish':
+                # Mod banishes:
+                selfmute      = f"Oh no {ctx.author.mention}, you stay away from me! I'm not banishing you here!"
+                singlemodmute = Template("$author There's no way I'm sharing a room with $victim!")
+                multimodmute  = Template("Oh no, $author is sending the mod gang to attack me! Freeze, smuds!")
 
-            except discord.HTTPException:
-                http_error = True
-                remove_from_db.discard(user)
-                fail_list.append(user)
+                # Freeze banishes:
+                freezemute    = f"{ctx.author.mention} Are you trying to put me under house arrest?"
+                modfreezemute = Template("$author There's no way I'm sharing a room with $victim!")
 
-        # Next up we'll remove them from the db.
-        for user in remove_from_db:
-            # fix_mute(user, voluntary=False, until=None, delete=False)
-            userdb.fix_mute(user, delete=True)
+                # User banishes:
+                # TODO PLACEHOLDERS TODO
+                singlebanish = Template("$author banishes $victim (s.)")
+                multibanish  = Template("$author banishes $victim (pl.)")
+                singlefail   = Template("$author banishes $victim error $error (s.)")
+                multifail    = Template("$author banishes $victim error $error (pl.)")
 
-        # Let's explain what went wrong if anything:
-        if forbidden_error and not http_error:
-            error_str = 'Insufficient privilegies.'
+            else:
+                # the 'mute flavor'is the default.
+                # Mod mutes:
+                selfmute      = f"I too am tired of hearing your voice {ctx.author.mention}, but there's not much I can do about it."
+                singlemodmute = Template("$author As much as I'd like to I'm afraid I'm not allowed to silence $victim or any other moderator.")
+                multimodmute  = Template("$author Believe me, if I could I would've shut $victim up a looooong time ago.")
 
-        elif not forbidden_error and http_error:
-            error_str = 'HTTP issues.'
+                # Freeze mutes:
+                freezemute    = f"{ctx.author.mention} I will not be silenced!"
+                modfreezemute = Template("Hey, $victim! Help! $author is trying to silence us!")
 
-        elif forbidden_error and http_error:
-            error_str = 'A mix of insufficient privilegies and HTTP issues.'
+                # User banishes:
+                # TODO PLACEHOLDERS TODO
+                singlebanish = Template("$author banishes $victim (s.)")
+                multibanish  = Template("$author banishes $victim (pl.)")
+                singlefail   = Template("$author banishes $victim error $error (s.)")
+                multifail    = Template("$author banishes $victim error $error (pl.)")
 
-        # Finally it's time to post some responses.
-        ment_success = native.mentions_list(success_list)
-        ment_fail = native.mentions_list(fail_list)
+            # Responses...
+            if len(muteables) == 0:
+                #####################################################
+                # NON-ACTIONABLE REQUESTS (only mods/mrfreeze/self) #
+                #####################################################
+                if len(ctx.message.mentions) == 1 and mission['self']:
+                    # !banish self
+                    await ctx.send(selfmute)
+                elif mission['mrfreeze']:
+                    if len(unmuteables) != 0:
+                        if mission['self']:
+                            # !banish self + mrfreeze
+                            await ctx.send(selfmute)
+                        else:
+                            # !banish other mod(s) + mrfreeze
+                            await ctx.send(modfreezemute.substitute(
+                                author=ctx.author.mention,
+                                victim=native.mentions_list(unmuteables)))
+                    else:
+                        # !banish mrfreeze
+                        await ctx.send(freezemute)
+                elif len(unmuteables) == 1:
+                    # !banish one other mod
+                    await ctx.send(singlemodmute.substitute(
+                            author=ctx.author.mention,
+                            victim=native.mentions_list(unmuteables)))
+                elif len(unmuteables) > 1:
+                    # !banish multiple other mods
+                    await ctx.send(multimodmute.substitute(
+                            author=ctx.author.mention,
+                            victim=native.mentions_list(unmuteables)))
+            else:
+                ################################################
+                # RESPONESE FOR ACTIONABLE REQUESTS START HERE #
+                ################################################
+                print("We have muteables!")
 
-        if len(remove_role) == 0:
-            # No mentions.
-            replystr = '%s You failed to mention anyone muted, twat.'
-            replystr = (replystr % (ctx.author.mention,))
 
-        elif (len(success_list) == 1) and (len(fail_list) == 0):
-            # Singular success.
-            replystr = '%s Don\'t blame me when %s starts causing trouble again. That\'s on you.'
-            replystr = (replystr % (ctx.author.mention, ment_success))
+        async def muteremove(mission):
+            antarctica = native.get_antarctica_role(mission['server'])
 
-        elif (len(success_list) > 1) and (len(fail_list) == 0):
-            # Plural success.
-            replystr = '%s Just don\'t come crying to me when %s start causing mayhem again, as they most certainly will.'
-            replystr = (replystr % (ctx.author.mention, ment_success))
+        # Ready to parse the command and determine what is to be done.
+        mission = await muteparse(ctx, args)
+        if mission['command'] == 'mute' and mission['time'] == None:
+            add_time, end_time = native.extract_time(args)
+            mission['time'] = end_time
+            mission['duration'] = native.parse_timedelta(add_time)
 
-        elif (len(success_list) == 0) and (len(fail_list) == 1):
-            # Singular fail.
-            replystr = '%s For some reason I wasn\'t able to unmute %s It\'s probably for the best, however this error '
-            replystr += 'was likely due to: %s'
-            replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
-
-        elif (len(success_list) == 0) and (len(fail_list) > 1):
-            # Plural fail.
-            ment_fail = ment_fail.replace(' and ', ' or ')
-            replystr = '%s We have a crisis on our hands, none of %s could be unmuted. While this is probably for the best, '
-            replystr += 'my diagnostics tell me this error has it roots in: %s'
-            replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
-
-        else:
-            # Mixed results.
-            replystr = '%s The operation came back with mixed results, I wasn\'t able to unmute all of the requested users.\n'
-            replystr += 'Unmuted: %s\nNot unmuted: %s\n The error(s) seem to have been due to: %s'
-            replystr = (replystr % (ctx.author.mention, ment_success, ment_fail, error_str))
-
-        await ctx.send(replystr)
-
+        if mission['command'] == 'count':       await mutecount(mission)
+        elif mission['command'] == 'check':     await mutecheck(mission)
+        elif mission['command'] == 'mute':      await muteadd(mission)
+        elif mission['command'] == 'unmute':    await muteremove(mission)
 
     @commands.command(name='ban', aliases=['purgeban', 'banpurge'])
     @commands.check(checks.is_mod)
@@ -675,7 +523,7 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
 
         elif len(success_list) == 1 and len(fail_list) == 0:
             # Singular success, no fails.
-            replystr = '%s Smuddy Mc Smudface AKA %s has been unbanned, happy now?'
+            replystr = '%s Smuddy McSmudface, I mean %s, has been unbanned... for some reason. :shrug:'
             replystr = (replystr % (ctx.author.mention, ment_success))
 
         elif len(success_list) > 1 and len(fail_list) == 0:
