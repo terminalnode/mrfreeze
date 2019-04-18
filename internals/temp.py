@@ -24,44 +24,28 @@ async def convert(ctx, tempstatement):
     # We'll need some conversion tables to convert between the different temperatures.
     # These function take the unit in their name and convert it to the unit in 'dest'.
     def celcius_table(temp, dest):
-        if dest == 'c':
-            return temp
-        elif dest == 'f':
-            return temp * 9.0 / 5.0 + 32
-        elif dest == 'k':
-            return temp + 273.15
-        elif dest == 'r':
-            return (temp + 273.15) * 9.0 / 5.0
+        if dest == 'c':     return temp
+        elif dest == 'f':   return temp * 9.0 / 5.0 + 32
+        elif dest == 'k':   return temp + 273.15
+        elif dest == 'r':   return (temp + 273.15) * 9.0 / 5.0
 
     def fahrenheit_table(temp, dest):
-        if dest == 'c':
-            return (temp - 32) * 5.0 / 9.0
-        elif dest == 'f':
-            return temp
-        elif dest == 'k':
-            return (temp + 459.67) * 5.0 / 9.0
-        elif dest == 'r':
-            return temp + 459.67
+        if dest == 'c':     return (temp - 32) * 5.0 / 9.0
+        elif dest == 'f':   return temp
+        elif dest == 'k':   return (temp + 459.67) * 5.0 / 9.0
+        elif dest == 'r':   return temp + 459.67
 
     def kelvin_table(temp, dest):
-        if dest == 'c':
-            return temp - 273.15
-        elif dest == 'f':
-            return temp * 9.0 / 5.0 - 459.67
-        elif dest == 'k':
-            return temp
-        elif dest == 'r':
-            return temp * 9.0 / 5.0
+        if dest == 'c':     return temp - 273.15
+        elif dest == 'f':   return temp * 9.0 / 5.0 - 459.67
+        elif dest == 'k':   return temp
+        elif dest == 'r':   return temp * 9.0 / 5.0
 
     def rankine_table(temp, dest):
-        if dest == 'c':
-            return (temp - 491.67) * 5.0 / 9.0
-        elif dest == 'f':
-            return temp - 469.67
-        elif dest == 'k':
-            return temp * 5.0 / 9.0
-        elif dest == 'r':
-            return temp
+        if dest == 'c':     return (temp - 491.67) * 5.0 / 9.0
+        elif dest == 'f':   return temp - 469.67
+        elif dest == 'k':   return temp * 5.0 / 9.0
+        elif dest == 'r':   return temp
 
     # Now we're gonna check if there are any specific wishes for what
     # to convert the unit to.
@@ -72,8 +56,7 @@ async def convert(ctx, tempstatement):
         dest_unit = re.search('(?:in|as|to|for)' + unit_regex, ctx.message.content.lower() + ' ').group().strip()
         dest_unit = re.search('\s\w+', dest_unit).group().strip()[0]
         manual_conversion = True
-    except:
-        pass
+    except: pass
 
     # Defaults unless an in- or to-statement is found.
     # This converts c to f and f to c, r and k are converted
@@ -90,14 +73,10 @@ async def convert(ctx, tempstatement):
                     origin_unit = 'f'
 
     # Now let's convert the temperature.
-    if origin_unit == 'c':
-        dest_temp = celcius_table(origin_temp, dest_unit)
-    elif origin_unit == 'f':
-        dest_temp = fahrenheit_table(origin_temp, dest_unit)
-    elif origin_unit == 'k':
-        dest_temp = kelvin_table(origin_temp, dest_unit)
-    elif origin_unit == 'r':
-        dest_temp = rankine_table(origin_temp, dest_unit)
+    if origin_unit == 'c':      dest_temp = celcius_table(origin_temp, dest_unit)
+    elif origin_unit == 'f':    dest_temp = fahrenheit_table(origin_temp, dest_unit)
+    elif origin_unit == 'k':    dest_temp = kelvin_table(origin_temp, dest_unit)
+    elif origin_unit == 'r':    dest_temp = rankine_table(origin_temp, dest_unit)
 
     # Let's round the numbers, both of them to be safe.
     origin_temp = str(round(origin_temp, 2))
@@ -105,24 +84,21 @@ async def convert(ctx, tempstatement):
 
     # If destination and origin temperatures are the same after rounding, we have custom replies for that.
     temps_are_same = False
-    if origin_temp == dest_temp:
-        temps_are_same = True
+    if origin_temp == dest_temp:    temps_are_same = True
 
     # Now we'll construct our reply.
-    reply = ctx.author.mention + ' I\'ve spotted a temperature statement in your message!\n'
+    reply = f"{ctx.author.mention} I've spotted a temperature statement in your message!\n"
 
     # The temperatures happen to be the same but the user didn't ask to convert them manually.
     if temps_are_same == True and manual_conversion == False:
-        reply += ('Huh, guess what! ' + origin_temp + ' is the same in both ' +
-                  '°' + origin_unit.upper() + ' and ' + '°' + dest_unit.upper() + '!')
+        reply += f"Huh, guess what! {origin_temp} is the same in both °{origin_unit.upper()} and °{dest_unit.upper()}!"
 
     # The temperatures are the same and the user deliberately asked the bot to convert between them.
     elif temps_are_same == True and manual_conversion == True:
-        reply = ctx.author.mention + ' Those temperatures are the same and you know it you filthy smud.'
+        reply = f"{ctx.author.mention} Those temperatures are the same and you know it you filthy smud."
 
     # Normal reply.
     else:
-        reply += (origin_temp + '°' + origin_unit.upper() + ' is equal to ' +
-                 dest_temp   + '°' + dest_unit.upper() + '.')
+        reply += f"{origin_temp}°{origin_unit.upper()} is equal to {dest_temp}°{dest_unit.upper()}."
 
     await ctx.send(reply)
