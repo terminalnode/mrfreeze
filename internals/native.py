@@ -6,6 +6,13 @@ from databases import mutes
 
 def get_author(ctx):
     return str(ctx.author.name + '#' + str(ctx.author.discriminator) + ' ')
+def get_trash_channel(guild):
+    """Currently just gives the channel with the name bot-trash.
+    In the future this may be expanded so servers can designate whatever channel they want as Antarctica."""
+    for channel in guild.text_channels:
+        if channel.name.lower() == "bot-trash":
+            return channel
+    return None
 
 def get_antarctica_role(guild):
     """Currently just gives the role with the name antarctica.
@@ -13,6 +20,7 @@ def get_antarctica_role(guild):
     for role in guild.roles:
         if role.name.lower() == "antarctica":
             return role
+    return None
 
 def get_antarctica_channel(guild):
     """Currently just gives the channel with the name antarctica.
@@ -20,6 +28,7 @@ def get_antarctica_channel(guild):
     for channel in guild.text_channels:
         if channel.name.lower() == "antarctica":
             return channel
+    return None
 
 def get_image(desired):
     with open('config/files', 'r') as f:

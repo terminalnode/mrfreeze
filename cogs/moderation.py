@@ -1,7 +1,7 @@
 import discord, re, datetime
 from discord.ext import commands
 from string import Template
-from internals import native, checks
+from internals import native, checks, var
 from databases import mutes
 
 # This cog is for commands restricted to mods on a server.
@@ -11,6 +11,85 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
     """Good mod! Read the manual! Or if you're not mod - sod off!"""
     def __init__(self, bot):
         self.bot = bot
+        self.antarctica_role    = dict()
+        self.antarctica_channel = dict()
+        self.trash_channel      = dict()
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        for guild in self.bot.guilds:
+            self.antarctica_role[guild.id]      = native.get_antarctica_role(guild)
+            self.antarctica_channel[guild.id]   = native.get_antarctica_channel(guild)
+            self.trash_channel[guild.id]        = native.get_trash_channel(guild)
+
+    def check_roles(self, role):
+        """When roles are created/deleted/updated this function checks that this
+        doesn't affect which role is antarctica."""
+        guild = role.guild
+
+        old_antarctica = self.antarctica_role[guild.id]
+        new_antarctica = native.get_antarctica_role(guild)
+
+        if old_antarctica != new_antarctica:
+            self.antarctica_role[guild.id] = new_antarctica
+            if new_antarctica == None:  new_antarctica = "undefined"
+            print(f"{var.cyan}The {var.boldwhite}Antarctica role{var.cyan} in {var.red}{guild.name}",
+                  f"{var.cyan}was updated to: {var.green}{new_antarctica}{var.reset}")
+
+    def check_channels(self, channel):
+        """When channels are created/deleted/updated this function checks that this
+        doesn't affect which channel is bot-trash, antarctica, etc."""
+        guild = channel.guild
+
+        # Check if antarctica has changed.
+        old_antarctica  = self.antarctica_channel[guild.id]
+        new_antarctica  = native.get_antarctica_channel(guild)
+
+        if old_antarctica != new_antarctica:
+            self.antarctica_channel[guild.id] = new_antarctica
+
+            if new_antarctica != None:  new_antarctica = f"#{new_antarctica.name}"
+            else:                       new_antarctica = "undefined"
+
+            print(f"{var.cyan}The {var.boldwhite}Antarctica channel{var.cyan} in {var.red}{guild.name}",
+                  f"{var.cyan}was updated to: {var.green}{new_antarctica}{var.reset}")
+
+        # Check if trash has changed.
+        old_trash       = self.trash_channel[guild.id]
+        new_trash       = native.get_trash_channel(guild)
+
+        if old_trash != new_trash:
+            self.trash_channel[guild.id] = new_trash
+
+            if new_trash != None:   new_trash = f"#{new_trash.name}"
+            else:                   new_trash = "undefined"
+
+            print(f"{var.cyan}The {var.boldwhite}trash channel{var.cyan} in {var.red}{guild.name}",
+                  f"{var.cyan}was updated to: {var.green}{new_trash}{var.reset}")
+
+    @commands.Cog.listener()
+    async def on_guild_channel_delete(self, channel):
+        self.check_channels(channel)
+
+    @commands.Cog.listener()
+    async def on_guild_channel_create(self, channel):
+        self.check_channels(channel)
+
+    @commands.Cog.listener()
+    async def on_guild_channel_update(self, before, after):
+        self.check_channels(after)
+
+    @commands.Cog.listener()
+    async def on_guild_role_create(self, role):
+        self.check_roles(role)
+
+    @commands.Cog.listener()
+    async def on_guild_role_delete(self, role):
+        self.check_roles(role)
+
+    @commands.Cog.listener()
+    async def on_guild_role_update(self, before, after):
+        self.check_roles(after)
 
     def extract_reason(self, reason):
         # This is a simple function that will return anything after the list of mentions.
