@@ -1,9 +1,9 @@
 # Various variables used throughout the program.
 # Colors
-boldcyan    = '\033[36;1m'
-boldwhite   = '\033[37;1m'
-white       = '\033[0;37m'
-cyan        = '\033[0;36m'
-green       = '\033[32;1m'
-red         = '\033[31;1m'
-reset       = '\033[0m'
+boldcyan    = '\033[36;01m'
+boldwhite   = '\033[37;01m'
+white       = '\033[00;37m'
+cyan        = '\033[00;36m'
+green       = '\033[32;01m'
+red         = '\033[31;01m'
+reset       = '\033[00000m'

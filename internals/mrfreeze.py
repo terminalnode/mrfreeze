@@ -21,11 +21,28 @@ class MrFreeze(commands.Bot):
         self.bg_tasks[name] = self.loop.create_task(task)
 
     async def on_ready(self):
-        print(f'{var.boldcyan}We have logged in as {self.user}')
-        print(f'{var.cyan}User name:           {var.boldcyan}{self.user.name}')
-        print(f'{var.cyan}User ID:             {var.boldcyan}{self.user.id}')
-        print(f'{var.cyan}Number of servers:   {var.boldcyan}{len(self.guilds)}')
-        print(f'{var.cyan}Number of users:     {var.boldcyan}{len(self.users)}{var.reset}')
+        greeting = list()
+        greeting.append(f'{var.cyan}{var.boldcyan}We have logged in as {self.user}')
+        greeting.append(f'{var.cyan}User name:           {var.boldcyan}{self.user.name}')
+        greeting.append(f'{var.cyan}User ID:             {var.boldcyan}{self.user.id}')
+        greeting.append(f'{var.cyan}Number of servers:   {var.boldcyan}{len(self.guilds)}')
+        greeting.append(f'{var.cyan}Number of channels:  {var.boldcyan}{sum([ len(guild.text_channels) for guild in self.guilds ])}')
+        greeting.append(f'{var.cyan}Number of users:     {var.boldcyan}{len(self.users)}')
+
+        # Calculating box width...
+        # Each escape character takes up 8 spaces.
+        # We then need two extra characters on each side.
+        longest = max(greeting, key=lambda x: len(x)-16)
+        linewidth = (len(longest) - 16)
+        box = f"{var.cyan}#{var.reset}"
+
+        print(f"{ box * (linewidth + 4) }")
+        for line in greeting:
+            width = ( len(line) - 16 )
+            line += ( ' ' * (linewidth - width) )
+            print(f"{box} {line} {box}")
+        print(f"{ box * (linewidth + 4) }\n")
+
 
         # Making sure that the userdb exists.
         # userdb.create()   # This is being replaced.
