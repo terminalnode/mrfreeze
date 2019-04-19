@@ -32,9 +32,10 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
 
         if old_antarctica != new_antarctica:
             self.antarctica_role[guild.id] = new_antarctica
-            if new_antarctica == None:  new_antarctica = "undefined"
-            print(f"{var.cyan}The {var.boldwhite}Antarctica role{var.cyan} in {var.red}{guild.name}",
-                  f"{var.cyan}was updated to: {var.green}{new_antarctica}{var.reset}")
+            if new_antarctica != None:  new_antarctica = f"{var.green}@{new_antarctica}"
+            else:                       new_antarctica = f"{var.red}undefined"
+            print(f"{var.cyan}The {var.boldwhite}Antarctica role{var.cyan} in",
+                  f"{var.red}{guild.name}{var.cyan} was updated to: {new_antarctica}{var.reset}")
 
     def check_channels(self, channel):
         """When channels are created/deleted/updated this function checks that this
@@ -48,11 +49,11 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         if old_antarctica != new_antarctica:
             self.antarctica_channel[guild.id] = new_antarctica
 
-            if new_antarctica != None:  new_antarctica = f"#{new_antarctica.name}"
-            else:                       new_antarctica = "undefined"
+            if new_antarctica != None:  new_antarctica = f"{var.green}#{new_antarctica.name}{var.reset}"
+            else:                       new_antarctica = f"{var.red}undefined"
 
-            print(f"{var.cyan}The {var.boldwhite}Antarctica channel{var.cyan} in {var.red}{guild.name}",
-                  f"{var.cyan}was updated to: {var.green}{new_antarctica}{var.reset}")
+            print(f"{var.cyan}The {var.boldwhite}Antarctica channel{var.cyan} in",
+                  f"{var.red}{guild.name}{var.cyan} was updated to: {new_antarctica}{var.reset}")
 
         # Check if trash has changed.
         old_trash       = self.trash_channel[guild.id]
@@ -61,35 +62,25 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         if old_trash != new_trash:
             self.trash_channel[guild.id] = new_trash
 
-            if new_trash != None:   new_trash = f"#{new_trash.name}"
-            else:                   new_trash = "undefined"
+            if new_trash != None:   new_trash = f"{var.green}#{new_trash.name}"
+            else:                   new_trash = f"{var.red}undefined"
 
-            print(f"{var.cyan}The {var.boldwhite}trash channel{var.cyan} in {var.red}{guild.name}",
-                  f"{var.cyan}was updated to: {var.green}{new_trash}{var.reset}")
+            print(f"{var.cyan}The {var.boldwhite}trash channel{var.cyan} in",
+                  f"{var.red}{guild.name}{var.cyan} was updated to: {new_trash}{var.reset}")
 
+    # Run check_channels() and check_roles() when a channel/role is updated somewhere.
     @commands.Cog.listener()
-    async def on_guild_channel_delete(self, channel):
-        self.check_channels(channel)
-
+    async def on_guild_channel_delete(self, channel):       self.check_channels(channel)
     @commands.Cog.listener()
-    async def on_guild_channel_create(self, channel):
-        self.check_channels(channel)
-
+    async def on_guild_channel_create(self, channel):       self.check_channels(channel)
     @commands.Cog.listener()
-    async def on_guild_channel_update(self, before, after):
-        self.check_channels(after)
-
+    async def on_guild_channel_update(self, before, after): self.check_channels(after)
     @commands.Cog.listener()
-    async def on_guild_role_create(self, role):
-        self.check_roles(role)
-
+    async def on_guild_role_create(self, role):             self.check_roles(role)
     @commands.Cog.listener()
-    async def on_guild_role_delete(self, role):
-        self.check_roles(role)
-
+    async def on_guild_role_delete(self, role):             self.check_roles(role)
     @commands.Cog.listener()
-    async def on_guild_role_update(self, before, after):
-        self.check_roles(after)
+    async def on_guild_role_update(self, before, after):    self.check_roles(after)
 
     def extract_reason(self, reason):
         # This is a simple function that will return anything after the list of mentions.
