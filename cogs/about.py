@@ -46,7 +46,7 @@ class AboutCog(commands.Cog, name='About'):
         await ctx.send(embed=mrfreeze)
 
     @commands.command(name='dummies')
-    async def _dummies(self, ctx, *args):
+    async def _dummies(self, ctx):
         """Supplies you with links to invite Ba'athman and Robin."""
         dummies = discord.Embed(color=0x00dee9,
                                 description = ("Here are the links for inviting Ba'athman and Robin, my arch enemies, to a server.\n\n" +
@@ -63,8 +63,8 @@ class AboutCog(commands.Cog, name='About'):
         """Supplies you with a list of my planned features."""
         todos = discord.Embed(color=0x00dee9)
         todos.set_thumbnail(url=native.get_image('TODOs'))
-        todos.add_field(name='You\'re a nosy one! Here\'s a list of all the \'cool\' stuff Terminal\'s got planned for me... :sleeping:',
-                        value='https://gitlab.com/terminalnode/MrFreeze/blob/master/TODO.md')
+        todos.add_field(name="You're a nosy one! Here's a list of all the 'cool' stuff Terminal's got planned for me... :sleeping:",
+                        value="https://gitlab.com/terminalnode/MrFreeze/blob/master/TODO.md")
 
         await ctx.send(embed=todos)
 
