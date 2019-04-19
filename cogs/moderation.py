@@ -119,8 +119,10 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
 
                 # Post success message to the server's designated Antarctica channel.
                 if len(success_list) != 0:
+                    if len(success_list) == 1:  exile = "exile"
+                    else:                       exile = "exiles"
                     ment_success = native.mentions_list(success_list)
-                    await channel.send(f"It's with great regret that I must inform you all that {ment_success}'s exile has come to an end.")
+                    await channel.send(f"It's with great regret that I must inform you all that the {exile} of {ment_success} has come to an end.")
 
     def extract_reason(self, reason):
         # This is a simple function that will return anything after the list of mentions.
