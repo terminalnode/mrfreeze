@@ -1,4 +1,4 @@
-import discord, re, datetime
+import discord, re, datetime, asyncio
 from discord.ext import commands
 from internals import native, checks, var, templates
 from databases import mutes
@@ -14,6 +14,9 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         self.antarctica_channel = dict()
         self.trash_channel      = dict()
         self.banish_templates   = templates.banish_templates()
+
+        bot.add_bg_task(self.unbanish_loop(), 'unbanish loop')
+        self.unbanish_interval = 5
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -81,6 +84,14 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
     async def on_guild_role_delete(self, role):             self.check_roles(role)
     @commands.Cog.listener()
     async def on_guild_role_update(self, before, after):    self.check_roles(after)
+
+    async def unbanish_loop(self):
+        """This loop checks for people to unbanish every self.banish_interval seconds."""
+        await self.bot.wait_until_ready()
+
+        while not self.bot.is_closed():
+            # The unbanish interval can potentially be changed through settings.
+            await asyncio.sleep(self.unbanish_interval)
 
     def extract_reason(self, reason):
         # This is a simple function that will return anything after the list of mentions.
