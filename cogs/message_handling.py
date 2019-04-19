@@ -18,8 +18,8 @@ class MessageHandlerCog(commands.Cog, name='MessageHandler'):
                                   '°?f(ahrenheit)?(reedom( units)?)?(u)?|°?k(elvin)?|°?r(ankine)?)[^\w]',
                                   ' ' + message.content.lower() + ' ')
 
-        if message.author == self.bot.user:
-            pass # Ignore what the bot says...
+        if message.author.bot:
+            pass # Ignore what all the bots say...
 
         elif tempstatement != None:
             await temp.convert(ctx, tempstatement)
