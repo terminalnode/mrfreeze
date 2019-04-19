@@ -2,6 +2,7 @@
 # Colors
 boldcyan    = '\033[36;1m'
 boldwhite   = '\033[37;1m'
+white       = '\033[0;37m'
 cyan        = '\033[0;36m'
 green       = '\033[32;1m'
 red         = '\033[31;1m'
