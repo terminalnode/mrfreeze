@@ -16,7 +16,7 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         self.banish_templates   = templates.banish_templates()
 
         bot.add_bg_task(self.unbanish_loop(), 'unbanish loop')
-        self.unbanish_interval = 5
+        self.unbanish_interval = 20
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -88,10 +88,39 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
     async def unbanish_loop(self):
         """This loop checks for people to unbanish every self.banish_interval seconds."""
         await self.bot.wait_until_ready()
-
         while not self.bot.is_closed():
             # The unbanish interval can potentially be changed through settings.
             await asyncio.sleep(self.unbanish_interval)
+
+            for server in self.bot.guilds:
+                banishes = [ user for user in mutes.list_server(server) if user['due'] == True ]
+
+                # If no unbanishes due, continue to next server.
+                # If there are, get the antarctica role for current server.
+                if len(banishes) == 0:
+                    continue
+                else:
+                    antarctica = self.antarctica_role[server.id]
+                    channel = self.antarctica_channel[server.id]
+
+                # Sequentially remove users from mute database, then remove antarctacia role.
+                # If both of these steps succeeded add them to success_list so we can mention them later.
+                success_list = list()
+                for user in banishes:
+                    user = server.get_member(user['user'])
+                    try:
+                        mutes.remove(user)
+                        if antarctica in user.roles:
+                            await user.remove_roles(antarctica)
+                            success_list.append(user)
+                    except Exception as e:
+                        print(f"{var.red}ERROR {var.cyan} Failed to remove {var.red}@{antarctica.name} {var.cyan}from" +
+                            f"{var.boldwhite}{user.name}#{user.discriminator} {var.cyan}in {var.red}{server.name}.")
+
+                # Post success message to the server's designated Antarctica channel.
+                if len(success_list) != 0:
+                    ment_success = native.mentions_list(success_list)
+                    await channel.send(f"It's with great regret that I must inform you all that {ment_success}'s exile has come to an end.")
 
     def extract_reason(self, reason):
         # This is a simple function that will return anything after the list of mentions.
@@ -250,7 +279,7 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
                 mission['command'] = 'mute'
                 if 'micro' in context.invoked_with:
                     mission['time'] = datetime.datetime.now()
-                    mission['duration'] = '15 seconds at most'
+                    mission['duration'] = 'only about a minute'
 
                 elif 'super' in context.invoked_with.lower():
                     nextyear = datetime.datetime.now().year + 1
@@ -275,7 +304,12 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
 
 
         async def mutecount(mission):
-            pass
+            """Counts the number of users muted on this server."""
+            result = mutes.count(mission['server'])
+            verb = self.banish_templates[mission['flavor']]['past_tense']
+            if result == 0:     await ctx.send(f"{ctx.author.mention} There is no one {verb} here. Fix it!")
+            elif result == 1:   await ctx.send(f"{ctx.author.mention} There is only a single person {verb} here. Who could it be??")
+            else:               await ctx.send(f"{ctx.author.mention} There are {result} people {verb} here. As it should be.")
 
 
         async def mutecheck(mission):
@@ -304,29 +338,32 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
 
         async def muteadd(mission):
             """Adds one or more users to the mute database and assigns them the antarctica role"""
-            print('lets mute')
             antarctica  = self.antarctica_role[mission['server'].id]
+            verb        = self.banish_templates[mission['flavor']]['past_tense']
             unmuteables = mission['mods']
             muteables   = mission['users']
+            mute_status = { 'new': list(), 'prolonged': list(), 'failed': list() }
 
-            if len(muteables) != 0:
-                mute_status = { 'new': list(), 'prolonged': list(), 'failed': list() }
-                if mission['time'] == None and mission['flavor'] == 'banish':
-                    mission['time'] = datetime.datetime.now() + datetime.timedelta(minutes=5)
+            # Default times for various themes are as follows.
+            if mission['time'] == None and mission['flavor'] == 'banish':
+                mission['time'] = datetime.datetime.now() + datetime.timedelta(minutes=5)
+            elif mission['time'] == None and mission['flavor'] == 'hogtie':
+                mission['time'] = datetime.datetime.now() + datetime.timedelta(minutes=10)
 
-                for victim in muteables:
-                    has_role = antarctica in victim.roles
-                    in_db    = mutes.check(victim) != False
-                    prolong  = has_role and in_db
-                    if not has_role:
-                        try:
-                            await victim.add_roles(antarctica, reason=f"!{ctx.invoked_with} by {ctx.author.name}")
-                        except Exception as e:
-                            mute_status['failed'].append([victim, e])
-                    if prolong:
-                        mutes.prolong(victim, voluntary=False, end_date=mission['time'])
-                    else:
-                        mutes.add(victim, voluntary=False, end_date=mission['time'])
+            for victim in muteables:
+                # 1. Always add the Antarctica role if the user doesn't have it.
+                # 2. If the user both have the role and are in the database, this is a prolonged mute.
+                # -> If a user has the role removed they should've been removed from the database. This is a failsafe.
+
+                has_role = antarctica in victim.roles
+                in_db    = mutes.check(victim) != False
+                prolong  = has_role and in_db
+                if not has_role:
+                    try:                    await victim.add_roles(antarctica, reason=f"!{verb} by {ctx.author.name}")
+                    except Exception as e:  mute_status['failed'].append([victim, e])
+
+                if prolong:     mutes.prolong(victim, voluntary=False, end_date=mission['time'])
+                else:               mutes.add(victim, voluntary=False, end_date=mission['time'])
 
             # Responses...
             responses = self.banish_templates[mission['flavor']]
@@ -335,13 +372,13 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
             # Set variables success_list, fail_list and errors for later on.
             success_list = native.mentions_list(mute_status['new'] + mute_status['prolonged'])
             fail_list = native.mentions_list( [ fail[0] for fail in mute_status['failed'] ] )
+
             if len(fail_list) != 0:
                 errors = ', '.join( [ fail[1] for fail in mute_status['failed'] ] )
             else:
                 errors = "No errors!"
 
             if len(muteables) == 0:
-                print('hello')
                 #####################################################
                 # NON-ACTIONABLE REQUESTS (only mods/mrfreeze/self) #
                 #####################################################
@@ -359,17 +396,17 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
                 ################################################
                 # RESPONESE FOR ACTIONABLE REQUESTS START HERE #
                 ################################################
-                print("We have muteables!")
+                pass
 
             if reply == None:
                 print(f"{var.red}!mute {var.cyan}FAILED to find an appropriate template.{var.reset}")
+                await ctx.send("I'm supposed to say something now, but I'm at a loss for words.")
             else:
                 reply = reply.substitute(
                     author = ctx.author.mention,
                     victim = success_list,
                     fail = fail_list,
-                    error = errors,
-                        )
+                    error = errors,)
                 await ctx.send(reply)
 
         async def muteremove(mission):
@@ -382,7 +419,6 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
             mission['time'] = end_time
             mission['duration'] = native.parse_timedelta(add_time)
 
-        print(f"Mission statement:\n{mission}")
         if mission['command'] == 'count':       await mutecount(mission)
         elif mission['command'] == 'check':     await mutecheck(mission)
         elif mission['command'] == 'mute':      await muteadd(mission)

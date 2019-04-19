@@ -1,8 +1,6 @@
-import sqlite3
-
-# A few variables used throughout the module
+import sqlite3, datetime
+from internals import var
 dbname  = 'Mutes and Banishes'
-from internals import var # Colors
 
 def connect_to_db():
     """Creates a connection to the regionbl database."""
@@ -30,7 +28,7 @@ def create():
         server      integer NOT NULL,
         voluntary   boolean NOT NULL,
         until       date,
-        CONSTRAINT server_user PRIMARY KEY (id, server));"""
+        CONSTRAINT  server_user PRIMARY KEY (id, server));"""
 
     # Now we'll create the database.
     with conn:
@@ -43,16 +41,27 @@ def create():
             print(f'{var.cyan}Database creation failed:     {var.red}{dbname}\n{str(e)}{var.reset}')
 
 # This module needs the following features:
-# NAME              FUNCTION
-# check()           False if user isn't muted.
-#                   True if user is muted indefinitely.
-#                   Datetime object is users is muted until a certain time.
+# NAME                      FUNCTION
+# check(user)               False if user isn't muted.
+#                           True if user is muted indefinitely.
+#                           Datetime object is users is muted until a certain time.
+# parsetime(string or date) Create a datetime from string or a string from datetime.             
+# fetch_server(server)      Get a list of all mutes for a server.
+# count(server)             Count all currently muted users.
+# list_server(server)       Get a list of all mutes in a server and if they are due.
+# add()                     Adds a user to the mute database.
+# prolong()                 Adds extra time to a users mute.
+# remove()                  Removes a user from the mute database.
 
-# count()           Count all currently muted users. List who they are if requested.
-#
-# add()             Adds a user to the mute database.
-#
-# prolong()         Adds extra time to a users mute.
+def parsetime(before):
+    timeformat = "%Y-%m-%d %H:%M:%S"
+
+    if isinstance(before, datetime.datetime):
+        return datetime.datetime.strftime(before, timeformat)
+    elif isinstance(before, str):
+        return datetime.datetime.strptime(before, timeformat)
+    else:
+        return None
 
 def user_info(user):
     """Returns ((user, server) username) based on a user object."""
@@ -73,28 +82,57 @@ def check(user):
         fetch = c.fetchall()
 
     if len(fetch) == 0:
-        print(f"{var.cyan}Checked if {var.red}{name} was muted{var.cyan} - they {var.red}were not{var.cyan}.{var.reset}")
         return False
     else:
-        print(f"{var.cyan}Checked if {var.green}{name} was muted{var.cyan} - they {var.green}were{var.cyan}.{var.reset}")
-        return True # TODO Return True only if there is no time on the mute, otherwise return datetime.
-                    # TODO Return information on whether it's a voluntary mute or not.
+        fetch = fetch[0]
+        if len(fetch) < 4: # This means there's no date on the fetch.
+            return True
+        else:
+            return parsetime(fetch[3])
 
-def count(show=False):
+def fetch_server(server):
     """Count how many users are currently muted.
     If show is set to True, list all the members if possible."""
+    server = server.id
     with connect_to_db() as conn:
         c = conn.cursor()
+        sql = ''' SELECT * FROM mutes WHERE server = ? '''
+        c.execute(sql, (server,))
+        fetch = c.fetchall()
+    return fetch
+
+def list_server(server):
+    """List all banishes in a server and if they are due for unbanish."""
+    banishes = list()
+    current = datetime.datetime.now()
+
+    raw_list = fetch_server(server)
+    for banishment in raw_list:
+        entry = dict()
+        entry['user']       = banishment[0]
+        entry['voluntary']  = banishment[2]
+        try:
+            entry['due'] = bool(parsetime(banishment[3]) < current)
+        except:
+            entry['due'] = None
+        banishes.append(entry)
+
+    return banishes
+
+def count(server):
+    """Count how many users are currently muted.
+    If show is set to True, list all the members if possible."""
+    return len(fetch_server(server))
 
 def add(user, voluntary=False, end_date=None):
     """Add a new user to the mutes database."""
     member, server, name = user_info(user)
     error = None
-    print(end_date)
 
     with connect_to_db() as conn:
         c = conn.cursor()
         if end_date != None:
+            end_date = parsetime(end_date)
             sql = ''' INSERT INTO mutes(id, server, voluntary, until) VALUES(?,?,?,?)'''
             try:                    c.execute(sql, (member, server, voluntary, end_date))
             except Exception as e:  error = e
@@ -122,6 +160,22 @@ def prolong(user, voluntary=False, end_date=None):
     with connect_to_db() as conn:
         c = conn.cursor()
 
+
+def remove(user):
+    """Removes a user from the mutes database."""
+    member, server, name = user_info(user)
+
+    with connect_to_db() as conn:
+        c = conn.cursor()
+        sql = ''' DELETE FROM mutes WHERE id = ? AND server = ? '''
+
+        try:
+            c.execute(sql, (member, server))
+            return True
+
+        except Exception as e:
+            print(f"Ugh, couldn't remove {name} from mutes db: {e}")
+            return False
 
 
 
