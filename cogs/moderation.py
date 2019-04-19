@@ -1,7 +1,6 @@
 import discord, re, datetime
 from discord.ext import commands
-from string import Template
-from internals import native, checks, var
+from internals import native, checks, var, templates
 from databases import mutes
 
 # This cog is for commands restricted to mods on a server.
@@ -14,6 +13,7 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         self.antarctica_role    = dict()
         self.antarctica_channel = dict()
         self.trash_channel      = dict()
+        self.banish_templates   = templates.banish_templates()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -104,10 +104,8 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
 
         # If there's nothing left after these steps we'll return None.
         # Otherwise we'll return the output.
-        if len(output.strip()) == 0:
-            return None
-        else:
-            return output.strip()
+        if len(output.strip()) == 0:    return None
+        else:                           return output.strip()
 
 
     @commands.command(name='say', aliases=['speak', 'chat'])
@@ -127,8 +125,8 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
 
         # If a string of numbers is found, see if it's a user ID.
         # 1. Find strings of numbers not belonging to a mention.
-        users = re.findall('(?:\s|^)(\d+)', replystr)
         # 2. See if that number is a user ID for anyone we know.
+        users = re.findall('(?:\s|^)(\d+)', replystr)
         users = [ ctx.guild.get_member(int(user)) for user in users if ctx.guild.get_member(int(user)) != None ]
         for user in users:
             replystr = replystr.replace(str(user.id), user.mention)
@@ -172,9 +170,11 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         else:                       await ctx.send(called_rules.strip())
 
 
-    @commands.command(name='mute', aliases=['banish', 'micromute', 'microbanish',
-        'superbanish', 'SUPERBANISH', 'supermute', 'SUPERMUTE',
-        'unbanish', 'unmute', 'pardon', 'forgive'])
+    @commands.command(name='mute', aliases=[ 'pardon', 'forgive',
+        'banish', 'unbanish', 'microbanish', 'superbanish', 'SUPERBANISH', 'megabanish', 'MEGABANISH',
+        'hogtie', 'unhogtie', 'microhogtie', 'superhogtie', 'SUPERHOGTIE', 'megahogtie', 'MEGAHOGTIE',
+                  'unmute',   'micromute',   'supermute',   'SUPERMUTE',   'megamute',   'MEGAMUTE',
+    ])
     @commands.check(checks.is_mod)
     async def _banish(self, ctx, *args):
         """Restrict a user to #antarctica for a short(?) period of time or frees them from that hell."""
@@ -220,26 +220,38 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
             # mute              Adds the Antarctica role to a user.
             # unmute            Removes the Antarctica role from a user.
             # Command flavors:  mute, banish
-            if 'banish' in context.invoked_with:    mission['flavor'] = 'banish'
-            else:                                   mission['flavor'] = 'mute'
+            if 'banish' in context.invoked_with.lower():    mission['flavor'] = 'banish'
+            elif 'hogtie' in context.invoked_with.lower():  mission['flavor'] = 'hogtie'
+            else:                                           mission['flavor'] = 'mute'
 
-            if 'check' in arguments:
-                mission['command'] = 'check'
+            mute_aliases = (
+                'banish', 'microbanish', 'superbanish', 'SUPERBANISH', 'megabanish', 'MEGABANISH',
+                'hogtie', 'microhogtie', 'superhogtie', 'SUPERHOGTIE', 'megahogtie', 'MEGAHOGTIE',
+                'mute',   'micromute',   'supermute',   'SUPERMUTE',   'megamute',   'MEGAMUTE',
+            )
+            unmute_aliases = (
+                'unbanish', 'unhogtie', 'unmute', 'pardon', 'forgive',
+            )
 
-            elif 'count' in arguments:
-                mission['command'] = 'count'
-
-            elif context.invoked_with.lower() in ('banish', 'mute', 'micromute', 'microbanish', 'superbanish'):
+            if 'check' in arguments:    mission['command'] = 'check'
+            elif 'count' in arguments:  mission['command'] = 'count'
+            elif context.invoked_with in mute_aliases:
                 mission['command'] = 'mute'
                 if 'micro' in context.invoked_with:
                     mission['time'] = datetime.datetime.now()
                     mission['duration'] = '15 seconds at most'
-                elif 'super' in context.invoked_with:
+
+                elif 'super' in context.invoked_with.lower():
                     nextyear = datetime.datetime.now().year + 1
                     mission['time'] = datetime.datetime.now().replace(year=nextyear)
                     mission['duration'] = 'ONE FULL YEAR'
 
-            elif context.invoked_with in ('unbanish', 'unmute', 'pardon', 'forgive'):
+                elif 'mega' in context.invoked_with.lower():
+                    nextyear = datetime.datetime.now().year + 1000
+                    mission['time'] = datetime.datetime.now().replace(year=nextyear)
+                    mission['duration'] = 'A MILLENIUM'
+
+            elif context.invoked_with in unmute_aliases:
                 mission['command'] = 'unmute'
 
             # Mention categories: mods, bots, users
@@ -247,41 +259,44 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
                 if mention == self.bot.user:        pass # Don't banish the bot.
                 elif await checks.is_mod(mention):  mission['mods'].append(mention)
                 else:                               mission['users'].append(mention)
+
             return mission
+
 
         async def mutecount(mission):
             pass
+
 
         async def mutecheck(mission):
             """Checks if one or more users are muted/banished."""
             if len(ctx.message.mentions) == 0:
                 await ctx.send(f"{ctx.author.mention} You didn't mention anyone you smud.")
             else:
-                if mission['flavor'] == 'banish': verb = "banished"
-                elif mission['flavor'] == 'mute': verb = "muted"
-                else:                             verb = "muted"
-
+                verb = self.banish_templates[mission['flavor']]['past_tense']
                 reply = str()
+
                 for user in ctx.message.mentions:
                     checkresult = mutes.check(user)
                     if isinstance(checkresult, bool):
-                        if checkresult:
-                            reply += f"{user.mention} is {verb} for life.\n"
-                        else:
-                            reply += f"{user.mention} is not {verb}.\n"
+                        if checkresult: reply += f"{user.mention} is {verb} for life.\n"
+                        else:           reply += f"{user.mention} is not {verb}.\n"
+
                     elif isinstance(checkresult, datetime.datetime):
                         until = native.parse_timedelta(checkresult - datetime.datetime.now())
                         reply += f"{user.mention} is going to be {verb} for another {until}.\n"
+
                     else:
                         reply += f"I'm not sure about {user.mention} actually. :shrug:\n"
+
                 await ctx.send(reply)
 
 
         async def muteadd(mission):
             """Adds one or more users to the mute database and assigns them the antarctica role"""
-            antarctica = native.get_antarctica_role(mission['server'])
+            print('lets mute')
+            antarctica  = self.antarctica_role[mission['server'].id]
             unmuteables = mission['mods']
-            muteables = mission['users']
+            muteables   = mission['users']
 
             if len(muteables) != 0:
                 mute_status = { 'new': list(), 'prolonged': list(), 'failed': list() }
@@ -292,89 +307,59 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
                     has_role = antarctica in victim.roles
                     in_db    = mutes.check(victim) != False
                     prolong  = has_role and in_db
-
                     if not has_role:
-                        try:                    await victim.add_roles(antarctica, reason=f"!{ctx.invoked_with} by {ctx.author.name}")
-                        except Exception as e:  mute_status['failed'].append([victim, e])
-
+                        try:
+                            await victim.add_roles(antarctica, reason=f"!{ctx.invoked_with} by {ctx.author.name}")
+                        except Exception as e:
+                            mute_status['failed'].append([victim, e])
                     if prolong:
                         mutes.prolong(victim, voluntary=False, end_date=mission['time'])
                     else:
                         mutes.add(victim, voluntary=False, end_date=mission['time'])
 
-            # Setting flavor texts.
-            if mission['flavor'] == 'banish':
-                # Mod banishes:
-                selfmute      = f"Oh no {ctx.author.mention}, you stay away from me! I'm not banishing you here!"
-                singlemodmute = Template("$author There's no way I'm sharing a room with $victim!")
-                multimodmute  = Template("Oh no, $author is sending the mod gang to attack me! Freeze, smuds!")
-
-                # Freeze banishes:
-                freezemute    = f"{ctx.author.mention} Are you trying to put me under house arrest?"
-                modfreezemute = Template("$author There's no way I'm sharing a room with $victim!")
-
-                # User banishes:
-                # TODO PLACEHOLDERS TODO
-                singlebanish = Template("$author banishes $victim (s.)")
-                multibanish  = Template("$author banishes $victim (pl.)")
-                singlefail   = Template("$author banishes $victim error $error (s.)")
-                multifail    = Template("$author banishes $victim error $error (pl.)")
-
-            else:
-                # the 'mute flavor'is the default.
-                # Mod mutes:
-                selfmute      = f"I too am tired of hearing your voice {ctx.author.mention}, but there's not much I can do about it."
-                singlemodmute = Template("$author As much as I'd like to I'm afraid I'm not allowed to silence $victim or any other moderator.")
-                multimodmute  = Template("$author Believe me, if I could I would've shut $victim up a looooong time ago.")
-
-                # Freeze mutes:
-                freezemute    = f"{ctx.author.mention} I will not be silenced!"
-                modfreezemute = Template("Hey, $victim! Help! $author is trying to silence us!")
-
-                # User banishes:
-                # TODO PLACEHOLDERS TODO
-                singlebanish = Template("$author banishes $victim (s.)")
-                multibanish  = Template("$author banishes $victim (pl.)")
-                singlefail   = Template("$author banishes $victim error $error (s.)")
-                multifail    = Template("$author banishes $victim error $error (pl.)")
-
             # Responses...
+            responses = self.banish_templates[mission['flavor']]
+            reply = None
+
+            # Set variables success_list, fail_list and errors for later on.
+            success_list = native.mentions_list(mute_status['new'] + mute_status['prolonged'])
+            fail_list = native.mentions_list( [ fail[0] for fail in mute_status['failed'] ] )
+            if len(fail_list) != 0:
+                errors = ', '.join( [ fail[1] for fail in mute_status['failed'] ] )
+            else:
+                errors = "No errors!"
+
             if len(muteables) == 0:
+                print('hello')
                 #####################################################
                 # NON-ACTIONABLE REQUESTS (only mods/mrfreeze/self) #
                 #####################################################
                 if len(ctx.message.mentions) == 1 and mission['self']:
-                    # !banish self
-                    await ctx.send(selfmute)
+                    reply = responses['selfmute']
                 elif mission['mrfreeze']:
                     if len(unmuteables) != 0:
-                        if mission['self']:
-                            # !banish self + mrfreeze
-                            await ctx.send(selfmute)
-                        else:
-                            # !banish other mod(s) + mrfreeze
-                            await ctx.send(modfreezemute.substitute(
-                                author=ctx.author.mention,
-                                victim=native.mentions_list(unmuteables)))
-                    else:
-                        # !banish mrfreeze
-                        await ctx.send(freezemute)
-                elif len(unmuteables) == 1:
-                    # !banish one other mod
-                    await ctx.send(singlemodmute.substitute(
-                            author=ctx.author.mention,
-                            victim=native.mentions_list(unmuteables)))
-                elif len(unmuteables) > 1:
-                    # !banish multiple other mods
-                    await ctx.send(multimodmute.substitute(
-                            author=ctx.author.mention,
-                            victim=native.mentions_list(unmuteables)))
+                        if mission['self']:     reply = responses['selfmute']
+                        else:                   reply = responses['modfreezemute']
+                    elif len(unmuteables) == 0: reply = responses['freezemute']
+                elif len(unmuteables) == 1:     reply = responses['singlemodmute']
+                elif len(unmuteables) > 1:      reply = responses['multimodmute']
+
             else:
                 ################################################
                 # RESPONESE FOR ACTIONABLE REQUESTS START HERE #
                 ################################################
                 print("We have muteables!")
 
+            if reply == None:
+                print(f"{var.red}!mute {var.cyan}FAILED to find an appropriate template.{var.reset}")
+            else:
+                reply = reply.substitute(
+                    author = ctx.author.mention,
+                    victim = success_list,
+                    fail = fail_list,
+                    error = errors,
+                        )
+                await ctx.send(reply)
 
         async def muteremove(mission):
             antarctica = native.get_antarctica_role(mission['server'])
@@ -386,6 +371,7 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
             mission['time'] = end_time
             mission['duration'] = native.parse_timedelta(add_time)
 
+        print(f"Mission statement:\n{mission}")
         if mission['command'] == 'count':       await mutecount(mission)
         elif mission['command'] == 'check':     await mutecheck(mission)
         elif mission['command'] == 'mute':      await muteadd(mission)
@@ -709,10 +695,10 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         mod_role = discord.utils.get(ctx.guild.roles, name='Administration')
         mods_list = [ user for user in ctx.message.mentions if mod_role in user.roles ]
         ment_mods = native.mentions_list(mods_list)
-        if len(mods_list) == 0:
-            tried_to_kick_mod = False
-        else:
-            tried_to_kick_mod = True
+
+        if len(mods_list) == 0: tried_to_kick_mod = False
+        else:                   tried_to_kick_mod = True
+
 
         # Start the kicking.
         if len(ctx.message.mentions) > 0 and not tried_to_kick_mod:
@@ -720,17 +706,28 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
                 try:
                     if reason == None:
                         await ctx.guild.kick(victim)
+                        print(f"{var.boldwhite}{victim.name}#{victim.discriminator}{var.cyan} was " +
+                            f"{var.red} kicked from {ctx.guild.name} {var.cyan}by {var.green}" +
+                            f"{ctx.author.name}#{ctx.author.discriminator}")
                     else:
                         await ctx.guild.kick(victim, reason=reason)
+                        print(f"{var.boldwhite}{victim.name}#{victim.discriminator}{var.cyan} was " +
+                            f"{var.red}kicked from {ctx.guild.name} {var.cyan}by {var.green}" +
+                            f"{ctx.author.name}#{ctx.author.discriminator}{var.cyan}.\n{var.boldwhite}Reason given: " +
+                            f"{var.white}{reason}{var.reset}")
                     success_list.append(victim)
 
                 except discord.Forbidden:
                     fail_list.append(victim)
                     forbidden_error = True
+                    print(f"{var.red}ERROR {var.cyan}I was not allowed to {var.red}!kick {var.boldwhite}{victim.name}#{victim.discriminator}" +
+                        f"{var.cyan} in {var.red}{ctx.guild.name}{var.cyan}.{var.reset}")
 
                 except discord.HTTPException:
                     fail_list.append(victim)
                     http_error = True
+                    print(f"{var.red}ERROR {var.cyan}I couldn't {var.red}!kick {var.boldwhite}{victim.name}#{victim.discriminator}" +
+                        f"{var.cyan} in {var.red}{ctx.guild.name} {var.cyan}due to an HTTP Exception.{var.reset}")
 
         # This will convert the lists into mentions suitable for text display:
         # user1, user2 and user 3
@@ -746,12 +743,12 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
 
             # Singular
             if len(success_list) == 1:
-                replystr = '%s The smud who goes by the name of %s has been kicked from the server, never to be seen again!'
+                replystr = "%s The smud who goes by the name of %s has been kicked from the server, never to be seen again!"
                 replystr = (replystr % (ctx.author.mention, ment_success))
 
             # Plural
             else:
-                replystr = '%s The smuds who go by the names of %s have been kicked from the server, never to be seen again!'
+                replystr = "%s The smuds who go by the names of %s have been kicked from the server, never to be seen again!"
                 replystr = (replystr % (ctx.author.mention, ment_success))
 
         # Had no successes and at least one fail.
@@ -759,41 +756,41 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
 
             # Singular
             if len(fail_list) == 1:
-                replystr = '%s So... it seems I wasn\'t able to kick %s due to: '
+                replystr = "%s So... it seems I wasn\'t able to kick %s due to: "
                 replystr = (replystr % (ctx.author.mention, ment_fail))
 
             # Plural
             else:
-                replystr = '%s So... it seems I wasn\'t able to kick any of %s.\nThis was due to: '
+                replystr = "%s So... it seems I wasn\'t able to kick any of %s.\nThis was due to: "
                 replystr = (replystr % (ctx.author.mention, ment_fail))
 
         # Had at least one success and at least one fail.
         elif (len(success_list) > 0) and (len(fail_list) > 0):
             # Singular and plural don't matter here.
-            replystr = '%s The request was executed with mixed results.\nKicked: %s\nNot kicked: %s\nThis was due to: '
+            replystr = "%s The request was executed with mixed results.\nKicked: %s\nNot kicked: %s\nThis was due to: "
             replystr = (replystr % (ctx.author.mention, ment_success, ment_fail))
 
         # Had no mentions whatsoever.
         elif len(ctx.message.mentions) == 0:
             # Singular and plural don't matter here.
-            replystr = '%s You forgot to mention anyone you doofus. Who exactly am I meant to kick??'
+            replystr = "%s You forgot to mention anyone you doofus. Who exactly am I meant to kick??"
             replystr = (replystr % (ctx.author.mention,))
 
         ### Now we're adding in the error codes if there are any.
         if forbidden_error and http_error:
-            replystr += 'Insufficient privilegies and HTTP exception.'
+            replystr += "Insufficient privilegies and HTTP exception."
         elif not forbidden_error and http_error:
-            replystr += 'HTTP exception.'
+            replystr += "HTTP exception."
         elif forbidden_error and not http_error:
-            replystr += 'Insufficient privilegies.'
+            replystr += "Insufficient privilegies."
 
         ### Finally, a special message to people who tried to kick a mod.
         if tried_to_kick_mod:
             if (len(mods_list) == 1) and ctx.author in mods_list:
-                replystr = '%s You can\'t kick yourself, silly.'
+                replystr = "%s You can't kick yourself, silly."
                 replystr = (replystr % (ctx.author.mention))
             else:
-                replystr = '%s Not even you can kick the likes of %s.'
+                replystr = "%s Not even you can kick the likes of %s."
                 replystr = (replystr % (ctx.author.mention, ment_mods))
 
         await ctx.send(replystr)
