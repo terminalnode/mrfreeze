@@ -44,7 +44,24 @@ Some points not to forget. Check that...
 * ...mods can and non-mods can't produce a list of blacklisted people.
 
 **Mute/banish etc**
+* ...banishing a single/multiple user works.
 * ...users who are manually unmuted don't get prolonged mutes when remuted.
+
+**Ban**
+* ...banning single/multiple users via mention works.
+* ...banning single/multiple users via user ID works.
+* ...banning multiple users via mention and user ID (mixed) works.
+* ...unbanning single/multiple users via name#discriminator works.
+* ...unbanning single/multiple users via user ID works.
+* ...unbanning multiple users via mention and name#discriminator (mixer) works.
+* ...listing banned users works.
+* ...errors report correctly.
+
+**Kick**
+* ...kicking single/multiple users via mention works.
+* ...kicking single/multiple users via user ID works.
+* ...kicking multiple users via mention and user ID (mixed) works.
+* ...errors report correctly.
 
 **Vote**
 * ...number emoji work.
