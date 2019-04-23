@@ -1,4 +1,4 @@
-import discord
+import discord, asyncio, datetime
 import traceback, sys # Debugging
 from discord.ext import commands
 from internals import var
@@ -14,8 +14,22 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
+        current_time = datetime.datetime.now()
+        current_time = datetime.datetime.strftime(current_time, '%Y-%m-%d %H:%M')
+        userstr = f"{ctx.author.name}#{ctx.author.discriminator}"
+
         if isinstance(error, commands.CheckFailure):
-            print (f"{ctx.author.name}#{ctx.author.discriminator} tried to illegaly invoke {ctx.prefix}{ctx.invoked_with}")
+            print(f"{var.red}{current_time} Check failure: {var.cyan}{userstr} tried to illegaly invoke {var.boldwhite}!{ctx.invoked_with}{var.reset}")
+
+        elif isinstance(error, discord.ext.commands.errors.BadArgument):
+            print(f"{var.red}{current_time} Bad arguments: {userstr} while using command {var.boldwhite}!{ctx.invoked_with}{var.reset}")
+            await ctx.send(f"{ctx.author.mention} That's not quite the information I need to execute that command.")
+
+        elif isinstance(error, discord.ext.commands.errors.CommandNotFound):
+            print(f"{var.red}{current_time} Command not found: {var.cyan}{userstr} tried {var.boldwhite}!{ctx.invoked_with}{var.reset}")
+
+        elif isinstance(error, asyncio.TimeoutError):
+            print(f"{var.red}{current_time} AsyncIO Timeout {var.reset}")
 
         elif isinstance(error, commands.errors.CommandOnCooldown):
             if error.cooldown.rate == 1:    er_rate = 'once'
@@ -48,15 +62,8 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
 
             await ctx.send("{ctx.author.name} The command **{ctx.invoked_with}** can only be used {er_rate} every {er_per}{er_type}. Try again in {er_retry}.")
 
-        elif isinstance(error, discord.ext.commands.errors.BadArgument):
-            await ctx.send(f"{ctx.author.mention} That's not quite the information I need to execute that command.")
-
-        elif isinstance(error, discord.ext.commands.errors.CommandNotFound):
-            print(f"{var.red}{ctx.author.name}#{ctx.author.discriminator}{var.cyan} used invalid command " +
-                f"{var.red}{ctx.prefix}{ctx.invoked_with}{var.reset}")
-
         else:
-            print(error)
+            print(f"{var.red}{current_time} Unclassified error: {var.boldwhite}{error}{var.reset}")
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
 def setup(bot):
