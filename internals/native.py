@@ -38,27 +38,13 @@ def get_image(desired):
                 return i.split(' ')[1]
         return 'https://i.imgur.com/pgNlDLT.png' # NoImage
 
+
 def mentions_list(mentions):
-    """Create a list of mentions from a list of user objects."""
-    text_list = str()
-
-    if len(mentions) == 0:
-        text_list = 'No one.'
-
-    elif len(mentions) == 1:
-        text_list = mentions[0].mention
-
-    else:
-        for i in range(len(mentions)):
-            if i != (len(mentions)-1):
-                if i == 0:
-                    text_list += (mentions[i].mention)
-                else:
-                    text_list += (', ' + mentions[i].mention)
-            else:
-                text_list += (' and ' + mentions[i].mention)
-
-    return text_list
+    """Create a string of mentions from a list of user objects."""
+    mentions = [ user.mention for user in mentions ]
+    if len(mentions) == 0:      return "No one"
+    elif len(mentions) == 1:    return mentions[0]
+    else:                       return ", ".join(mentions[:-1]) + f" and {mentions[-1]}"
 
 def extract_time(args, fallback_minutes=True):
     """Extract time expressions from a set of arguments.
