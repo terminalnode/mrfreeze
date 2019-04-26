@@ -61,100 +61,66 @@ def mentions_list(mentions):
     return text_list
 
 def extract_time(args, fallback_minutes=True):
-    # This function is used to extract time statements to know for how long
-    # people are going to be muted, banned etc.
-    default_duration = False
-    args = ' '.join(args) + ' '
+    """Extract time expressions from a set of arguments.
+    If time expressions are not found, assume all digits refer to minutes.
 
-    # Keywords for individual time units.
-    r_seconds   = 'seconds?|secs?|s[, ]'
-    r_minutes   = 'minutes?|mins?|m[, ]'
-    r_hours     = 'hours?|hrs?|h[, ]'
-    r_days      = 'days?|d[, ]'
-    r_weeks     = 'weeks?|w[, ]'
-    r_months    = 'months?|mnth?s?|mons?'
-    r_years     = 'years?|yrs?|y[, ]'
+    Return a timedelta and an end time if successful, otherwise (None, None)."""
 
-    # Combine them all into one regexp.
-    r_time = ( '(\d+) ?((%s)|(%s)|(%s)|(%s)|(%s)|(%s)|(%s))' % (r_seconds, r_minutes, r_hours, r_days, r_weeks, r_months, r_years) )
-    regex_output = re.findall(r_time, args, re.IGNORECASE)
+    # Create regular expression
+    seconds   = 'seconds?|secs?|s[, ]'
+    minutes   = 'minutes?|mins?|m[, ]'
+    hours     = 'hours?|hrs?|h[, ]'
+    days      = 'days?|d[, ]'
+    weeks     = 'weeks?|w[, ]'
+    months    = 'months?|mnth?s?|mons?'
+    years     = 'years?|yrs?|y[, ]'
+    find_time = f"(\d+) ?(({seconds})|({minutes})|({hours})|({days})|({weeks})|({months})|({years}))"
 
-    # The way the r_time regexp is designed it will output one tuple for every
-    # time statement. Assuming a number was given the [0] and [1] will always
-    # be non-empty, but the rest depend on the unit that was hit. So only
-    # for seconds will [2] be nonempty, only for minutes will [3] be nonempty etc.
+    regex_output = re.findall(
+            find_time,      # Use our newly created regex.
+            ' '.join(args), # Search through the arguments.
+            re.IGNORECASE)   # Ignore case when applying the expression.
+
+    # Sum up all hits for the different time units
     time_dict = {
-    'seconds' : [2,0],
-    'minutes' : [3,0],
-    'hours'   : [4,0],
-    'days'    : [5,0],
-    'weeks'   : [6,0],
-    'months'  : [7,0],
-    'years'   : [8,0]
+    'seconds' : sum( [ int(row[0]) for row in regex_output if row[2] != '' ] ),
+    'minutes' : sum( [ int(row[0]) for row in regex_output if row[3] != '' ] ),
+    'hours'   : sum( [ int(row[0]) for row in regex_output if row[4] != '' ] ),
+    'days'    : sum( [ int(row[0]) for row in regex_output if row[5] != '' ] ),
+    'weeks'   : sum( [ int(row[0]) for row in regex_output if row[6] != '' ] ),
+    'months'  : sum( [ int(row[0]) for row in regex_output if row[7] != '' ] ),
+    'years'   : sum( [ int(row[0]) for row in regex_output if row[8] != '' ] ),
     }
 
-    for unit in time_dict:
-        unit_index = time_dict[unit][0]
-        for hit in regex_output:
-            if hit[unit_index] != '' and hit[0] != '':
-                time_dict[unit][1] += int(hit[0])
-
-    # Now we'll remove all the indexes from the time dict as they're no longer needed.
-    for unit in time_dict:
-        time_dict[unit] = time_dict[unit][1]
-
-    # Now we'll put all of this time into a datetime.datetime object.
-    # Because we can't use months and years precisely these will be converted to
-    # 30 and 365 days respectively.
+    # Create a new datetime object based on these numbers.
+    # Months and years are converted to 30 and 365 days respectively.
+    add_time = datetime.timedelta(
+            days    =   time_dict['days'] + (time_dict['months'] * 30) + (time_dict['years'] * 365),
+            weeks   =   time_dict['weeks'],
+            hours   =   time_dict['hours'],
+            minutes =   time_dict['minutes'],
+            seconds =   time_dict['seconds'])
     current_date = datetime.datetime.now()
-    add_time = datetime.timedelta(days=(time_dict['days'] + (time_dict['months']*30) + (time_dict['years']*365)), weeks=time_dict['weeks'],
-                                  hours=time_dict['hours'], minutes=time_dict['minutes'], seconds=time_dict['seconds'])
     end_date = current_date + add_time
 
-    # If nothing was detected, we'll look for isolated integers, add them all
-    # up and assume those are minutes. Then remove them from the reply string.
+    # If nothing was found, assume all numbers are minutes.
     if (end_date == current_date) and fallback_minutes:
-        resplit = args.split(' ')
-        int_list = list()
+        no_minutes = sum([ int(arg) for arg in args if arg.isdigit() ])
+        add_time = datetime.timedelta(minutes = no_minutes)
+        end_date = current_date + add_time
 
-        # Finding integers
-        for arg in resplit:
-            if arg.isdigit():
-                int_list.append(int(arg))
-
-        # Removing integers from original args and summing up minutes.
-        # Using re to know if there're spaces to remove as well.
-        no_minutes = 0
-        for number in int_list:
-            regexp = (' ?%s' % (str(number),))
-            re_results = re.findall(regexp, args)
-            for hit in re_results:
-                args = args.replace(hit, '')
-            no_minutes += number
-
-        # Finally creating the new add_time and end_date.
-        if no_minutes > 0:
-            add_time = datetime.timedelta(minutes = no_minutes)
-            end_date = current_date + add_time
-
-
-    if end_date == current_date:
-        # In this scenario, no time statements have been found.
-        end_date = None
-
-    # Finally, we're going to remove all the time expressions from the args we got.
-    r_list = [r_seconds, r_minutes, r_hours, r_days, r_weeks, r_months, r_years]
-    for unit in r_list:
-        matches = re.findall(('(\d+ ?(%s))' % unit), args, re.IGNORECASE)
-        for match in matches:
-            args = args.replace(match[0], '')
-
-    # Finally we can return our values.
-    return add_time, end_date
+    # Return None if current date and end date are different.
+    if end_date != current_date:
+        return add_time, end_date
+    else:
+        return None, None
 
 def parse_timedelta(time_delta):
     # This function takes a time delta as it's argument and outputs
     # a string such as "1 days, 2 hours, 3 minutes and 4 seconds".
+
+    if time_delta == None:
+        return "an eternity"
 
     # Time delta only gives us days and seconds, we have to calculate
     # hours and minutes ourselves.
