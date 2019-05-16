@@ -14,19 +14,65 @@ class MessageHandlerCog(commands.Cog, name='MessageHandler'):
         # Ignore what all the bots say...
         if message.author.bot: return
 
-        ctx = await self.bot.get_context(message)
-
         # Look for temperature statements and autoconvert them.
+        ctx = await self.bot.get_context(message)
         await self.temperatures(ctx)
 
     async def temperatures(self, ctx):
         # Trailing space is required for matching temperatures at the end of the message.
-        text = ctx.message.content
         author = ctx.author.mention
         roles = ctx.author.roles
         channel = ctx.channel
 
-        # Extract temperature statement
+        # Abort if no temperature statement was found.
+        statement = self.parse_request(ctx.message.content)
+        if not statement: return
+
+        # Calculate converted temperature, see if it's above or equal to dog threshold.
+        dog_threshold = 35 # defined in celcius
+        if   statement['origin'] == 'c':
+            new_temp    = self.celcius_table(statement['temperature'], statement['destination'])
+            dog         = statement['temperature'] >= dog_threshold;
+
+        elif statement['origin'] == 'f':
+            new_temp    = self.fahrenheit_table(statement['temperature'], statement['destination'])
+            dog         = self.fahrenheit_table(statement['temperature'], 'c') >= dog_threshold;
+
+        elif statement['origin'] == 'k':
+            new_temp    = self.kelvin_table(statement['temperature'], statement['destination'])
+            dog         = self.kelvin_table(statement['temperature'], 'c') >= dog_threshold;
+
+        elif statement['origin'] == 'r':
+            new_temp    = self.rankine_table(statement['temperature'], statement['destination'])
+            dog         = self.rankine_table(statement['temperature'], 'c') >= dog_threshold;
+
+        if dog: image = discord.File("images/helldog.gif")
+        else:   image = None
+
+        old_temp = statement['temperature']
+        new_temp = round(new_temp, 2)
+        no_change = (old_temp == new_temp)
+        same_unit = (statement['origin'] == statement['destination'])
+
+        # Kelvin isn't supposed to have a ° before it, all others should.
+        origin      = f"°{statement['origin'].upper()}".replace("°K", "K")
+        destination = f"°{statement['destination'].upper()}".replace("°K", "K")
+
+        # Time for the reply.
+        if no_change:
+            if same_unit and statement['manual']:
+                reply = f"Did {author} just try to convert {old_temp}{origin} to {destination}? :thinking:"
+            elif statement['manual']:
+                reply = f"Uh... {old_temp}{origin} is the same in {new_temp}{destination} you smud. :angry:"
+            else:
+                reply = f"Guess what! {old_temp}{origin} is the same as {new_temp}{destination}! WOOOW!"
+        else:             reply = f"{old_temp}{origin} is around {new_temp}{destination}"
+        await channel.send(reply, file=image)
+
+    def parse_request(self, text):
+        """Extract temperature statement from text.
+        If no temperature statement is found returns false.
+        Otherwise returns a dictionary with keys: temperature, origin, destination, manual"""
         # Space or ° mandatory for kelvin to avoid collision with k as in thousand.
         numbers    = "(?:(?:\s|^)-)?\d+(?:[,.]\d+)? ?"
         celcius    = "°?(?:c|celcius|celsius|civili[sz]ed units?)"
@@ -36,21 +82,22 @@ class MessageHandlerCog(commands.Cog, name='MessageHandler'):
         rankine    = "°?(?:r|rankine)"
         regex      = f"({numbers})(?:({celcius})|({fahrenheit})|([ °]{kelvin})|({rankine})|({degrees}))(?:\s|$)"
         statement  = re.search(regex, text, re.IGNORECASE)
-        # Abort if no temperature statement was found.
-        if not statement: return
+        if not statement: return False
+
+        result = dict()
 
         # Determine the origin unit.
         statement = statement.groups()
-        temperature = float(statement[0].replace(",", "."))
-        if   statement[1]: origin = 'c'
-        elif statement[2]: origin = 'f'
-        elif statement[3]: origin = 'k'
-        elif statement[4]: origin = 'r'
+        result['temperature'] = float(statement[0].replace(",", "."))
+        if   statement[1]: result['origin'] = 'c'
+        elif statement[2]: result['origin'] = 'f'
+        elif statement[3]: result['origin'] = 'k'
+        elif statement[4]: result['origin'] = 'r'
 
         # Origin is "degrees", turning it into a real unit.
         # TODO Better origin-guessing.
         elif statement[5]:
-            origin = 'c'
+            result['origin'] = 'c'
 
         # Determine destination unit
         # First we'll look for force conversions
@@ -59,61 +106,24 @@ class MessageHandlerCog(commands.Cog, name='MessageHandler'):
         conversion = re.search(find_convert, text, re.IGNORECASE)
 
         if conversion:
-            manual = True
+            result['manual'] = True
             conversion = conversion.groups()
-            if   conversion[0]: destination = 'c'
-            elif conversion[1]: destination = 'f'
-            elif conversion[2]: destination = 'k'
-            elif conversion[3]: destination = 'r'
+            if   conversion[0]: result['destination'] = 'c'
+            elif conversion[1]: result['destination'] = 'f'
+            elif conversion[2]: result['destination'] = 'k'
+            elif conversion[3]: result['destination'] = 'r'
         else:
             # TODO Better destination-guessing.
-            manual = False
-            if origin == 'c': destination = 'f'
-            else:             destination = 'c'
+            result['manual'] = False
+            if result['origin'] == 'c': result['destination'] = 'f'
+            else:                       result['destination'] = 'c'
 
             # TODO Remove debug print TODO
             print(statement)
-            print(f"{temperature} {origin} to {destination}. Manual: {manual}")
+            print(f"{result['temperature']} {result['origin']} to {result['destination']}. Manual: {result['manual']}")
 
-        # Calculate converted temperature, see if it's above or equal to dog threshold.
-        dog_threshold = 35
-        if   origin == 'c':
-            new_temp    = self.celcius_table(temperature, destination)
-            dog         = temperature >= dog_threshold;
-
-        elif origin == 'f':
-            new_temp    = self.fahrenheit_table(temperature, destination)
-            dog         = self.fahrenheit_table(temperature, 'c') >= dog_threshold;
-
-        elif origin == 'k':
-            new_temp    = self.kelvin_table(temperature, destination)
-            dog         = self.kelvin_table(temperature, 'c') >= dog_threshold;
-
-        elif origin == 'r':
-            new_temp    = self.rankine_table(temperature, destination)
-            dog         = self.rankine_table(temperature, 'c') >= dog_threshold;
-
-        if dog: image = discord.File("images/helldog.gif")
-        else:   image = None
-
-        new_temp = round(new_temp, 2)
-        no_change = (temperature == new_temp)
-        same_unit = (origin == destination)
-
-        # Kelvin isn't supposed to have a ° before it, all others should.
-        origin      = f"°{origin.upper()}".replace("°K", "K")
-        destination = f"°{destination.upper()}".replace("°K", "K")
-
-        # Time for the reply.
-        if no_change:
-            if same_unit and manual:
-                reply = f"Did {author} just try to convert {temperature}{origin} to {destination}? :thinking:"
-            elif manual:
-                reply = f"Uh... {temperature}{origin} is the same in {new_temp}{destination} you smud. :angry:"
-            else:
-                reply = f"Guess what! {temperature}{origin} is the same as {new_temp}{destination}! WOOOW!"
-        else:             reply = f"{temperature}{origin} is around {new_temp}{destination}"
-        await channel.send(reply, file=image)
+        print(result)
+        return result
 
     def celcius_table(self, temp, dest):
         if   dest == 'c':   return temp
