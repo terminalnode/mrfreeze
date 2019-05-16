@@ -122,7 +122,6 @@ class MessageHandlerCog(commands.Cog, name='MessageHandler'):
             print(statement)
             print(f"{result['temperature']} {result['origin']} to {result['destination']}. Manual: {result['manual']}")
 
-        print(result)
         return result
 
     def celcius_table(self, temp, dest):
