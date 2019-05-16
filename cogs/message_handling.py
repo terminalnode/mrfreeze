@@ -28,6 +28,11 @@ class MessageHandlerCog(commands.Cog, name='MessageHandler'):
         statement = self.parse_request(ctx.message.content)
         if not statement: return
 
+        # Check if input is ridiculous.
+        if abs(statement['temperature']) > 100000:
+            await channel.send(f'{author} No matter what unit you put that in the answer is still gonna be "quite warm".')
+            return
+
         # Calculate converted temperature, see if it's above or equal to dog threshold.
         dog_threshold = 35 # defined in celcius
         if   statement['origin'] == 'c':
