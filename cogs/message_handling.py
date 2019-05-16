@@ -30,7 +30,11 @@ class MessageHandlerCog(commands.Cog, name='MessageHandler'):
 
         # Check if input is ridiculous.
         if abs(statement['temperature']) > 100000:
-            await channel.send(f'{author} No matter what unit you put that in the answer is still gonna be "quite warm".')
+            if statement['temperature'] > 0:
+                hotcold = 'quite warm'
+            else:
+                hotcold = 'a bit chilly'
+            await channel.send(f'{author} No matter what unit you put that in the answer is still gonna be "{hotcold}".')
             return
 
         # Calculate converted temperature, see if it's above or equal to dog threshold.
