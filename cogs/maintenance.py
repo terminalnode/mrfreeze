@@ -5,6 +5,8 @@ from internals import checks
 
 # This cog is for commands restricted to the owner of the bot (me!).
 # It has features like !restart and !gitupdate.
+def setup(bot):
+    bot.add_cog(MaintenanceCog(bot))
 
 class MaintenanceCog(commands.Cog, name='Maintenance'):
     """There is only one person who is allowed to execute these commands... and it's not you."""
@@ -50,6 +52,3 @@ class MaintenanceCog(commands.Cog, name='Maintenance'):
         # If an update was found, restart automatically.
         if do_restart:
             os.execl(sys.executable, sys.executable, *sys.argv)
-
-def setup(bot):
-    bot.add_cog(MaintenanceCog(bot))
