@@ -1,14 +1,27 @@
 import discord, re
+from enum import Enum
 from discord.ext import commands
 
-class MessageHandlerCog(commands.Cog, name='MessageHandler'):
+# Set to true to enable some printouts on how
+# the temperature statement has been parsed.
+TEMP_DEBUG = False
+
+class TempUnit(Enum):
+    C = 'Celsius'
+    K = 'Kelvin'
+    F = 'Fahrenheit'
+    R = 'Rankine'
+
+def setup(bot):
+    bot.add_cog(TempConverterCog(bot))
+
+class TempConverterCog(commands.Cog, name='MessageHandler'):
     """How the bot acts when messages are posted."""
     def __init__(self, bot):
         self.bot = bot
 
     # Certain events, namely temp, depends on checking for
     # temperature statements in all messages sent to the chat.
-
     @commands.Cog.listener()
     async def on_message(self, message):
         # Ignore what all the bots say...
@@ -21,11 +34,10 @@ class MessageHandlerCog(commands.Cog, name='MessageHandler'):
     async def temperatures(self, ctx):
         # Trailing space is required for matching temperatures at the end of the message.
         author = ctx.author.mention
-        roles = ctx.author.roles
         channel = ctx.channel
 
         # Abort if no temperature statement was found.
-        statement = self.parse_request(ctx.message.content)
+        statement = self.parse_request(ctx)
         if not statement: return
 
         # Check if input is ridiculous.
@@ -78,10 +90,12 @@ class MessageHandlerCog(commands.Cog, name='MessageHandler'):
         else:             reply = f"{old_temp}{origin} is around {new_temp}{destination}"
         await channel.send(reply, file=image)
 
-    def parse_request(self, text):
+    def parse_request(self, ctx):
         """Extract temperature statement from text.
         If no temperature statement is found returns false.
         Otherwise returns a dictionary with keys: temperature, origin, destination, manual"""
+        text = ctx.message.content
+
         # Space or ° mandatory for kelvin to avoid collision with k as in thousand.
         numbers    = "(?:(?:\s|^)-)?\d+(?:[,.]\d+)? ?"
         celcius    = "°?(?:c|celcius|celsius|civili[sz]ed units?)"
@@ -104,9 +118,25 @@ class MessageHandlerCog(commands.Cog, name='MessageHandler'):
         elif statement[4]: result['origin'] = 'r'
 
         # Origin is "degrees", turning it into a real unit.
-        # TODO Better origin-guessing.
         elif statement[5]:
-            result['origin'] = 'c'
+            if ctx.guild != None:
+                # Not DMs
+                roles = ctx.author.roles
+                if discord.utils.get(roles, name="Celsius") != None:
+                    result['origin'] = 'c'
+                elif discord.utils.get(roles, name="Fahrenheit") != None:
+                    result['origin'] = 'f'
+                elif discord.utils.get(roles, name="Canada") != None:
+                    result['origin'] = 'c'
+                elif discord.utils.get(roles, name="Mexico") != None:
+                    result['origin'] = 'c'
+                elif discord.utils.get(roles, name="North America") != None:
+                    result['origin'] = 'f'
+                else:
+                    result['origin'] = 'c'
+            else:
+                # DMs
+                result['origin'] = 'c'
 
         # Determine destination unit
         # First we'll look for force conversions
@@ -122,14 +152,15 @@ class MessageHandlerCog(commands.Cog, name='MessageHandler'):
             elif conversion[2]: result['destination'] = 'k'
             elif conversion[3]: result['destination'] = 'r'
         else:
-            # TODO Better destination-guessing.
             result['manual'] = False
-            if result['origin'] == 'c': result['destination'] = 'f'
-            else:                       result['destination'] = 'c'
+            if result['origin'] == 'f':     result['destination'] = 'c'
+            elif result['origin'] == 'k':   result['destination'] = 'c'
+            elif result['origin'] == 'c':   result['destination'] = 'f'
+            elif result['origin'] == 'r':   result['destination'] = 'f'
 
-            # TODO Remove debug print TODO
-            print(statement)
-            print(f"{result['temperature']} {result['origin']} to {result['destination']}. Manual: {result['manual']}")
+            if TEMP_DEBUG:
+                print(statement)
+                print(f"{result['temperature']} {result['origin']} to {result['destination']}. Manual: {result['manual']}")
 
         return result
 
@@ -152,6 +183,3 @@ class MessageHandlerCog(commands.Cog, name='MessageHandler'):
     def rankine_table(self, temp, dest):
         in_fahrenheit = ( temp - 459.67 )
         return self.fahrenheit_table( in_fahrenheit, dest )
-
-def setup(bot):
-    bot.add_cog(MessageHandlerCog(bot))
