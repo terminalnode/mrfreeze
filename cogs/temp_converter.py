@@ -7,10 +7,10 @@ from discord.ext import commands
 TEMP_DEBUG = False
 
 class TempUnit(Enum):
-    C = 'Celsius'
-    K = 'Kelvin'
-    F = 'Fahrenheit'
-    R = 'Rankine'
+    C = "°C"
+    K = "K" # Kelvin is weird and doesn't use ° as a prefix.
+    F = "°F"
+    R = "°R"
 
 def setup(bot):
     bot.add_cog(TempConverterCog(bot))
@@ -51,33 +51,34 @@ class TempConverterCog(commands.Cog, name='MessageHandler'):
 
         # Calculate converted temperature, see if it's above or equal to dog threshold.
         dog_threshold = 35 # defined in celcius
-        if   statement['origin'] == 'c':
+        if   statement['origin'] == TempUnit.C:
             new_temp    = self.celcius_table(statement['temperature'], statement['destination'])
             dog         = statement['temperature'] >= dog_threshold;
 
-        elif statement['origin'] == 'f':
+        elif statement['origin'] == TempUnit.F:
             new_temp    = self.fahrenheit_table(statement['temperature'], statement['destination'])
-            dog         = self.fahrenheit_table(statement['temperature'], 'c') >= dog_threshold;
+            dog         = self.fahrenheit_table(statement['temperature'], TempUnit.C) >= dog_threshold;
 
-        elif statement['origin'] == 'k':
+        elif statement['origin'] == TempUnit.K:
             new_temp    = self.kelvin_table(statement['temperature'], statement['destination'])
-            dog         = self.kelvin_table(statement['temperature'], 'c') >= dog_threshold;
+            dog         = self.kelvin_table(statement['temperature'], TempUnit.C) >= dog_threshold;
 
-        elif statement['origin'] == 'r':
+        elif statement['origin'] == TempUnit.R:
             new_temp    = self.rankine_table(statement['temperature'], statement['destination'])
-            dog         = self.rankine_table(statement['temperature'], 'c') >= dog_threshold;
+            dog         = self.rankine_table(statement['temperature'], TempUnit.C) >= dog_threshold;
 
         if dog: image = discord.File("images/helldog.gif")
         else:   image = None
 
-        old_temp = statement['temperature']
+        # old/new_temp contains the temperature values as floats.
+        old_temp = round(statement['temperature'], 2)
         new_temp = round(new_temp, 2)
+        # Check if old and new temp are the same temperatures or units.
         no_change = (old_temp == new_temp)
         same_unit = (statement['origin'] == statement['destination'])
-
-        # Kelvin isn't supposed to have a ° before it, all others should.
-        origin      = f"°{statement['origin'].upper()}".replace("°K", "K")
-        destination = f"°{statement['destination'].upper()}".replace("°K", "K")
+        # Get the abbreviations for each temperature unit
+        origin = statement['origin'].value
+        destination = statement['destination'].value
 
         # Time for the reply.
         if no_change:
@@ -112,10 +113,10 @@ class TempConverterCog(commands.Cog, name='MessageHandler'):
         # Determine the origin unit.
         statement = statement.groups()
         result['temperature'] = float(statement[0].replace(",", "."))
-        if   statement[1]: result['origin'] = 'c'
-        elif statement[2]: result['origin'] = 'f'
-        elif statement[3]: result['origin'] = 'k'
-        elif statement[4]: result['origin'] = 'r'
+        if   statement[1]: result['origin'] = TempUnit.C
+        elif statement[2]: result['origin'] = TempUnit.F
+        elif statement[3]: result['origin'] = TempUnit.K
+        elif statement[4]: result['origin'] = TempUnit.R
 
         # Origin is "degrees", turning it into a real unit.
         elif statement[5]:
@@ -123,20 +124,20 @@ class TempConverterCog(commands.Cog, name='MessageHandler'):
                 # Not DMs
                 roles = ctx.author.roles
                 if discord.utils.get(roles, name="Celsius") != None:
-                    result['origin'] = 'c'
+                    result['origin'] = TempUnit.C
                 elif discord.utils.get(roles, name="Fahrenheit") != None:
-                    result['origin'] = 'f'
+                    result['origin'] = TempUnit.F
                 elif discord.utils.get(roles, name="Canada") != None:
-                    result['origin'] = 'c'
+                    result['origin'] = TempUnit.C
                 elif discord.utils.get(roles, name="Mexico") != None:
-                    result['origin'] = 'c'
+                    result['origin'] = TempUnit.C
                 elif discord.utils.get(roles, name="North America") != None:
-                    result['origin'] = 'f'
+                    result['origin'] = TempUnit.F
                 else:
-                    result['origin'] = 'c'
+                    result['origin'] = TempUnit.C
             else:
                 # DMs
-                result['origin'] = 'c'
+                result['origin'] = TempUnit.C
 
         # Determine destination unit
         # First we'll look for force conversions
@@ -147,16 +148,16 @@ class TempConverterCog(commands.Cog, name='MessageHandler'):
         if conversion:
             result['manual'] = True
             conversion = conversion.groups()
-            if   conversion[0]: result['destination'] = 'c'
-            elif conversion[1]: result['destination'] = 'f'
-            elif conversion[2]: result['destination'] = 'k'
-            elif conversion[3]: result['destination'] = 'r'
+            if   conversion[0]: result['destination'] = TempUnit.C
+            elif conversion[1]: result['destination'] = TempUnit.F
+            elif conversion[2]: result['destination'] = TempUnit.K
+            elif conversion[3]: result['destination'] = TempUnit.R
         else:
             result['manual'] = False
-            if result['origin'] == 'f':     result['destination'] = 'c'
-            elif result['origin'] == 'k':   result['destination'] = 'c'
-            elif result['origin'] == 'c':   result['destination'] = 'f'
-            elif result['origin'] == 'r':   result['destination'] = 'f'
+            if result['origin']   == TempUnit.F:    result['destination'] = TempUnit.C
+            elif result['origin'] == TempUnit.K:    result['destination'] = TempUnit.C
+            elif result['origin'] == TempUnit.C:    result['destination'] = TempUnit.F
+            elif result['origin'] == TempUnit.R:    result['destination'] = TempUnit.F
 
             if TEMP_DEBUG:
                 print(statement)
@@ -165,21 +166,21 @@ class TempConverterCog(commands.Cog, name='MessageHandler'):
         return result
 
     def celcius_table(self, temp, dest):
-        if   dest == 'c':   return temp
-        elif dest == 'f':   return temp * 9.0 / 5.0 + 32
-        elif dest == 'k':   return temp + 273.15
-        elif dest == 'r':   return (temp + 273.15) * 9.0 / 5.0
+        if   dest == TempUnit.C:    return temp
+        elif dest == TempUnit.F:    return temp * 9.0 / 5.0 + 32
+        elif dest == TempUnit.K:    return temp + 273.15
+        elif dest == TempUnit.R:    return (temp + 273.15) * 9.0 / 5.0
 
     def fahrenheit_table(self, temp, dest):
-        if   dest == 'c':   return (temp - 32) * 5.0 / 9.0
-        elif dest == 'f':   return temp
-        elif dest == 'k':   return (temp + 459.67) * 5.0 / 9.0
-        elif dest == 'r':   return temp + 459.67
+        if   dest == TempUnit.C:    return (temp - 32) * 5.0 / 9.0
+        elif dest == TempUnit.F:    return temp
+        elif dest == TempUnit.K:    return (temp + 459.67) * 5.0 / 9.0
+        elif dest == TempUnit.R:    return temp + 459.67
 
     def kelvin_table(self, temp, dest):
         in_celcius = ( temp - 273.15 )
-        return self.celcius_table( in_celcius, dest )
+        return self.celcius_table(in_celcius, dest)
 
     def rankine_table(self, temp, dest):
         in_fahrenheit = ( temp - 459.67 )
-        return self.fahrenheit_table( in_fahrenheit, dest )
+        return self.fahrenheit_table(in_fahrenheit, dest)
