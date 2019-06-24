@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands
 
+def setup(bot):
+    bot.add_cog(DepartureHandlerCog(bot))
+
 class DepartureHandlerCog(commands.Cog, name='DepartureHandler'):
     """How the bot acts when members leave the chat."""
     def __init__(self, bot):
@@ -22,6 +25,3 @@ class DepartureHandlerCog(commands.Cog, name='DepartureHandler'):
         )
 
         await mod_channel.send(embed=embed)
-
-def setup(bot):
-    bot.add_cog(DepartureHandlerCog(bot))
