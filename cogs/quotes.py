@@ -7,6 +7,8 @@ import traceback, sys
 # Mods are able to add quotes to the list.
 # Users are able to have the bot cite random
 # quotes that have previously been added.
+def setup(bot):
+    bot.add_cog(QuotesCog(bot))
 
 class QuotesCog(commands.Cog, name='Quotes'):
     """The quotes database is a long and complicated piece of spaghetti. There's a non-trivial risk that you may get entangled and suffocate to death. Use at your own peril."""
@@ -282,6 +284,3 @@ class QuotesCog(commands.Cog, name='Quotes'):
         # Finally, if nothing has triggered by now we have no idea wtf they're trying to do.
         if (command == None) and (sent_reply == False):
             await ctx.send(('%s Please consult the help file using **!help quote** because I have no idea wtf you\'re trying to do.' % (ctx.author.mention,)))
-
-def setup(bot):
-    bot.add_cog(QuotesCog(bot))
