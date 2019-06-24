@@ -6,6 +6,8 @@ from internals import var
 # If buckets are ever implemented again:
 # from discord.ext.commands.cooldowns import BucketType
 # import inflect
+def setup(bot):
+    bot.add_cog(ErrorHandlerCog(bot))
 
 class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
     """How the bot acts when errors occur."""
@@ -65,6 +67,3 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
         else:
             print(f"{var.red}{current_time} Unclassified error: {var.boldwhite}{error}{var.reset}")
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
-
-def setup(bot):
-    bot.add_cog(ErrorHandlerCog(bot))
