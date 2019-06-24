@@ -41,34 +41,34 @@ class TempConverterCog(commands.Cog, name='MessageHandler'):
         if not statement: return
 
         # Check if input is ridiculous.
-        if abs(statement['temperature']) > 100000:
-            if statement['temperature'] > 0:
-                hotcold = 'quite warm'
-            else:
-                hotcold = 'a bit chilly'
+        if abs(statement['temperature']) > 10000:
+            if statement['temperature'] > 0:    hotcold = 'quite warm'
+            else:                               hotcold = 'a bit chilly'
+
             await channel.send(f'{author} No matter what unit you put that in the answer is still gonna be "{hotcold}".')
             return
 
         # Calculate converted temperature, see if it's above or equal to dog threshold.
-        dog_threshold = 35 # defined in celcius
         if   statement['origin'] == TempUnit.C:
             new_temp    = self.celcius_table(statement['temperature'], statement['destination'])
-            dog         = statement['temperature'] >= dog_threshold;
+            in_c        = statement['temperature']
 
         elif statement['origin'] == TempUnit.F:
             new_temp    = self.fahrenheit_table(statement['temperature'], statement['destination'])
-            dog         = self.fahrenheit_table(statement['temperature'], TempUnit.C) >= dog_threshold;
+            in_c        = self.fahrenheit_table(statement['temperature'], TempUnit.C)
 
         elif statement['origin'] == TempUnit.K:
             new_temp    = self.kelvin_table(statement['temperature'], statement['destination'])
-            dog         = self.kelvin_table(statement['temperature'], TempUnit.C) >= dog_threshold;
+            in_c        = self.kelvin_table(statement['temperature'], TempUnit.C)
 
         elif statement['origin'] == TempUnit.R:
             new_temp    = self.rankine_table(statement['temperature'], statement['destination'])
-            dog         = self.rankine_table(statement['temperature'], TempUnit.C) >= dog_threshold;
+            in_c        = self.rankine_table(statement['temperature'], TempUnit.C)
 
-        if dog: image = discord.File("images/helldog.gif")
-        else:   image = None
+        # hot/cold thresholds are defined in celsius
+        if in_c >= 35:      image = discord.File("images/helldog.gif")
+        elif in_c <= -20:   image = discord.File("images/hellacold.gif")
+        else:               image = None
 
         # old/new_temp contains the temperature values as floats.
         old_temp = round(statement['temperature'], 2)
@@ -123,17 +123,13 @@ class TempConverterCog(commands.Cog, name='MessageHandler'):
             if ctx.guild != None:
                 # Not DMs
                 roles = ctx.author.roles
-                if discord.utils.get(roles, name="Celsius") != None:
-                    result['origin'] = TempUnit.C
-                elif discord.utils.get(roles, name="Fahrenheit") != None:
-                    result['origin'] = TempUnit.F
-                elif discord.utils.get(roles, name="Canada") != None:
-                    result['origin'] = TempUnit.C
-                elif discord.utils.get(roles, name="Mexico") != None:
-                    result['origin'] = TempUnit.C
-                elif discord.utils.get(roles, name="North America") != None:
-                    result['origin'] = TempUnit.F
+                if discord.utils.get(roles, name="Celsius") != None:            result['origin'] = TempUnit.C
+                elif discord.utils.get(roles, name="Fahrenheit") != None:       result['origin'] = TempUnit.F
+                elif discord.utils.get(roles, name="Canada") != None:           result['origin'] = TempUnit.C
+                elif discord.utils.get(roles, name="Mexico") != None:           result['origin'] = TempUnit.C
+                elif discord.utils.get(roles, name="North America") != None:    result['origin'] = TempUnit.F
                 else:
+                    # Default
                     result['origin'] = TempUnit.C
             else:
                 # DMs
