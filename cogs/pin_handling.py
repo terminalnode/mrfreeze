@@ -2,6 +2,9 @@ import discord, asyncio
 from discord.ext import commands
 from internals import var
 
+def setup(bot):
+    bot.add_cog(PinHandlerCog(bot))
+
 class PinHandlerCog(commands.Cog, name='PinHandler'):
     """Posts the content of a message that was just pinned to chat."""
     def __init__(self, bot):
@@ -74,6 +77,3 @@ class PinHandlerCog(commands.Cog, name='PinHandler'):
                     break # No need to look further.
 
             await channel.send(f"The following message was just pinned by {author}:\n", embed=pinned_message)
-
-def setup(bot):
-    bot.add_cog(PinHandlerCog(bot))
