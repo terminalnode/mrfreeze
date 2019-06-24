@@ -4,6 +4,9 @@ from discord.ext import commands
 from internals import native, checks
 from databases import regionbl
 
+def setup(bot):
+    bot.add_cog(UserCmdsCog(bot))
+
 class UserCmdsCog(commands.Cog, name='Everyone'):
     """These are the fun commands, everything else is boring and lame. Frankly there's no reason you should pay attention to anything that's not on this page."""
     def __init__(self, bot):
@@ -210,7 +213,3 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
         else:
             replystr = '<@!154516898434908160> Something went wrong when trying to change my activity and I have no idea what. Come see!'
             await ctx.send(replystr)
-
-
-def setup(bot):
-    bot.add_cog(UserCmdsCog(bot))
