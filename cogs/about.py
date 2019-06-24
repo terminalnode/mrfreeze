@@ -6,6 +6,9 @@ from internals import native
 # https://leovoel.github.io/embed-visualizer/
 # https://cog-creators.github.io/discord-embed-sandbox/
 
+def setup(bot):
+    bot.add_cog(AboutCog(bot))
+ 
 class AboutCog(commands.Cog, name='About'):
     """Use these commands to unlock my deepest, darkest inner secrets!"""
     def __init__(self, bot):
@@ -91,6 +94,3 @@ class AboutCog(commands.Cog, name='About'):
         image = discord.File("images/todos.png")
         embed.set_thumbnail(url="attachment://todos.png")
         await ctx.send(embed=embed, file=image)
-
-def setup(bot):
-    bot.add_cog(AboutCog(bot))
