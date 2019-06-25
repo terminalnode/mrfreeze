@@ -1,30 +1,32 @@
-# Here we define all of our custom checks.
-import discord
-from . import native
+import discord  # Required to compare called to discord.member.Member
 
 async def is_owner(ctx):
     # @commands.check(checks.is_owner)
     is_owner = await ctx.bot.is_owner(ctx.author)
     if not is_owner:
-        await ctx.send(f"{ctx.author.mention} You're not the boss of me! <@!154516898434908160> Help I'm being opressed!!")
+        await ctx.send(f"{ctx.author.mention} You're not the boss of me! " +
+            "<@!154516898434908160> Help I'm being opressed!!")
     return is_owner
 
-async def is_mod(ctx):
+async def is_mod(caller):
     # @commands.check(checks.is_mod)
     # This check can also be used as a command with a member object,
     # depending on the input, output may vary.
-    member_call = isinstance(ctx, discord.member.Member)
+    member_call = isinstance(caller, discord.member.Member)
 
     if member_call:
-        mod_status = ctx.guild_permissions.administrator
+        # caller is a member object
+        mod_status = caller.guild_permissions.administrator
 
     else:
-        if ctx.guild == None:
+        # caller is a context object
+        if caller.guild == None:
             await ctx.send(f"Don't you try to sneak into my DMs and mod me!")
             return False
-        mod_status = ctx.author.guild_permissions.administrator
+
+        mod_status = caller.author.guild_permissions.administrator
         if not mod_status:
-            await ctx.send(f"{ctx.author.mention} Only mods are allowed to use that command.")
+            await caller.send(f"{caller.author.mention} Only mods are allowed to use that command.")
 
     return mod_status
 
