@@ -1,9 +1,9 @@
 import discord
 
 def setup(bot):
-    bot.add_cog(DepartureHandlerCog(bot))
+    bot.add_cog(DeparturesCog(bot))
 
-class DepartureHandlerCog(discord.ext.commands.Cog, name='DepartureHandler'):
+class DeparturesCog(discord.ext.commands.Cog, name='Departures'):
     """How the bot acts when members leave the chat."""
     def __init__(self, bot):
         self.bot = bot
