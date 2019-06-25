@@ -1,6 +1,4 @@
-import discord
-from discord.ext import commands
-from internals import native
+import discord # Basic discord functionality
 
 # Useful links for testing out embeds:
 # https://leovoel.github.io/embed-visualizer/
@@ -9,12 +7,12 @@ from internals import native
 def setup(bot):
     bot.add_cog(AboutCog(bot))
  
-class AboutCog(commands.Cog, name='About'):
+class AboutCog(discord.ext.commands.Cog, name='About'):
     """Use these commands to unlock my deepest, darkest inner secrets!"""
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='readme')
+    @discord.ext.commands.command(name='readme')
     async def _readme(self, ctx):
         """Hands you a link to the readme file over on Gitlab."""
         url = "https://gitlab.com/terminalnode/MrFreeze/blob/master/README.md"
@@ -29,7 +27,7 @@ class AboutCog(commands.Cog, name='About'):
         await ctx.send(embed=embed, file=image)
 
 
-    @commands.command(name='source', aliases=['github', 'gitlab', 'git'])
+    @discord.ext.commands.command(name='source', aliases=['github', 'gitlab', 'git'])
     async def _source(self, ctx):
         """Hands you a link to the MrFreeze repository over on Gitlab."""
         embed = discord.Embed(color=0x00dee9)
@@ -41,7 +39,7 @@ class AboutCog(commands.Cog, name='About'):
         embed.set_thumbnail(url="attachment://source.png")
         await ctx.send(embed=embed, file=image)
 
-    @commands.command(name='getfreeze', aliases=['getfrozen', 'getmrfreeze', 'freezemeup', 'freezeme'])
+    @discord.ext.commands.command(name='getfreeze', aliases=['getfrozen', 'getmrfreeze', 'freezemeup', 'freezeme'])
     async def _getfreeze(self,ctx):
         """Get an invite link to invite MrFreeze to your server!"""
         botname = self.bot.user.name
@@ -61,7 +59,7 @@ class AboutCog(commands.Cog, name='About'):
         embed.set_thumbnail(url=botpfp)
         await ctx.send(embed=embed)
 
-    @commands.command(name='dummies')
+    @discord.ext.commands.command(name='dummies')
     async def _dummies(self, ctx):
         """Supplies you with links to invite Ba'athman and Robin."""
         baathman_url = "https://discordapp.com/oauth2/authorize?client_id=469030362119667712&scope=bot"
@@ -81,7 +79,7 @@ class AboutCog(commands.Cog, name='About'):
         embed.set_thumbnail(url="attachment://dummies.png")
         await ctx.send(embed=embed, file=image)
 
-    @commands.command(name='todo', aliases=['TODO', 'TODOs', 'ToDo', 'ToDos', 'todos', 'whatsnext', 'whatnext'])
+    @discord.ext.commands.command(name='todo', aliases=['TODO', 'TODOs', 'ToDo', 'ToDos', 'todos', 'whatsnext', 'whatnext'])
     async def _todos(self, ctx):
         """Supplies you with a list of my planned features."""
         url = "https://gitlab.com/terminalnode/MrFreeze/blob/master/TODO.md"
