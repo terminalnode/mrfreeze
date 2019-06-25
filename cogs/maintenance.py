@@ -1,28 +1,28 @@
-import discord, sys, os
-from subprocess import run, PIPE
-from discord.ext import commands
-from internals import checks
+import discord                      # Basic discord functionality
+import sys, os                      # Required to restart the bot
+from subprocess import run, PIPE    # Required to run shell commands
+from internals import checks        # Required to check that only bot owner can run commands
 
 # This cog is for commands restricted to the owner of the bot (me!).
 # It has features like !restart and !gitupdate.
 def setup(bot):
     bot.add_cog(MaintenanceCog(bot))
 
-class MaintenanceCog(commands.Cog, name='Maintenance'):
+class MaintenanceCog(discord.ext.commands.Cog, name='Maintenance'):
     """There is only one person who is allowed to execute these commands... and it's not you."""
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='restart')
-    @commands.check(checks.is_owner)
+    @discord.ext.commands.command(name='restart')
+    @discord.ext.commands.check(checks.is_owner)
     async def _restart(self, ctx, *args):
         """Makes me restart if and only if you're Terminal."""
         await ctx.send(ctx.author.mention + " Yes Dear Leader... I will restart now.")
         print ('\n') # extra new line after the commandlog() output
         os.execl(sys.executable, sys.executable, *sys.argv)
 
-    @commands.command(name='update')
-    @commands.check(checks.is_owner)
+    @discord.ext.commands.command(name='update')
+    @discord.ext.commands.check(checks.is_owner)
     async def _gitupdate(self, ctx, *args):
         """Makes me update myself if and only if you're Terminal."""
         # git fetch returns nothing if no updates were found
