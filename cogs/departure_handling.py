@@ -1,15 +1,14 @@
 import discord
-from discord.ext import commands
 
 def setup(bot):
     bot.add_cog(DepartureHandlerCog(bot))
 
-class DepartureHandlerCog(commands.Cog, name='DepartureHandler'):
+class DepartureHandlerCog(discord.ext.commands.Cog, name='DepartureHandler'):
     """How the bot acts when members leave the chat."""
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.Cog.listener()
+    @discord.ext.commands.Cog.listener()
     async def on_member_remove(self, member):
         mod_channel = discord.utils.get(member.guild.channels, name='mod-discussion')
 
