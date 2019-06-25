@@ -20,14 +20,14 @@ class UserCmdsCog(discord.ext.commands.Cog, name='Everyone'):
         # Creating dict of all the region role ids
         for server in self.bot.guilds:
             self.region_ids[server.id] = {
-            'Africa':           discord.utils.get(guild.roles, name='Africa'),
-            'North America':    discord.utils.get(guild.roles, name='North America'),
-            'South America':    discord.utils.get(guild.roles, name='South America'),
-            'Asia':             discord.utils.get(guild.roles, name='Asia'),
-            'Europe':           discord.utils.get(guild.roles, name='Europe'),
-            'Middle East':      discord.utils.get(guild.roles, name='Middle East'),
-            'Oceania':          discord.utils.get(guild.roles, name='Oceania'),
-            'Antarctica':       discord.utils.get(guild.roles, name='Antarctica')
+            'Africa':           discord.utils.get(server.roles, name='Africa'),
+            'North America':    discord.utils.get(server.roles, name='North America'),
+            'South America':    discord.utils.get(server.roles, name='South America'),
+            'Asia':             discord.utils.get(server.roles, name='Asia'),
+            'Europe':           discord.utils.get(server.roles, name='Europe'),
+            'Middle East':      discord.utils.get(server.roles, name='Middle East'),
+            'Oceania':          discord.utils.get(server.roles, name='Oceania'),
+            'Antarctica':       discord.utils.get(server.roles, name='Antarctica')
             }
 
     @discord.ext.commands.command(name='praise')
