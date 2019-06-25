@@ -1,6 +1,5 @@
 import discord, re
 from enum import Enum
-from discord.ext import commands
 
 # Set to true to enable some printouts on how
 # the temperature statement has been parsed.
@@ -15,14 +14,14 @@ class TempUnit(Enum):
 def setup(bot):
     bot.add_cog(TempConverterCog(bot))
 
-class TempConverterCog(commands.Cog, name='MessageHandler'):
+class TempConverterCog(discord.ext.commands.Cog, name='MessageHandler'):
     """How the bot acts when messages are posted."""
     def __init__(self, bot):
         self.bot = bot
 
     # Certain events, namely temp, depends on checking for
     # temperature statements in all messages sent to the chat.
-    @commands.Cog.listener()
+    @discord.ext.commands.Cog.listener()
     async def on_message(self, message):
         # Ignore what all the bots say...
         if message.author.bot: return
