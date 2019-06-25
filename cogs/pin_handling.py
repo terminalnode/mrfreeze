@@ -1,17 +1,15 @@
-import discord, asyncio
-from discord.ext import commands
-from internals import var
+import discord  # Basic discord functionality
 
 def setup(bot):
     bot.add_cog(PinHandlerCog(bot))
 
-class PinHandlerCog(commands.Cog, name='PinHandler'):
+class PinHandlerCog(discord.ext.commands.Cog, name='PinHandler'):
     """Posts the content of a message that was just pinned to chat."""
     def __init__(self, bot):
         self.bot = bot
         self.pinsDict = None
 
-    @commands.Cog.listener()
+    @discord.ext.commands.Cog.listener()
     async def on_ready(self):
         pinsDict = dict()
         for guild in self.bot.guilds:
@@ -20,24 +18,24 @@ class PinHandlerCog(commands.Cog, name='PinHandler'):
                 if isinstance(channel, discord.channel.TextChannel):
                     try:
                         pinsDict[guild.id][channel.id] = len(await channel.pins())
-                        print( f"{var.cyan}Fetched pins from {var.red}{guild.name} {var.green}{channel.name}{var.reset}" )
+                        print( f"{self.bot.CYAN}Fetched pins from {self.bot.RED_B}{guild.name} {self.bot.GREEN_B}{channel.name}{self.bot.RESET}" )
 
                         if channel.id == 466241532458958850 and len(self.bot.guilds) == 2:
                             # This is for debugging purposes because the dict takes forever to build.
                             self.pinsDict = pinsDict
-                            print (f"{var.boldcyan}PinsDict all done!{var.reset}")
+                            print (f"{self.bot.CYAN_B}PinsDict all done!{self.bot.RESET}")
                             return
                     except: pass # Channel probably got deleted.
 
         self.pinsDict = pinsDict
-        print (f"{var.boldcyan}PinsDict all done!{var.reset}")
+        print (f"{self.bot.CYAN_B}PinsDict all done!{self.bot.RESET}")
 
-    @commands.Cog.listener()
+    @discord.ext.commands.Cog.listener()
     async def on_guild_channel_pins_update(self, channel, last_pin):
         # Unfortunately we have to cast an empty return
         # if the dict isn't finished yet.
         if self.pinsDict == None:
-            print (f"{var.cyan}The {var.red}pinsDict{var.cyan} isn't finished yet!{var.reset}")
+            print (f"{self.bot.CYAN}The {self.bot.RED_B}pinsDict{self.bot.CYAN} isn't finished yet!{self.bot.RESET}")
             return
 
         # The channel might be new, if so we need to create an entry for it.
