@@ -1,23 +1,25 @@
-import discord, re, datetime, random
-from internals import var
-from discord.ext import commands
-from internals import native, checks
+import discord  # Required for basic discord functionality
+import re       # Required for !vote to find custom emoji
+import random   # Required for !cointoss and !mrfreeze
+
+# This import should eventually be integrated into the cog
 from databases import regionbl
 
 def setup(bot):
     bot.add_cog(UserCmdsCog(bot))
 
-class UserCmdsCog(commands.Cog, name='Everyone'):
+class UserCmdsCog(discord.ext.commands.Cog, name='Everyone'):
     """These are the fun commands, everything else is boring and lame. Frankly there's no reason you should pay attention to anything that's not on this page."""
     def __init__(self, bot):
         self.bot = bot
         self.region_ids = dict()
+        regionbl.create()
 
-    @commands.Cog.listener()
+    @discord.ext.commands.Cog.listener()
     async def on_ready(self):
         # Creating dict of all the region role ids
-        for guild in self.bot.guilds:
-            self.region_ids[guild.id] = {
+        for server in self.bot.guilds:
+            self.region_ids[server.id] = {
             'Africa':           discord.utils.get(guild.roles, name='Africa'),
             'North America':    discord.utils.get(guild.roles, name='North America'),
             'South America':    discord.utils.get(guild.roles, name='South America'),
@@ -28,13 +30,13 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
             'Antarctica':       discord.utils.get(guild.roles, name='Antarctica')
             }
 
-    @commands.command(name='praise')
+    @discord.ext.commands.command(name='praise')
     async def _praise(self, ctx, *args):
         """Praise me!!"""
         author = ctx.author.mention
         await ctx.send(f"{author} Your praises have been heard, and in return I bestow upon you... nothing!")
 
-    @commands.command(name='icon', aliases=['logo'])
+    @discord.ext.commands.command(name='icon', aliases=['logo'])
     async def _logo(self, ctx, *args):
         """Post the logo of the current server."""
         author = ctx.author.mention
@@ -45,7 +47,7 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
         logo.set_image(url=ctx.guild.icon_url_as(format='png'))
         await ctx.send(f"{author} Here's the server {word} for {server}!", embed=logo)
 
-    @commands.command(name='mrfreeze', aliases=['freeze'])
+    @discord.ext.commands.command(name='mrfreeze', aliases=['freeze'])
     async def _mrfreeze(self, ctx, *args):
         """Get a quote from my timeless classic "Batman & Robin"!"""
         author = ctx.author.mention
@@ -59,14 +61,14 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
         await ctx.send(quote)
 
 
-    @commands.command(name='cointoss', aliases=['coin', 'coinflip'])
+    @discord.ext.commands.command(name='cointoss', aliases=['coin', 'coinflip'])
     async def _cointoss(self, ctx, *args):
         """Toss a coin, results are 50/50."""
         if random.randint(0,1): await ctx.send(f"{ctx.author.mention} Heads")
         else:                   await ctx.send(f"{ctx.author.mention} Tails")
 
 
-    @commands.command(name='vote', aliases=['election', 'choice', 'choose'])
+    @discord.ext.commands.command(name='vote', aliases=['election', 'choice', 'choose'])
     async def _vote(self, ctx, *args):
         """Create a handy little vote using reacts."""
         def find_custom_emoji(line):
@@ -102,7 +104,7 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
                         except: pass
 
             if react_error:
-                print(f"{var.red}!vote{var.cyan} Not allowed to add react in {ctx.guild.name}{var.reset}")
+                print(f"{self.bot.RED_B}!vote{self.bot.CYAN} Not allowed to add react in {ctx.guild.name}{self.bot.RESET}")
                 await ctx.send(f"{ctx.author.mention} The moderators dun goofed I think. I encountered some sort of anomaly when trying to vote.")
             elif nitro_error:
                 await ctx.send(f"{ctx.author.mention} There seem to be some emoji there I don't have access to.\nI need to be in the server the emoji is from.")
@@ -114,13 +116,13 @@ class UserCmdsCog(commands.Cog, name='Everyone'):
         reacts = [ find_custom_emoji(row) for row in rows ]
         await add_reacts(reacts)
 
-    @commands.command(name='region', aliases=['regions'])
+    @discord.ext.commands.command(name='region', aliases=['regions'])
     async def _region(self, ctx, *args):
         """Assign yourself a colourful regional role."""
         await ctx.send("!region is currently out of service.")
 
-    @commands.command(name='activity', aliases=['listen', 'listening', 'playing', 'play', 'game', 'gaming', 'gameing', 'stream', 'streaming', 'watch', 'watching'])
-    # @commands.cooldown(1, (60*10), BucketType.default)
+    @discord.ext.commands.command(name='activity', aliases=['listen', 'listening', 'playing', 'play', 'game', 'gaming', 'gameing', 'stream', 'streaming', 'watch', 'watching'])
+    # @discord.ext.commands.cooldown(1, (60*10), BucketType.default)
     async def _activity(self, ctx, *args):
         """Dictate what text should be displayed under my nick."""
         # Dictionary of all different activity types with keywords.
