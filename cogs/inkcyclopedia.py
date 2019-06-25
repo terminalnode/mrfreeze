@@ -1,6 +1,5 @@
-import discord, csv
-from discord.ext import commands
-from internals import native
+import discord  # Basic discord functionality
+import csv      # Required for parsing the list of inks
 
 # Small script listening to all incoming messages looking for
 # mentions of inks. Based on The Inkcyclopedia by klundtasaur:
@@ -8,13 +7,13 @@ from internals import native
 def setup(bot):
     bot.add_cog(InkcyclopediaCog(bot))
 
-class InkcyclopediaCog(commands.Cog, name='Inkcyclopedia'):
+class InkcyclopediaCog(discord.ext.commands.Cog, name='Inkcyclopedia'):
     """Type an ink inside {curly brackets} and I'll tell you what it looks like!"""
     def __init__(self, bot):
         self.bot = bot
         self.inkydb = list()
 
-    @commands.Cog.listener()
+    @discord.ext.commands.Cog.listener()
     async def on_ready(self):
         # Load up the ink db!
         with open('databases/dbfiles/inkcyclopedia.csv', encoding='utf-8-sig') as inkfile:
@@ -33,6 +32,6 @@ class InkcyclopediaCog(commands.Cog, name='Inkcyclopedia'):
         # Print that the ink database has been loaded and with how many inks.
         print('\033[0;36mThe ink database has been loaded with \033[35;1m{} inks\033[0;36m!\033[0m'.format(str(len(self.inkydb))))
 
-    @commands.Cog.listener()
+    @discord.ext.commands.Cog.listener()
     async def on_message(self, message):
         pass
