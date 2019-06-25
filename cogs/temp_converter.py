@@ -1,5 +1,6 @@
-import discord, re
-from enum import Enum
+import discord          # Basic discord functionality.
+import re               # Used extensively to parse input.
+from enum import Enum   # Used to denote temperature units.
 
 # Set to true to enable some printouts on how
 # the temperature statement has been parsed.
