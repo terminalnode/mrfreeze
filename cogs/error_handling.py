@@ -1,7 +1,7 @@
-import discord, asyncio, datetime
-import traceback, sys # Debugging
-from discord.ext import commands
-from internals import var
+import discord      # Required to check for a lot of different discord exceptions
+import asyncio      # Required to check for asyncio.TimeoutErrors
+import traceback    # Debugging
+import sys          # Debugging
 
 # If buckets are ever implemented again:
 # from discord.ext.commands.cooldowns import BucketType
@@ -9,31 +9,33 @@ from internals import var
 def setup(bot):
     bot.add_cog(ErrorHandlerCog(bot))
 
-class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
+class ErrorHandlerCog(discord.ext.commands.Cog, name='ErrorHandler'):
     """How the bot acts when errors occur."""
+
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.Cog.listener()
+    @discord.ext.commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        current_time = datetime.datetime.now()
-        current_time = datetime.datetime.strftime(current_time, '%Y-%m-%d %H:%M')
+        """What happens when we encounter a command error? This happens."""
+
+        current_time = self.bot.current_time()
         userstr = f"{ctx.author.name}#{ctx.author.discriminator}"
 
-        if isinstance(error, commands.CheckFailure):
-            print(f"{var.red}{current_time} Check failure: {var.cyan}{userstr} tried to illegaly invoke {var.boldwhite}!{ctx.invoked_with}{var.reset}")
+        if isinstance(error, discord.ext.commands.CheckFailure):
+            print(f"{current_time} {self.bot.RED_B}Check failure: {self.bot.CYAN}{userstr} tried to illegaly invoke {self.bot.WHITE_B}!{ctx.invoked_with}{self.bot.RESET}")
 
         elif isinstance(error, discord.ext.commands.errors.BadArgument):
-            print(f"{var.red}{current_time} Bad arguments: {userstr} while using command {var.boldwhite}!{ctx.invoked_with}{var.reset}")
+            print(f"{current_time} {self.bot.RED_B}Bad arguments: {userstr} while using command {self.bot.WHITE_B}!{ctx.invoked_with}{self.bot.RESET}")
             await ctx.send(f"{ctx.author.mention} That's not quite the information I need to execute that command.")
 
         elif isinstance(error, discord.ext.commands.errors.CommandNotFound):
-            print(f"{var.red}{current_time} Command not found: {var.cyan}{userstr} tried {var.boldwhite}!{ctx.invoked_with}{var.reset}")
+            print(f"{current_time} {self.bot.RED_B}Command not found: {self.bot.CYAN}{userstr} tried {self.bot.WHITE_B}!{ctx.invoked_with}{self.bot.RESET}")
 
         elif isinstance(error, asyncio.TimeoutError):
-            print(f"{var.red}{current_time} AsyncIO Timeout {var.reset}")
+            print(f"{current_time} {self.bot.RED_B}AsyncIO Timeout {self.bot.RESET}")
 
-        elif isinstance(error, commands.errors.CommandOnCooldown):
+        elif isinstance(error, discord.ext.commands.errors.CommandOnCooldown):
             if error.cooldown.rate == 1:    er_rate = 'once'
             elif error.cooldown.rate == 2:  er_rate = 'twice'
             else:
@@ -65,5 +67,5 @@ class ErrorHandlerCog(commands.Cog, name='ErrorHandler'):
             await ctx.send("{ctx.author.name} The command **{ctx.invoked_with}** can only be used {er_rate} every {er_per}{er_type}. Try again in {er_retry}.")
 
         else:
-            print(f"{var.red}{current_time} Unclassified error: {var.boldwhite}{error}{var.reset}")
+            print(f"{current_time} {self.bot.RED_B}Unclassified error: {self.bot.WHITE_B}{error}{self.bot.RESET}")
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
