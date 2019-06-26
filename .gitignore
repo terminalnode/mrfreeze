@@ -1,6 +1,10 @@
 # Your token is secret, do not upload to git.
 token
 
+# Local files
+config/*
+!config/mrfreezequotes
+
 # File to test various code snippets.
 experimentation.py
 
