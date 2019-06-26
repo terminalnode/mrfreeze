@@ -2,9 +2,6 @@ import discord  # Required for basic discord functionality
 import re       # Required for !vote to find custom emoji
 import random   # Required for !cointoss and !mrfreeze
 
-# This import should eventually be integrated into the cog
-from databases import regionbl
-
 def setup(bot):
     bot.add_cog(UserCmdsCog(bot))
 
@@ -13,7 +10,6 @@ class UserCmdsCog(discord.ext.commands.Cog, name='Everyone'):
     def __init__(self, bot):
         self.bot = bot
         self.region_ids = dict()
-        regionbl.create()
 
     @discord.ext.commands.Cog.listener()
     async def on_ready(self):
