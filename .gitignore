@@ -1,4 +1,4 @@
-# Your token is secret, do not upload to GitHub.
+# Your token is secret, do not upload to git.
 token
 
 # File to test various code snippets.
@@ -7,3 +7,6 @@ experimentation.py
 # Garbage files.
 .DS_Store
 __pycache__
+
+# Pyenv stuff
+.python-version
