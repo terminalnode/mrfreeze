@@ -1,128 +1,20 @@
 import discord, re, datetime, asyncio
 from discord.ext import commands
-from internals import native, checks, var, templates
+from internals import checks
 from databases import mutes
+
+# from internals import native, templates, var
 
 # This cog is for commands restricted to mods on a server.
 # It features commands such as !ban, !mute, etc.
+
+def setup(bot):
+    bot.add_cog(ModCmdsCog(bot))
 
 class ModCmdsCog(commands.Cog, name='Moderation'):
     """Good mod! Read the manual! Or if you're not mod - sod off!"""
     def __init__(self, bot):
         self.bot = bot
-        self.antarctica_role    = dict()
-        self.antarctica_channel = dict()
-        self.trash_channel      = dict()
-        self.banish_templates   = templates.banish_templates()
-
-        bot.add_bg_task(self.unbanish_loop(), 'unbanish loop')
-        self.unbanish_interval = 20
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        for guild in self.bot.guilds:
-            self.antarctica_role[guild.id]      = native.get_antarctica_role(guild)
-            self.antarctica_channel[guild.id]   = native.get_antarctica_channel(guild)
-            self.trash_channel[guild.id]        = native.get_trash_channel(guild)
-
-    def check_roles(self, role):
-        """When roles are created/deleted/updated this function checks that this
-        doesn't affect which role is antarctica."""
-        guild = role.guild
-
-        old_antarctica = self.antarctica_role[guild.id]
-        new_antarctica = native.get_antarctica_role(guild)
-
-        if old_antarctica != new_antarctica:
-            self.antarctica_role[guild.id] = new_antarctica
-            if new_antarctica != None:  new_antarctica = f"{var.green}@{new_antarctica}"
-            else:                       new_antarctica = f"{var.red}undefined"
-            print(f"{var.cyan}The {var.boldwhite}Antarctica role{var.cyan} in",
-                  f"{var.red}{guild.name}{var.cyan} was updated to: {new_antarctica}{var.reset}")
-
-    def check_channels(self, channel):
-        """When channels are created/deleted/updated this function checks that this
-        doesn't affect which channel is bot-trash, antarctica, etc."""
-        guild = channel.guild
-
-        # Check if antarctica has changed.
-        old_antarctica  = self.antarctica_channel[guild.id]
-        new_antarctica  = native.get_antarctica_channel(guild)
-
-        if old_antarctica != new_antarctica:
-            self.antarctica_channel[guild.id] = new_antarctica
-
-            if new_antarctica != None:  new_antarctica = f"{var.green}#{new_antarctica.name}{var.reset}"
-            else:                       new_antarctica = f"{var.red}undefined"
-
-            print(f"{var.cyan}The {var.boldwhite}Antarctica channel{var.cyan} in",
-                  f"{var.red}{guild.name}{var.cyan} was updated to: {new_antarctica}{var.reset}")
-
-        # Check if trash has changed.
-        old_trash       = self.trash_channel[guild.id]
-        new_trash       = native.get_trash_channel(guild)
-
-        if old_trash != new_trash:
-            self.trash_channel[guild.id] = new_trash
-
-            if new_trash != None:   new_trash = f"{var.green}#{new_trash.name}"
-            else:                   new_trash = f"{var.red}undefined"
-
-            print(f"{var.cyan}The {var.boldwhite}trash channel{var.cyan} in",
-                  f"{var.red}{guild.name}{var.cyan} was updated to: {new_trash}{var.reset}")
-
-    # Run check_channels() and check_roles() when a channel/role is updated somewhere.
-    @commands.Cog.listener()
-    async def on_guild_channel_delete(self, channel):       self.check_channels(channel)
-    @commands.Cog.listener()
-    async def on_guild_channel_create(self, channel):       self.check_channels(channel)
-    @commands.Cog.listener()
-    async def on_guild_channel_update(self, before, after): self.check_channels(after)
-    @commands.Cog.listener()
-    async def on_guild_role_create(self, role):             self.check_roles(role)
-    @commands.Cog.listener()
-    async def on_guild_role_delete(self, role):             self.check_roles(role)
-    @commands.Cog.listener()
-    async def on_guild_role_update(self, before, after):    self.check_roles(after)
-
-    async def unbanish_loop(self):
-        """This loop checks for people to unbanish every self.banish_interval seconds."""
-        await self.bot.wait_until_ready()
-        while not self.bot.is_closed():
-            # The unbanish interval can potentially be changed through settings.
-            await asyncio.sleep(self.unbanish_interval)
-
-            for server in self.bot.guilds:
-                banishes = [ user for user in mutes.list_server(server) if user['due'] == True ]
-
-                # If no unbanishes due, continue to next server.
-                # If there are, get the antarctica role for current server.
-                if len(banishes) == 0:
-                    continue
-                else:
-                    antarctica = self.antarctica_role[server.id]
-                    channel = self.antarctica_channel[server.id]
-
-                # Sequentially remove users from mute database, then remove antarctacia role.
-                # If both of these steps succeeded add them to success_list so we can mention them later.
-                success_list = list()
-                for user in banishes:
-                    user = server.get_member(user['user'])
-                    try:
-                        mutes.remove(user)
-                        if antarctica in user.roles:
-                            await user.remove_roles(antarctica)
-                            success_list.append(user)
-                    except Exception as e:
-                        print(f"{var.red}ERROR {var.cyan} Failed to remove {var.red}@{antarctica.name} {var.cyan}from" +
-                            f"{var.boldwhite}{user.name}#{user.discriminator} {var.cyan}in {var.red}{server.name}.")
-
-                # Post success message to the server's designated Antarctica channel.
-                if len(success_list) != 0:
-                    if len(success_list) == 1:  exile = "exile"
-                    else:                       exile = "exiles"
-                    ment_success = native.mentions_list(success_list)
-                    await channel.send(f"It's with great regret that I must inform you all that the {exile} of {ment_success} has come to an end.")
 
     def extract_reason(self, reason):
         # This is a simple function that will return anything after the list of mentions.
@@ -185,6 +77,7 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
             1: "Rule 1: Be nice and decent to everyone. Hate speech will not be tolerated.",
             2: "Rule 2: Keep discussions civil and mature.",
             3: "Rule 3: Stay on topic and avoid spamming.",
+            4: "Rule 4: Please use common sense when posting here and follow usual Discord etiquette."
         }
 
         rule_triggers = {
@@ -210,221 +103,6 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
 
         if len(called_rules) == 0:  await ctx.send(f"Sorry {ctx.author.mention}, your terms don't seem to match any rules. :thinking:")
         else:                       await ctx.send(called_rules.strip())
-
-
-    @commands.command(name='mute', aliases=[ 'pardon', 'forgive',
-        'banish', 'unbanish', 'microbanish', 'superbanish', 'SUPERBANISH', 'megabanish', 'MEGABANISH',
-        'hogtie', 'unhogtie', 'microhogtie', 'superhogtie', 'SUPERHOGTIE', 'megahogtie', 'MEGAHOGTIE',
-                  'unmute',   'micromute',   'supermute',   'SUPERMUTE',   'megamute',   'MEGAMUTE',
-    ])
-    @commands.check(checks.is_mod)
-    async def _banish(self, ctx, *args):
-        """Restrict a user to #antarctica for a short(?) period of time or frees them from that hell."""
-
-        # This function is carried out through the following subfunctions:
-        # muteparse(context, arguments)     Parse the command.
-        # mutecount()                       Count number of mutes.
-        # mutecheck()                       Check if one or more users are already muted.
-        # muteadd()                         Mute one or more users.
-        # muteremove()                      Unmute one or more users
-
-        async def muteparse(context, arguments):
-            """Uses context and arguments to determine what is to be done.
-            Returns a dictionary with information for what the rest of the function should do.
-
-            It outputs a dictionary with the following data:
-                { 'command':     string with command category (mute or unmute)
-                  'flavor':      if applicable the flavor or the command, subcommand if you will. otherwise None.
-                  'mods':        list item with all, if any, mods that were mentioned.
-                  'users':       list item with all, if any, non-mod/bot/author users that were mentioned.
-                  'self':        True if ctx.author was mentioned, otherwise None.
-                  'time':        datetime object if micro or super commands were used, otherwise None.
-                  'duration':    specifies how long the mute is in words
-                  'server':      the guild object
-                }"""
-
-            # Initialize the dict we're going to return.
-            mission = {
-            'command'  : None,
-            'flavor'   : None,
-            'mods'     : list(),
-            'users'    : list(),
-            'self'     : (context.author in context.message.mentions),
-            'mrfreeze' : (self.bot.user in context.message.mentions),
-            'time'     : None,
-            'duration' : str(),
-            'server'   : context.guild
-            }
-
-            # Command categories:
-            # check             Checks if user or users are banished.
-            # count             Check how many users are in the banish DB
-            # mute              Adds the Antarctica role to a user.
-            # unmute            Removes the Antarctica role from a user.
-            # Command flavors:  mute, banish
-            if 'banish' in context.invoked_with.lower():    mission['flavor'] = 'banish'
-            elif 'hogtie' in context.invoked_with.lower():  mission['flavor'] = 'hogtie'
-            else:                                           mission['flavor'] = 'mute'
-
-            mute_aliases = (
-                'banish', 'microbanish', 'superbanish', 'SUPERBANISH', 'megabanish', 'MEGABANISH',
-                'hogtie', 'microhogtie', 'superhogtie', 'SUPERHOGTIE', 'megahogtie', 'MEGAHOGTIE',
-                'mute',   'micromute',   'supermute',   'SUPERMUTE',   'megamute',   'MEGAMUTE',
-            )
-            unmute_aliases = (
-                'unbanish', 'unhogtie', 'unmute', 'pardon', 'forgive',
-            )
-
-            if 'check' in arguments:    mission['command'] = 'check'
-            elif 'count' in arguments:  mission['command'] = 'count'
-            elif context.invoked_with in mute_aliases:
-                mission['command'] = 'mute'
-                if 'micro' in context.invoked_with:
-                    mission['time'] = datetime.datetime.now()
-                    mission['duration'] = 'only about a minute'
-
-                elif 'super' in context.invoked_with.lower():
-                    nextyear = datetime.datetime.now().year + 1
-                    mission['time'] = datetime.datetime.now().replace(year=nextyear)
-                    mission['duration'] = 'ONE FULL YEAR'
-
-                elif 'mega' in context.invoked_with.lower():
-                    nextyear = datetime.datetime.now().year + 1000
-                    mission['time'] = datetime.datetime.now().replace(year=nextyear)
-                    mission['duration'] = 'A MILLENIUM'
-
-            elif context.invoked_with in unmute_aliases:
-                mission['command'] = 'unmute'
-
-            # Mention categories: mods, bots, users
-            for mention in context.message.mentions:
-                if mention == self.bot.user:        pass # Don't banish the bot.
-                elif await checks.is_mod(mention):  mission['mods'].append(mention)
-                else:                               mission['users'].append(mention)
-
-            return mission
-
-
-        async def mutecount(mission):
-            """Counts the number of users muted on this server."""
-            result = mutes.count(mission['server'])
-            verb = self.banish_templates[mission['flavor']]['past_tense']
-            if result == 0:     await ctx.send(f"{ctx.author.mention} There is no one {verb} here. Fix it!")
-            elif result == 1:   await ctx.send(f"{ctx.author.mention} There is only a single person {verb} here. Who could it be??")
-            else:               await ctx.send(f"{ctx.author.mention} There are {result} people {verb} here. As it should be.")
-
-
-        async def mutecheck(mission):
-            """Checks if one or more users are muted/banished."""
-            if len(ctx.message.mentions) == 0:
-                await ctx.send(f"{ctx.author.mention} You didn't mention anyone you smud.")
-            else:
-                verb = self.banish_templates[mission['flavor']]['past_tense']
-                reply = str()
-
-                for user in ctx.message.mentions:
-                    checkresult = mutes.check(user)
-                    if isinstance(checkresult, bool):
-                        if checkresult: reply += f"{user.mention} is {verb} for life.\n"
-                        else:           reply += f"{user.mention} is not {verb}.\n"
-
-                    elif isinstance(checkresult, datetime.datetime):
-                        until = native.parse_timedelta(checkresult - datetime.datetime.now())
-                        reply += f"{user.mention} is going to be {verb} for another {until}.\n"
-
-                    else:
-                        reply += f"I'm not sure about {user.mention} actually. :shrug:\n"
-
-                await ctx.send(reply)
-
-
-        async def muteadd(mission):
-            """Adds one or more users to the mute database and assigns them the antarctica role"""
-            antarctica  = self.antarctica_role[mission['server'].id]
-            verb        = self.banish_templates[mission['flavor']]['past_tense']
-            unmuteables = mission['mods']
-            muteables   = mission['users']
-            mute_status = { 'new': list(), 'prolonged': list(), 'failed': list() }
-
-            # Default times for various themes are as follows.
-            if mission['time'] == None and mission['flavor'] == 'banish':
-                mission['time'] = datetime.datetime.now() + datetime.timedelta(minutes=5)
-            elif mission['time'] == None and mission['flavor'] == 'hogtie':
-                mission['time'] = datetime.datetime.now() + datetime.timedelta(minutes=10)
-
-            for victim in muteables:
-                # 1. Always add the Antarctica role if the user doesn't have it.
-                # 2. If the user both have the role and are in the database, this is a prolonged mute.
-                # -> If a user has the role removed they should've been removed from the database. This is a failsafe.
-
-                has_role = antarctica in victim.roles
-                in_db    = mutes.check(victim) != False
-                prolong  = has_role and in_db
-                if not has_role:
-                    try:                    await victim.add_roles(antarctica, reason=f"!{verb} by {ctx.author.name}")
-                    except Exception as e:  mute_status['failed'].append([victim, e])
-
-                if prolong:     mutes.prolong(victim, voluntary=False, end_date=mission['time'])
-                else:               mutes.add(victim, voluntary=False, end_date=mission['time'])
-
-            # Responses...
-            responses = self.banish_templates[mission['flavor']]
-            reply = None
-
-            # Set variables success_list, fail_list and errors for later on.
-            success_list = native.mentions_list(mute_status['new'] + mute_status['prolonged'])
-            fail_list = native.mentions_list( [ fail[0] for fail in mute_status['failed'] ] )
-
-            if len(fail_list) != 0:
-                errors = ', '.join( [ fail[1] for fail in mute_status['failed'] ] )
-            else:
-                errors = "No errors!"
-
-            if len(muteables) == 0:
-                #####################################################
-                # NON-ACTIONABLE REQUESTS (only mods/mrfreeze/self) #
-                #####################################################
-                if len(ctx.message.mentions) == 1 and mission['self']:
-                    reply = responses['selfmute']
-                elif mission['mrfreeze']:
-                    if len(unmuteables) != 0:
-                        if mission['self']:     reply = responses['selfmute']
-                        else:                   reply = responses['modfreezemute']
-                    elif len(unmuteables) == 0: reply = responses['freezemute']
-                elif len(unmuteables) == 1:     reply = responses['singlemodmute']
-                elif len(unmuteables) > 1:      reply = responses['multimodmute']
-
-            else:
-                ################################################
-                # RESPONESE FOR ACTIONABLE REQUESTS START HERE #
-                ################################################
-                pass
-
-            if reply == None:
-                print(f"{var.red}!mute {var.cyan}FAILED to find an appropriate template.{var.reset}")
-                await ctx.send("I'm supposed to say something now, but I'm at a loss for words.")
-            else:
-                reply = reply.substitute(
-                    author = ctx.author.mention,
-                    victim = success_list,
-                    fail = fail_list,
-                    error = errors,)
-                await ctx.send(reply)
-
-        async def muteremove(mission):
-            antarctica = native.get_antarctica_role(mission['server'])
-
-        # Ready to parse the command and determine what is to be done.
-        mission = await muteparse(ctx, args)
-        if mission['command'] == 'mute' and mission['time'] == None:
-            add_time, end_time = native.extract_time(args)
-            mission['time'] = end_time
-            mission['duration'] = native.parse_timedelta(add_time)
-
-        if mission['command'] == 'count':       await mutecount(mission)
-        elif mission['command'] == 'check':     await mutecheck(mission)
-        elif mission['command'] == 'mute':      await muteadd(mission)
-        elif mission['command'] == 'unmute':    await muteremove(mission)
 
     @commands.command(name='ban', aliases=['purgeban', 'banpurge'])
     @commands.check(checks.is_mod)
@@ -474,8 +152,8 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
                 fail_list.append(victim)
 
         # And now we compile a response.
-        ment_success = native.mentions_list(success_list)
-        ment_fail = native.mentions_list(fail_list)
+        ment_success = self.bot.mentions_list(success_list)
+        ment_fail = self.bot.mentions_list(fail_list)
 
         # Error list:
         if forbidden_error and not http_error:
@@ -491,43 +169,43 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
 
         elif len(ctx.message.mentions) == 0:
             # No mentions
-            replystr = 'Sure, I\'ll go right ahead and ban... wait who should I ban? You didn\'t mention anyone? Freeze in hell %s!'
+            replystr = "Sure, I'll go right ahead and ban... wait who should I ban? You didn't mention anyone? Freeze in hell %s!"
             replystr = (replystr % (ctx.author.mention,))
 
         elif len(ctx.message.mentions) == len(mods_list):
             # No mentions that weren't mods
-            replystr = '%s Every single person on that list of yours is a mod. This is mutiny!'
+            replystr = "%s Every single person on that list of yours is a mod. This is mutiny!"
             replystr = (replystr % (ctx.author.mention,))
 
         elif (len(success_list) == 1) and (len(fail_list) == 0):
             # Singular success
-            replystr = '%s The smuddy little smud %s won\'t bother us no more, if you know what I mean... :hammer:'
+            replystr = "%s The smuddy little smud %s won't bother us no more, if you know what I mean... :hammer:"
             replystr = (replystr % (ctx.author.mention, ment_success))
 
         elif (len(success_list) > 1) and (len(fail_list) == 0):
             # Plural success
             ban_hammer = (':hammer:' * len(success_list))
-            replystr = '%s Those smuddy little smuds %s won\'t bother us no more. Because they\'re all BANNED! %s'
+            replystr = "%s Those smuddy little smuds %s won't bother us no more. Because they're all BANNED! %s"
             replystr = (replystr % (ctx.author.mention, ment_success, ban_hammer))
 
         elif (len(success_list) > 0) and (len(fail_list) > 0):
             # Mixed results
             error_str = error_str.lower().replace('.', '').replace('http', 'HTTP')
-            replystr = '%s My powers are disapating, due to %s I wasn\'t able to ban all of the users requested.'
-            replystr += '\nBanned: %s\nNot banned: %s'
+            replystr = "%s My powers are disapating, due to %s I wasn't able to ban all of the users requested."
+            replystr += "\nBanned: %s\nNot banned: %s"
             replystr = (replystr % (ctx.author.mention, error_str, ment_success, ment_fail))
 
         elif (len(success_list) == 0) and (len(fail_list) == 1):
             # Singular fail
             error_str = error_str.lower().replace('.', '').replace('http', 'HTTP')
-            replystr = '%s The smuddy little smud %s... will actually keep bothering us. I wasn\'t able to ban them due to %s.'
+            replystr = "%s The smuddy little smud %s... will actually keep bothering us. I wasn't able to ban them due to %s."
             replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
 
         elif (len(success_list) == 0) and (len(fail_list) > 1):
             # Plural fail
             ment_fail = ment_fail.replace(' and ', ' or ')
-            replystr = '%s I\'m deeply ashamed to say that my systems are malfunctioning and I wasn\'t able to ban %s.\n'
-            replystr += 'This seems to be due to: %s'
+            replystr = "%s I'm deeply ashamed to say that my systems are malfunctioning and I wasn't able to ban %s.\n"
+            replystr += "This seems to be due to: %s"
             replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
 
         if not banlist:
@@ -599,10 +277,8 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
                     http_error = True
                     fail_list.append(user)
 
-        if forbidden_error or http_error:
-            any_error = True
-        else:
-            any_error = False
+        if forbidden_error or http_error:   any_error = True
+        else:                               any_error = False
 
         if forbidden_error and http_error:
             error_str = 'a mix of insufficient privilegies and HTTP issues'
@@ -611,11 +287,11 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         elif http_error:
             error_str = 'HTTP issues'
         else:
-            error_str = 'no errors? (why are you seeing this?)'
+            error_str = 'unknown error'
 
         # Now all we need is a reply string.
-        ment_success = native.mentions_list(success_list)
-        ment_fail = native.mentions_list(fail_list)
+        ment_success = self.bot.mentions_list(success_list)
+        ment_fail = self.bot.mentions_list(fail_list)
 
 
         if showbans:
@@ -624,50 +300,42 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
 
         elif not found_anyone and not any_error:
             # No banned users were found in the message.
-            replystr = '%s I wasn\'t able to spot any banned usernames or IDs in that message of yours.'
-            replystr = (replystr % (ctx.author.mention,))
+            replystr = f"{ctx.author.mention} I wasn't able to spot any banned usernames or IDs in that message of yours."
 
         elif any_error and len(fail_list) == 0:
             # Encountered an error during listing,
             # no unban attempts have been made.
-            replystr = '%s Due to %s I wasn\'t able to retrieve the list of banned users. '
-            replystr += 'Without that list I can\'t even try to unban them.'
-            replystr = (replystr % (ctx.author.mention, error_str))
+            replystr = f"{ctx.author.mention} Due to {error_str} I wasn't able to retrieve the list of banned users. "
+            replystr += "Without that list I can't even try to unban them."
 
         elif len(success_list) == 1 and len(fail_list) == 0:
             # Singular success, no fails.
-            replystr = '%s Smuddy McSmudface, I mean %s, has been unbanned... for some reason. :shrug:'
-            replystr = (replystr % (ctx.author.mention, ment_success))
+            replystr = f"{ctx.author.mention} Smuddy McSmudface, I mean {ment_success}, has been unbanned... for some reason. :shrug:"
 
         elif len(success_list) > 1 and len(fail_list) == 0:
             # Plural success, no fails.
-            replystr = '%s The users known as %s have been unbanned... but why?'
-            replystr = (replystr % (ctx.author.mention, ment_success))
+            replystr = f"{ctx.author.mention} The users known as {ment_success} have been unbanned... but why?"
 
         elif len(success_list) > 0 and len(fail_list) > 0:
             # Mixed results.
-            replystr = '%s The unbanning was a success! Partially anyway...\n'
-            replystr += 'Unbanned user(s): %s\n'
-            replystr += 'Still banned user(s): %s'
-            replystr += 'Failure was caused by %s.'
-            replystr = (replystr % (ctx.author.mention, ment_success, ment_fail, error_str))
+            replystr =  f"{ctx.author.mention} The unbanning was a success! Partially anyway...\n"
+            replystr += f"Unbanned user(s): {ment_success}\n"
+            replystr += f"Still banned user(s): {ment_fail}\n"
+            replystr += f"Failure was caused by {error_str}."
 
         elif len(success_list) == 0 and len(fail_list) == 1:
             # No success, singular fail.
-            replystr = '%s I wasn\'t able to unban %s due to %s.'
-            replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
+            replystr = f"{ctx.author.mention} I wasn't able to unban {ment_fail} due to {error_str}."
 
         elif len(success_list) == 0 and len(fail_list) > 1:
             # No success, plural fails.
             ment_fail = ment_fail.replace(' and ', ' or ')
-            replystr = '%s I wasn\'t able to unban %s due to %s.'
-            replystr = (replystr % (ctx.author.mention, ment_fail, error_str))
+            replystr = f"{ctx.author.mention} I wasn't able to unban {ment_fail} due to {error_str}."
 
         else:
-            replystr = '%s Someone call <@!154516898434908160>! I don\'t know what\'s going on!!!\n'
-            replystr += 'len(success_list) == %s, len(fail_list) == %s\n'
-            replystr += 'http_error == %s, forbidden_error == %s'
-            replystr = (replystr % (ctx.author.mention, str(len(success_list))), str(len(fail_list)), str(http_error), str(forbidden_error))
+            replystr =  f"{ctx.author.mention} Someone call <@!154516898434908160>! I don't know what's going on!!!\n"
+            replystr += f"len(success_list) == {len(success_list)}, len(fail_list) == {len(fail_list)}\n"
+            replystr += f"http_error == {http_error}, forbidden_error == {forbidden_error}"
 
         if not showbans:
             await ctx.send(replystr)
@@ -704,26 +372,21 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
 
         if not general_error:
             if len(banlist) == 0:
-                replystr = '%s There are no banned users... yet. If you\'d like to change that just say the word!'
-                replystr = (replystr % (ctx.author.mention,))
+                replystr = f"{ctx.author.mention} There are no banned users... yet. If you'd like to change that just say the word!"
 
             else:
-                replystr = 'The following users are currently banned:\n'
+                replystr = "The following users are currently banned:\n"
                 for ban in banlist:
-                    if ban.reason == None:
-                        add_str = '**%s#%s** (id: %s)'
-                        add_str = (add_str % (ban.user.name, str(ban.user.discriminator), str(ban.user.id)))
-
-                    else:
-                        add_str = '**%s#%s** (id: %s)\n(%s was banned for: %s)'
-                        add_str = (add_str % (ban.user.name, str(ban.user.discriminator), str(ban.user.id), ban.user.name, ban.reason))
+                    add_str = f"**{ban.user.name}#{ban.user.discriminator}** (id: {ban.user.id})"
+                    if ban.reason != None:
+                        add_str += f"**\n({ban.user.name} was banned for: {ban.reason})"
 
                     if ban != banlist[-1]:
-                        add_str += '\n'
+                        add_str += "\n"
+
                     replystr += add_str
         else:
-            replystr = '%s Due to %s I wasn\'t able to retrieve the list of banned smuds.'
-            replystr = (replystr % (ctx.author.mention, error_str,))
+            replystr = f"{ctx.author.mention} Due to {error_str} I wasn't able to retrieve the list of banned smuds."
 
         await ctx.send(replystr)
 
@@ -743,7 +406,7 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         # If they tried to kick a mod christmas is cancelled.
         mod_role = discord.utils.get(ctx.guild.roles, name='Administration')
         mods_list = [ user for user in ctx.message.mentions if mod_role in user.roles ]
-        ment_mods = native.mentions_list(mods_list)
+        ment_mods = self.bot.mentions_list(mods_list)
 
         if len(mods_list) == 0: tried_to_kick_mod = False
         else:                   tried_to_kick_mod = True
@@ -755,34 +418,33 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
                 try:
                     if reason == None:
                         await ctx.guild.kick(victim)
-                        print(f"{var.boldwhite}{victim.name}#{victim.discriminator}{var.cyan} was " +
-                            f"{var.red} kicked from {ctx.guild.name} {var.cyan}by {var.green}" +
+                        print(f"{self.bot.WHITE_B}{victim.name}#{victim.discriminator}{self.bot.CYAN} was " +
+                            f"{self.bot.RED_B} kicked from {ctx.guild.name} {self.bot.CYAN}by {self.bot.GREEN_B}" +
                             f"{ctx.author.name}#{ctx.author.discriminator}")
                     else:
                         await ctx.guild.kick(victim, reason=reason)
-                        print(f"{var.boldwhite}{victim.name}#{victim.discriminator}{var.cyan} was " +
-                            f"{var.red}kicked from {ctx.guild.name} {var.cyan}by {var.green}" +
-                            f"{ctx.author.name}#{ctx.author.discriminator}{var.cyan}.\n{var.boldwhite}Reason given: " +
-                            f"{var.white}{reason}{var.reset}")
+                        print(f"{self.bot.WHITE_B}{victim.name}#{victim.discriminator}{self.bot.CYAN} was " +
+                            f"{self.bot.RED_B}kicked from {ctx.guild.name} {self.bot.CYAN}by {self.bot.GREEN_B}" +
+                            f"{ctx.author.name}#{ctx.author.discriminator}{self.bot.CYAN}.\n{self.bot.WHITE_B}Reason given: " +
+                            f"{self.bot.WHITE}{reason}{self.bot.RESET}")
                     success_list.append(victim)
 
                 except discord.Forbidden:
                     fail_list.append(victim)
                     forbidden_error = True
-                    print(f"{var.red}ERROR {var.cyan}I was not allowed to {var.red}!kick {var.boldwhite}{victim.name}#{victim.discriminator}" +
-                        f"{var.cyan} in {var.red}{ctx.guild.name}{var.cyan}.{var.reset}")
+                    print(f"{self.bot.RED_B}ERROR {self.bot.CYAN}I was not allowed to {self.bot.RED_B}!kick {self.bot.WHITE_B}{victim.name}#{victim.discriminator}" +
+                        f"{self.bot.CYAN} in {self.bot.RED_B}{ctx.guild.name}{self.bot.CYAN}.{self.bot.RESET}")
 
                 except discord.HTTPException:
                     fail_list.append(victim)
                     http_error = True
-                    print(f"{var.red}ERROR {var.cyan}I couldn't {var.red}!kick {var.boldwhite}{victim.name}#{victim.discriminator}" +
-                        f"{var.cyan} in {var.red}{ctx.guild.name} {var.cyan}due to an HTTP Exception.{var.reset}")
+                    print(f"{self.bot.RED_B}ERROR {self.bot.CYAN}I couldn't {self.bot.RED_B}!kick {self.bot.WHITE_B}{victim.name}#{victim.discriminator}" +
+                        f"{self.bot.CYAN} in {self.bot.RED_B}{ctx.guild.name} {self.bot.CYAN}due to an HTTP Exception.{self.bot.RESET}")
 
         # This will convert the lists into mentions suitable for text display:
         # user1, user2 and user 3
-        ment_success = native.mentions_list(success_list)
-        ment_fail = native.mentions_list(fail_list)
-
+        ment_success = self.bot.mentions_list(success_list)
+        ment_fail = self.bot.mentions_list(fail_list)
 
         ### Preparation of replystrings.
         ### Errors are added further down.
@@ -792,38 +454,35 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
 
             # Singular
             if len(success_list) == 1:
-                replystr = "%s The smud who goes by the name of %s has been kicked from the server, never to be seen again!"
-                replystr = (replystr % (ctx.author.mention, ment_success))
+                replystr = f"{ctx.author.mention} The smud who goes by the name of {ment_success}"
+                replystr += "has been kicked from the server, never to be seen again!"
 
             # Plural
             else:
-                replystr = "%s The smuds who go by the names of %s have been kicked from the server, never to be seen again!"
-                replystr = (replystr % (ctx.author.mention, ment_success))
+                replystr = f"{ctx.author.mention} The smuds who go by the names of {ment_success} "
+                replystr += "have been kicked from the server, never to be seen again!"
 
         # Had no successes and at least one fail.
         elif (len(success_list) == 0) and (len(fail_list) > 0):
 
             # Singular
             if len(fail_list) == 1:
-                replystr = "%s So... it seems I wasn\'t able to kick %s due to: "
-                replystr = (replystr % (ctx.author.mention, ment_fail))
+                replystr = f"{ctx.author.mention} So... it seems I wasn't able to kick {ment_fail} due to: "
 
             # Plural
             else:
-                replystr = "%s So... it seems I wasn\'t able to kick any of %s.\nThis was due to: "
-                replystr = (replystr % (ctx.author.mention, ment_fail))
+                replystr = f"{ctx.author.mention} So... it seems I wasn't able to kick any of {ment_fail}.\nThis was due to: "
 
         # Had at least one success and at least one fail.
         elif (len(success_list) > 0) and (len(fail_list) > 0):
             # Singular and plural don't matter here.
-            replystr = "%s The request was executed with mixed results.\nKicked: %s\nNot kicked: %s\nThis was due to: "
-            replystr = (replystr % (ctx.author.mention, ment_success, ment_fail))
+            replystr =  f"{ctx.author.mention} The request was executed with mixed results."
+            replystr += f"\nKicked: {ment_success}\nNot kicked: {ment_fail}\nThis was due to: "
 
         # Had no mentions whatsoever.
         elif len(ctx.message.mentions) == 0:
             # Singular and plural don't matter here.
-            replystr = "%s You forgot to mention anyone you doofus. Who exactly am I meant to kick??"
-            replystr = (replystr % (ctx.author.mention,))
+            replystr = f"{ctx.author.mention} You forgot to mention anyone you doofus. Who exactly am I meant to kick??"
 
         ### Now we're adding in the error codes if there are any.
         if forbidden_error and http_error:
@@ -836,75 +495,106 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         ### Finally, a special message to people who tried to kick a mod.
         if tried_to_kick_mod:
             if (len(mods_list) == 1) and ctx.author in mods_list:
-                replystr = "%s You can't kick yourself, silly."
-                replystr = (replystr % (ctx.author.mention))
+                replystr = f"{ctx.author.mention} You can't kick yourself, silly."
             else:
-                replystr = "%s Not even you can kick the likes of %s."
-                replystr = (replystr % (ctx.author.mention, ment_mods))
+                replystr = f"{ctx.author.mention} Not even you can kick the likes of {ment_mods}."
 
         await ctx.send(replystr)
 
 
-    @commands.command(name='purge', aliases=['clean', 'cleanup'])
+    @commands.command(name='purge', aliases=['superpurge'])
     @commands.check(checks.is_mod)
     async def _purge(self, ctx, *args):
         """Delete a certain number of posts all at once."""
         # This function will remove the last X number of posts in the channel.
-        #
         # Features:
         # - If message contains mentions, it will only delete messages by
         #   the people mentioned.
         # - Limit is 100 messages.
-        # - Delets message which called the function.
-        try:
-            await ctx.message.delete()
-        except:
-            pass
+        # - Also deletes message which called the function.
+
+        # Delete the message containing the purge command.
+        try:    await ctx.message.delete()
+        except: pass
 
         # We'll use the first number we can find in the arguments.
+        # We'll also parse negative numbers so the error message will be better.
         delete_no = 0
         for arg in args:
-            if arg.isdigit() and delete_no == 0:
+            if arg.isdigit() or (arg[0] == '-' and arg[1:].isdigit()):
                 delete_no = int(arg)
+                break
 
-        if delete_no < 0:
+        if delete_no <= 0:
+            await ctx.send(f"{ctx.author.mention} You want me to delete {delete_no} messages? Good joke.")
             delete_no = 0
-        elif delete_no > 100:
-            delete_no = 100
+
+        elif delete_no > 100 and ctx.invoked_with != 'superpurge':
+            # For big deletes we post a warning message for a few seconds before deleting.
+            message = await ctx.send('`Purge overload detected, engaging safety protocols.`')
+            await asyncio.sleep(1)
+
+            await message.edit(content=message.content + '\n`Purge size successfully contained to 100 messages.`')
+            await asyncio.sleep(1)
+
+            await message.edit(content=message.content + '\n`Charging phasers...`')
+            await asyncio.sleep(1)
+
+            oldmessage = message.content + '\n'
+
+            countdown = 3
+            while countdown > 0:
+                if countdown == 0:
+                    break
+
+                await message.edit(content=
+                        oldmessage + f'`Phaser at full charge in... {countdown}`'
+                )
+                countdown -= 1
+                await asyncio.sleep(1)
+
+            delete_no = 101
 
         def check_func(message):
-            # If message is pinned -> False
-            # Author in mentions      True
-            # No mentions             True
-            # -> Otherwise            False
-            if message.pinned:
-                return False
-            elif message.author in ctx.message.mentions:
-                return True
-            elif len(ctx.message.mentions) == 0:
-                return True
-            else:
-                return False
+            # False means don't delete, True means delete.
+            # - Don't delete pinned messages.
+            # - If there are no mentions in the original message, delete.
+            # - If the author is in the list of mentions, delete it.
+            # - Also delete if there are no mentions.
+            author = message.author
+            mentions = ctx.message.mentions
+            no_mentions = (len(mentions) == 0)
+
+            if message.pinned:          return False
+            elif no_mentions:           return True
+            elif author in mentions:    return True
+            else:                       return False
 
         try:
             await ctx.channel.purge(limit=delete_no, check=check_func)
 
         except discord.Forbidden:
-            replystr = '%s An error occured, it seems I\'m lacking the privilegies '
-            replystr += 'to carry out your Great Purge.'
-            replystr = (replystr % (ctx.author.mention,))
-            await ctx.send(replystr)
+            print(f"{self.bot.RED_B}!purge failed{self.bot.CYAN} in " +
+                f"{self.bot.CYAN_B}#{ctx.channel.name}{self.bot.YELLOW_B} @ {self.bot.CYAN_B}{ctx.guild.name}" +
+                f"{self.bot.RED_B} (Forbidden){self.bot.RESET}")
+
+            await ctx.send(
+                f"{ctx.author.mention} An error occured, it seems I'm lacking the" +
+                "privilegies to carry out your Great Purge.")
 
         except discord.HTTPException:
-            replystr = '%s An error occured, it seems my HTTP sockets are glitching out '
-            replystr += 'and thus couldn\'t carry out your Great Purge.'
-            replystr = (replystr % (ctx.author.mention,))
-            await ctx.send(replystr)
+            print(f"{self.bot.RED_B}!purge failed{self.bot.CYAN} in " +
+                f"{self.bot.CYAN_B}#{ctx.channel.name}{self.bot.YELLOW_B} @ {self.bot.CYAN_B}{ctx.guild.name}" +
+                f"{self.bot.RED_B} (HTTP Exception){self.bot.RESET}")
 
-        except:
-            replystr = '%s Something went wrong with your Great Purge and I don\'t '
-            replystr += 'really know what. It\'s not related to HTTP or permissions...'
-            await ctx.send(replystr)
+            await ctx.send(
+                f"{ctx.author.mention} An error occured, it seems my HTTP sockets are " +
+                "glitching out and thus I couldn't carry out your Great Purge.")
 
-def setup(bot):
-    bot.add_cog(ModCmdsCog(bot))
+        except Exception as e:
+            print(f"{self.bot.RED_B}!purge failed{self.bot.CYAN} in " +
+                f"{self.bot.CYAN_B}#{ctx.channel.name}{self.bot.YELLOW_B} @ {self.bot.CYAN_B}{ctx.guild.name}" +
+                f"{self.bot.RED_B}\n({e}){self.bot.RESET}")
+
+            await ctx.send(
+                f"{ctx.author.mention} Something went wrong with your Great Purge and I don't really know what.")
