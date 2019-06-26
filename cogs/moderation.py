@@ -1,17 +1,15 @@
-import discord, re, datetime, asyncio
-from discord.ext import commands
-from internals import checks
-from databases import mutes
-
-# from internals import native, templates, var
+import discord                  # Basic discord functionality
+import re                       # Required for certain commands
+import asyncio                  # Required for banger !purge message
+from internals import checks    # Required to check for mod privilegies
 
 # This cog is for commands restricted to mods on a server.
-# It features commands such as !ban, !mute, etc.
+# It features commands such as !ban, !kick, etc.
 
 def setup(bot):
     bot.add_cog(ModCmdsCog(bot))
 
-class ModCmdsCog(commands.Cog, name='Moderation'):
+class ModCmdsCog(discord.ext.commands.Cog, name='Moderation'):
     """Good mod! Read the manual! Or if you're not mod - sod off!"""
     def __init__(self, bot):
         self.bot = bot
@@ -42,8 +40,8 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         else:                           return output.strip()
 
 
-    @commands.command(name='say', aliases=['speak', 'chat'])
-    @commands.check(checks.is_mod)
+    @discord.ext.commands.command(name='say', aliases=['speak', 'chat'])
+    @discord.ext.commands.check(checks.is_mod)
     async def _say(self, ctx, channel : discord.TextChannel, *args):
         """Let me be your voice!"""
         replystr = ' '.join(args)
@@ -70,7 +68,7 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         else:           await channel.send(replystr)
 
 
-    @commands.command(name='rules', aliases=['rule'])
+    @discord.ext.commands.command(name='rules', aliases=['rule'])
     async def _rules(self, ctx, *args):
         """Remind users of what the rules are."""
         rules = {
@@ -104,8 +102,8 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         if len(called_rules) == 0:  await ctx.send(f"Sorry {ctx.author.mention}, your terms don't seem to match any rules. :thinking:")
         else:                       await ctx.send(called_rules.strip())
 
-    @commands.command(name='ban', aliases=['purgeban', 'banpurge'])
-    @commands.check(checks.is_mod)
+    @discord.ext.commands.command(name='ban', aliases=['purgeban', 'banpurge'])
+    @discord.ext.commands.check(checks.is_mod)
     async def _ban(self, ctx, *args):
         """Remove a user from our sight - permanently."""
         # This function simply bans a user from the server in which it's issued.
@@ -212,8 +210,8 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
             await ctx.send(replystr)
 
 
-    @commands.command(name='unban')
-    @commands.check(checks.is_mod)
+    @discord.ext.commands.command(name='unban')
+    @discord.ext.commands.check(checks.is_mod)
     async def _unban(self, ctx, *args):
         """Unpermanent removal from sight of a previously banned user."""
         # This function simply remover the ban of a user from the server in which it's issued.
@@ -342,8 +340,8 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
 
 
 
-    @commands.command(name='listban', aliases=['banlist','listbans','banslist'])
-    @commands.check(checks.is_mod)
+    @discord.ext.commands.command(name='listban', aliases=['banlist','listbans','banslist'])
+    @discord.ext.commands.check(checks.is_mod)
     async def _listban(self, ctx):
         """Get a list of all banned users (useful for unbanning)."""
         # Because it's tricky to find the exact user name/id when you can't highlight people,
@@ -391,8 +389,8 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         await ctx.send(replystr)
 
 
-    @commands.command(name='kick')
-    @commands.check(checks.is_mod)
+    @discord.ext.commands.command(name='kick')
+    @discord.ext.commands.check(checks.is_mod)
     async def _kick(self, ctx, *args):
         """Force a user to leave the server temporarily."""
         # This function kicks the user out of the server in which it is issued.
@@ -502,8 +500,8 @@ class ModCmdsCog(commands.Cog, name='Moderation'):
         await ctx.send(replystr)
 
 
-    @commands.command(name='purge', aliases=['superpurge'])
-    @commands.check(checks.is_mod)
+    @discord.ext.commands.command(name='purge', aliases=['superpurge'])
+    @discord.ext.commands.check(checks.is_mod)
     async def _purge(self, ctx, *args):
         """Delete a certain number of posts all at once."""
         # This function will remove the last X number of posts in the channel.
