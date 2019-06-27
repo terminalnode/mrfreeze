@@ -46,6 +46,16 @@ class MuteStr(Enum):
     SINGLE_FAILS        = auto()    # Successfully muted one, failed to mute more than one
     MULTI_FAIL          = auto()    # Successfully muted more than one, failed to mute one
     MULTI_FAILS         = auto()    # Successfully muted more than one, failed to mute more than one
+    # Unmutes
+    INVALID             = auto()    # Invalid unmute (targeting freeze or mods)
+    UNSINGLE            = auto()    # Successfully unmuted one
+    UNMULTI             = auto()    # Successfully unmuted more than one
+    UNFAIL              = auto()    # Failed to unmute one
+    UNFAILS             = auto()    # Failed to unmute more than one
+    UNSINGLE_FAIL       = auto()    # Successfully unmuted one, failed to unmute one
+    UNSINGLE_FAILS      = auto()    # Successfully unmuted one, failed to unmute more than one
+    UNMULTI_FAIL        = auto()    # Successfully unmuted more than one, failed to unmute one
+    UNMULTI_FAILS       = auto()    # Successfully unmuted more than one, failed to unmute more than one
     # By user mutes (users trying to mute)
     USER_SELF           = auto()    # User tried muting themselves
     USER_USER           = auto()    # User tried muting other user(s)
@@ -75,6 +85,16 @@ templates[MuteType.MUTE] = {
     MuteStr.SINGLE_FAILS    : Template("About time! $victims has been muted. $timestamp However due to $errors I was unable to mute $fails."),
     MuteStr.MULTI_FAIL      : Template("About time! $victims have been muted. $timestamp However due to $errors I was unable to mute $fails."),
     MuteStr.MULTI_FAILS     : Template("About time! $victims have been muted. $timestamp However due to $errors I was unable to mute $fails."),
+    # Unmutes
+    MuteStr.INVALID         : Template("If none of the users are muteable, how do you expect me to unmute them smud?"),
+    MuteStr.UNSINGLE        : Template("Oh yay, it seems $victims is allowed to talk again."),
+    MuteStr.UNMULTI         : Template("Oh yay, it seems $victims are allowed to talk again."),
+    MuteStr.UNFAIL          : Template("Fortunately $errors has come to save the day, $victims will remain muted for a while longer."),
+    MuteStr.UNFAILS         : Template("Fortunately $errors has come to save the day, $victims will remain muted for a while longer."),
+    MuteStr.UNSINGLE_FAIL   : Template("Oh yay, it seems $victims is allowed to talk again. However due to $errors $fails will remain muted for a while longer."),
+    MuteStr.UNSINGLE_FAILS  : Template("Oh yay, it seems $victims is allowed to talk again. However due to $errors $fails will remain muted for a while longer."),
+    MuteStr.UNMULTI_FAIL    : Template("Oh yay, it seems $victims are allowed to talk again. However due to $errors $fails will remain muted for a while longer."),
+    MuteStr.UNMULTI_FAILS   : Template("Oh yay, it seems $victims are allowed to talk again. However due to $errors $fails will remain muted for a while longer."),
     # By users mutes (users trying to mute)
     MuteStr.USER_SELF       : Template("Muting yourself, that's a new one. Have you tried just not talking so damn much?"),
     MuteStr.USER_USER       : Template("I hate $victims too, but I hate you more so... nope."),
@@ -98,10 +118,20 @@ templates[MuteType.BANISH] = {
     MuteStr.MULTI           : Template("Good work! The filthy smuds $victims have been banished! $timestamp"),
     MuteStr.FAIL            : Template("Seems $fails is banned from going to Antarctica after having caused $errors there a few years back."),
     MuteStr.FAILS           : Template("Seems $fails is banned from going to Antarctica after having caused $errors there a few years back."),
-    MuteStr.SINGLE_FAIL     : Template("Good work! The filthy smud $victims has been banished! $timestamp However it seems $fails is banned from going to Antarctica after having caused $errors there a few years back."),
-    MuteStr.SINGLE_FAILS    : Template("Good work! The filthy smud $victims has been banished! $timestamp However it seems $fails are banned from going to Antarctica after having caused $errors there a few years back."),
-    MuteStr.MULTI_FAIL      : Template("Good work! The filthy smuds $victims have been banished! $timestamp However it seems $fails is banned from going to Antarctica after having caused $errors there a few years back."),
-    MuteStr.MULTI_FAILS     : Template("Good work! The filthy smuds $victims have been banished! $timestamp However it seems $fails are banned from going to Antarctica after having caused $errors there a few years back."),
+    MuteStr.SINGLE_FAIL     : Template("Good work! The filthy smud $victims has been banished! $timestamp\n\nHowever it seems $fails is banned from going to Antarctica after having caused $errors there a few years back."),
+    MuteStr.SINGLE_FAILS    : Template("Good work! The filthy smud $victims has been banished! $timestamp\n\nHowever it seems $fails are banned from going to Antarctica after having caused $errors there a few years back."),
+    MuteStr.MULTI_FAIL      : Template("Good work! The filthy smuds $victims have been banished! $timestamp\n\nHowever it seems $fails is banned from going to Antarctica after having caused $errors there a few years back."),
+    MuteStr.MULTI_FAILS     : Template("Good work! The filthy smuds $victims have been banished! $timestamp\n\nHowever it seems $fails are banned from going to Antarctica after having caused $errors there a few years back."),
+    # Unmutes
+    MuteStr.INVALID         : Template("None of the users specified are even banishable you filthy smud."),
+    MuteStr.UNSINGLE        : Template("Ew, $victims has been let back in."),
+    MuteStr.UNMULTI         : Template("Ew, $victims have been let back in."),
+    MuteStr.UNFAIL          : Template("It seems $victims's boat encountered some $errors on the way back here. They'll stay in Antarctica for a while longer."),
+    MuteStr.UNFAILS         : Template("It seems the boat $victims were travelling with encountered some $errors on the way back here. They'll stay in Antarctica for a while longer."),
+    MuteStr.UNSINGLE_FAIL   : Template("Ew, $victims has been let back in. However $fails is being detained by the penguin police, suspected of having caused $errors."),
+    MuteStr.UNSINGLE_FAILS  : Template("Ew, $victims has been let back in. However $fails are being detained by penguin police, suspected of having caused $errors."),
+    MuteStr.UNMULTI_FAIL    : Template("Ew, $victims have been let back in. However $fails is being detained by the penguin police, suspected of having caused $errors."),
+    MuteStr.UNMULTI_FAILS   : Template("Ew, $victims have been let back in. However $fails are being detained by penguin police, suspected of having caused $errors."),
     # By users mutes (users trying to mute)
     MuteStr.USER_SELF       : Template("You're not allowed to banish anyone, including yourself."),
     MuteStr.USER_USER       : Template("I hate $victims too, but I hate you more so... nah."),
@@ -129,6 +159,16 @@ templates[MuteType.HOGTIE] = {
     MuteStr.SINGLE_FAILS    : Template("I was able to tie $victims up nice and tight, but my ropes snapped due to $errors before I was able to do the same to $fails. $timestamp"),
     MuteStr.MULTI_FAIL      : Template("I was able to tie $victims up nice and tight, but my ropes snapped due to $errors before I was able to do the same to $fails. $timestamp"),
     MuteStr.MULTI_FAILS     : Template("I was able to tie $victims up nice and tight, but my ropes snapped due to $errors before I was able to do the same to $fails. $timestamp"),
+    # Unmutes
+    MuteStr.INVALID         : Template("Unfortunately none of the members you specified can be tied up to begin with, so there isn't much for me to do."),
+    MuteStr.UNSINGLE        : Template("After all that work tying them up... $victims has been untied."),
+    MuteStr.UNMULTI         : Template("After all that work tying them up... $victims have been untied."),
+    MuteStr.UNFAIL          : Template("I used a very special knot implementing $errors when I tied $fails up, and I can't seem to get it undone.."),
+    MuteStr.UNFAILS         : Template("I used a very special knot implementing $errors when I tied $fails up, and I can't seem to get it undone."),
+    MuteStr.UNSINGLE_FAIL   : Template("I managed to untie $victims, but for $fails I used a very special knot implementing $errors, and I can't seem to get it undone."),
+    MuteStr.UNSINGLE_FAILS  : Template("I managed to untie $victims, but for $fails I used a very special knot implementing $errors, and I can't seem to get it undone."),
+    MuteStr.UNMULTI_FAIL    : Template("I managed to untie $victims, but for $fails I used a very special knot implementing $errors, and I can't seem to get it undone."),
+    MuteStr.UNMULTI_FAILS   : Template("I managed to untie $victims, but for $fails I used a very special knot implementing $errors, and I can't seem to get it undone."),
     # By users mutes (users trying to mute)
     MuteStr.USER_SELF       : Template("Trying to hogtie yourself... good luck with that?"),
     MuteStr.USER_USER       : Template("I hate $victims too, but I hate you more so... nah."),
@@ -327,15 +367,12 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
             else:                               template = MuteStr.MODS
             fails_list = mod
 
-        elif unmute:
-            # Unmuting muted users
-            pass
-
         else:
             # Working mutes (at user mutes):
             # SINGLE, MULTI, FAIL, FAILS, SINGLE_FAIL, SINGLE_FAILS, MULTI_FAIL, MULTI_FAILS
             for member in usr:
-                error = await self.carry_out_banish(member, end_date)
+                if unmute:  error = await self.carry_out_unbanish(member)
+                else:       error = await self.carry_out_banish(member, end_date)
 
                 if isinstance(error, Exception):
                     fails_list.append(member)
@@ -346,6 +383,10 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
                 else:
                     success_list.append(member)
 
+            if not usr and unmute:
+                # Fully invalid unbanish attempt!
+                template = MuteStr.INVALID
+
             successes   = len(success_list)
             no_success  = (successes == 0)
             single      = (successes == 1)
@@ -355,14 +396,22 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
             fail        = (failures == 1)
             fails       = (failures > 1)
 
-            if single and no_fails:     template = MuteStr.SINGLE
-            elif multi and no_fails:    template = MuteStr.MULTI
-            elif fail and no_success:   template = MuteStr.FAIL
-            elif fails and no_success:  template = MuteStr.FAILS
-            elif single and fail:       template = MuteStr.SINGLE_FAIL
-            elif single and fails:      template = MuteStr.SINGLE_FAILS
-            elif multi and fail:        template = MuteStr.MULTI_FAIL
-            elif multi and fails:       template = MuteStr.MULTI_FAILS
+            if single and no_fails and unmute:      template = MuteStr.UNSINGLE
+            elif single and no_fails:               template = MuteStr.SINGLE
+            elif multi and no_fails and unmute:     template = MuteStr.UNMULTI
+            elif multi and no_fails:                template = MuteStr.MULTI
+            elif fail and no_success and unmute:    template = MuteStr.UNFAIL
+            elif fail and no_success:               template = MuteStr.FAIL
+            elif fails and no_success and unmute:   template = MuteStr.UNFAILS
+            elif fails and no_success:              template = MuteStr.FAILS
+            elif single and fail and unmute:        template = MuteStr.UNSINGLE_FAIL
+            elif single and fail:                   template = MuteStr.SINGLE_FAIL
+            elif single and fails and unmute:       template = MuteStr.UNSINGLE_FAILS
+            elif single and fails:                  template = MuteStr.SINGLE_FAILS
+            elif multi and fail and unmute:         template = MuteStr.UNMULTI_FAIL
+            elif multi and fail:                    template = MuteStr.MULTI_FAIL
+            elif multi and fails and unmute:        template = MuteStr.UNMULTI_FAILS
+            elif multi and fails:                   template = MuteStr.MULTI_FAILS
 
         # TESTING THINGIE - leave commented unless testing
         # fails_list = success_list
@@ -373,6 +422,12 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         # template = MuteStr.MULTI_FAIL
         # template = MuteStr.MULTI_FAILS
         # template = MuteStr.MULTI_FAIL
+        # template = MuteStr.UNFAIL
+        # template = MuteStr.UNFAILS
+        # template = MuteStr.UNSINGLE_FAIL
+        # template = MuteStr.UNSINGLE_FAILS
+        # template = MuteStr.UNMULTI_FAIL
+        # template = MuteStr.UNMULTI_FAILS
         # http_exception = True
         # forbidden_exception = True
         # other_exception = True
@@ -388,7 +443,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         elif forbidden_exception and other_exception:                   error = "**a wild mix of lacking privilegies and some other stuff**"
         elif http_exception:                                            error = "**an HTTP exception**"
         elif forbidden_exception:                                       error = "**a lack of privilegies**"
-        else:                                                           error = "**some unidentified error**"
+        else:                                                           error = "**an unidentified exception**"
 
         # Create string
         timestamp = templates[invocation][MuteStr.TIMESTAMP].substitute(
@@ -412,11 +467,11 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
 
     async def carry_out_banish(self, member, end_date):
         """Add the antarctica role to a user, then add them to the db.
-        Return None if successfull, Exception otherwise."""
+        Return None if successful, Exception otherwise."""
         server = member.guild
         roles = member.roles
         mute_role = self.bot.servertuples[server.id].mute_role
-        result = True
+        result = None
 
         if mute_role not in roles:
             try:                    await member.add_roles(mute_role)
@@ -424,6 +479,23 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
 
         if not isinstance(result, Exception):
             self.mdb_add(member, end_date=end_date)
+
+        return result
+
+    async def carry_out_unbanish(self, member):
+        """Remove the antarctica role from a user, then remove them from the db.
+        Return None if successful, Exception otherwise."""
+        server = member.guild
+        roles = member.roles
+        mute_role = self.bot.servertuples[server.id].mute_role
+        result = None
+
+        if mute_role in roles:
+            try:                    await member.remove_roles(mute_role)
+            except Exception as e:  result = e
+
+        if not isinstance(result, Exception):
+            self.mdb_del(member)
 
         return result
 
