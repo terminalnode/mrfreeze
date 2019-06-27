@@ -21,72 +21,120 @@ mute_aliases =    ['mute',   'unmute',   'micromute',   'supermute',   'SUPERMUT
 all_aliases = banish_aliases + hogtie_aliases + mute_aliases
 
 # Templates for the various responses. There are lots of them.
+class MuteType(Enum):
+    MUTE      = "muted"
+    BANISH    = "banished"
+    HOGTIE    = "hogtied"
+
 class MuteStr(Enum):
-    # Gag mutes
-    SELF_FREEZE_MUTE    = auto()
-    FREEZE_MUTE         = auto()
-    SELF_MUTE_MOD       = auto()
-    SELF_MUTE_USER      = auto()
-    NON_MOD_MUTE        = auto()
-    # User mutes
-    MISSING_MUTE        = auto()
-    SINGLE_MUTE         = auto()
-    MULTI_MUTE          = auto()
-    SINGLE_MUTE_FAIL    = auto()
-    MULTI_MUTE_FAIL     = auto()
-    # Generic
-    PAST_TENSE          = auto()
+    """Various categories of !mute attempts."""
+    # MrFreeze
+    FREEZE              = auto()    # Tried muting: MrFreeze
+    FREEZE_SELF         = auto()    # Tried muting: MrFreeze + only self
+    FREEZE_OTHERS       = auto()    # Tried muting: MrFreeze + others (possibly including self)
+    # Mod mutes (any added users will just be ignored for simplicity)
+    SELF                = auto()    # Tried muting: self
+    MOD                 = auto()    # Tried muting: a single mod
+    MODS                = auto()    # Tried muting: several mods (possibly including self)
+    # At user mutes (mods muting users)
+    NONE                = auto()    # No mentions in list
+    SINGLE              = auto()    # Successfully muted one
+    MULTI               = auto()    # Successfully muted more than one
+    FAIL                = auto()    # Failed to mute one
+    FAILS               = auto()    # Failed to mute more than one
+    SINGLE_FAIL         = auto()    # Successfully muted one, failed to mute one
+    SINGLE_FAILS        = auto()    # Successfully muted one, failed to mute more than one
+    MULTI_FAIL          = auto()    # Successfully muted more than one, failed to mute one
+    MULTI_FAILS         = auto()    # Successfully muted more than one, failed to mute more than one
+    # By user mutes (users trying to mute)
+    USER_SELF           = auto()    # User tried muting themselves
+    USER_USER           = auto()    # User tried muting other user(s)
+    USER_MIXED          = auto()    # User tried musing themselves and other user(s)
+    # Timestamp
+    TIMESTAMP           = auto()    # The time stamp appended to the end of the message
 
 templates = dict()
-templates['mute'] = {
-    # Gag mutes
-    MuteStr.SELF_FREEZE_MUTE    : Template("$author You can't silence me! Much less yourself. :rage:"),
-    MuteStr.FREEZE_MUTE         : Template("$author If you want me to be silent maybe stop calling on me? Just a thought."),
-    MuteStr.SELF_MUTE_MOD       : Template("$author Trust me, if I could I would."),
-    MuteStr.SELF_MUTE_USER      : Template("$author PLACEHOLDER **[mute]** self-mute-user"),
-    MuteStr.NON_MOD_MUTE        : Template("$author PLACEHOLDER **[mute]** non-mod-mute"),
-    # User mutes
-    MuteStr.MISSING_MUTE        : Template("$author Uhh, who exactly is it that you want me to mute?"),
-    MuteStr.SINGLE_MUTE         : Template("$victim has been muted for $time."),
-    MuteStr.MULTI_MUTE          : Template("$victim have been muted for $time."),
-    MuteStr.SINGLE_MUTE_FAIL    : Template("$victim $error"),
-    MuteStr.MULTI_MUTE_FAIL     : Template("$victim $error"),
-    # Generic
-    MuteStr.PAST_TENSE          : "muted",
+# Initial mention of author will be added before all of these.
+
+templates[MuteType.MUTE] = {
+    # MrFreeze
+    MuteStr.FREEZE          : Template("No *you* shut up!"),
+    MuteStr.FREEZE_SELF     : Template("If you shut up, I shut up. Deal?"),
+    MuteStr.FREEZE_OTHERS   : Template("If you could silence me you would've done so long ago, now $fails on the other hand... just give me the word."),
+    # Mod mutes (any added users will just be ignored for simplicity)
+    MuteStr.SELF            : Template("Believe me, if I could've I would've muted you the day I walked in here."),
+    MuteStr.MOD             : Template("Look, nobody likes $fails but they're a mod so we're stuck with them."),
+    MuteStr.MODS            : Template("Look, nobody likes $fails, but they're mods so we're stuck with them."),
+    # At user mutes (mods muting users)
+    MuteStr.NONE            : Template("You want me to mute... no one? Well, that makes my job easy."),
+    MuteStr.SINGLE          : Template("About time! $victims has been muted. $timestamp"),
+    MuteStr.MULTI           : Template("About time! $victims have been muted. $timestamp"),
+    MuteStr.FAIL            : Template("Due to $errors it seems I was unable to mute $fails. Damn shame."),
+    MuteStr.FAILS           : Template("Due to $errors it seems I was unable to mute $fails. Damn shame."),
+    MuteStr.SINGLE_FAIL     : Template("About time! $victims has been muted. $timestamp However due to $errors I was unable to mute $fails."),
+    MuteStr.SINGLE_FAILS    : Template("About time! $victims has been muted. $timestamp However due to $errors I was unable to mute $fails."),
+    MuteStr.MULTI_FAIL      : Template("About time! $victims have been muted. $timestamp However due to $errors I was unable to mute $fails."),
+    MuteStr.MULTI_FAILS     : Template("About time! $victims have been muted. $timestamp However due to $errors I was unable to mute $fails."),
+    # By users mutes (users trying to mute)
+    MuteStr.USER_SELF       : Template("Muting yourself, that's a new one. Have you tried just not talking so damn much?"),
+    MuteStr.USER_USER       : Template("I hate $victims too, but I hate you more so... nope."),
+    MuteStr.USER_MIXED      : Template("Those are some prime victims you've got there, too bad I don't listen to you."),
+    # Timestamp (appeneded to the original message)
+    MuteStr.TIMESTAMP       : Template("This will last for about $duration."),
 }
 
-templates['banish'] = {
-    # Gag mutes
-    MuteStr.SELF_FREEZE_MUTE    : Template("$author PLACEHOLDER **[banish]** self-freeze-mute"),
-    MuteStr.FREEZE_MUTE         : Template("$author PLACEHOLDER **[banish]** freeze-mute"),
-    MuteStr.SELF_MUTE_MOD       : Template("$author PLACEHOLDER **[banish]** self-mute-mod"),
-    MuteStr.SELF_MUTE_USER      : Template("$author PLACEHOLDER **[banish]** self-mute-user"),
-    MuteStr.NON_MOD_MUTE        : Template("$author PLACEHOLDER **[banish]** non-mod-mute"),
-    # User mutes
-    MuteStr.MISSING_MUTE        : Template("$author PLACEHOLDER **[banish]** missing-mute"),
-    MuteStr.SINGLE_MUTE         : Template("$author PLACEHOLDER **[banish]** single-mute"),
-    MuteStr.MULTI_MUTE          : Template("$author PLACEHOLDER **[banish]** multi-mute"),
-    MuteStr.SINGLE_MUTE_FAIL    : Template("$author PLACEHOLDER **[banish]** single-mute-failed"),
-    MuteStr.MULTI_MUTE_FAIL     : Template("$author PLACEHOLDER **[banish]** multi-mute-failed"),
-    # Generic
-    MuteStr.PAST_TENSE          : "banished",
+templates[MuteType.BANISH] = {
+    # MrFreeze
+    MuteStr.FREEZE          : Template("OK, I'll just march right on home then."),
+    MuteStr.FREEZE_SELF     : Template("Oh heeeeell no! This is my realm and you're not invited."),
+    MuteStr.FREEZE_OTHERS   : Template("If you think I'm spending a second more than necessary with $fails you're gravely mistaken."),
+    # Mod mutes
+    MuteStr.SELF            : Template("Oh heeeeell no! This is my realm and you're not invited."),
+    MuteStr.MOD             : Template("Sorry, I have a strict no mods-policy at home."),
+    MuteStr.MODS            : Template("Oh yay, mod party at my house! Me, $fails can have long enthralling talks on server policy all night! On second thought... PASS."),
+    # At user mutes (mods muting users)
+    MuteStr.NONE            : Template("Oki-doki, zero banishes coming up! That's OK, I like solitude. $timestamp"),
+    MuteStr.SINGLE          : Template("Good work! The filthy smud $victims has been banished! $timestamp"),
+    MuteStr.MULTI           : Template("Good work! The filthy smuds $victims have been banished! $timestamp"),
+    MuteStr.FAIL            : Template("Seems $fails is banned from going to Antarctica after having caused $errors there a few years back."),
+    MuteStr.FAILS           : Template("Seems $fails is banned from going to Antarctica after having caused $errors there a few years back."),
+    MuteStr.SINGLE_FAIL     : Template("Good work! The filthy smud $victims has been banished! $timestamp However it seems $fails is banned from going to Antarctica after having caused $errors there a few years back."),
+    MuteStr.SINGLE_FAILS    : Template("Good work! The filthy smud $victims has been banished! $timestamp However it seems $fails are banned from going to Antarctica after having caused $errors there a few years back."),
+    MuteStr.MULTI_FAIL      : Template("Good work! The filthy smuds $victims have been banished! $timestamp However it seems $fails is banned from going to Antarctica after having caused $errors there a few years back."),
+    MuteStr.MULTI_FAILS     : Template("Good work! The filthy smuds $victims have been banished! $timestamp However it seems $fails are banned from going to Antarctica after having caused $errors there a few years back."),
+    # By users mutes (users trying to mute)
+    MuteStr.USER_SELF       : Template("You're not allowed to banish anyone, including yourself."),
+    MuteStr.USER_USER       : Template("I hate $victims too, but I hate you more so... nah."),
+    MuteStr.USER_MIXED      : Template("I'm not letting *anyone* in here unless the mods force me to."),
+    # Timestamp (appeneded to the original message)
+    MuteStr.TIMESTAMP       : Template("They will be stuck in the frozen hells of Antarctica for a good $duration."),
 }
 
-templates['hogtie'] = {
-    # Gag mute
-    MuteStr.SELF_FREEZE_MUTE    : Template("$author PLACEHOLDER **[hogtie]** self-freeze-mute"),
-    MuteStr.FREEZE_MUTE         : Template("$author PLACEHOLDER **[hogtie]** freeze-mute"),
-    MuteStr.SELF_MUTE_MOD       : Template("$author PLACEHOLDER **[hogtie]** self-mute-mod"),
-    MuteStr.SELF_MUTE_USER      : Template("$author PLACEHOLDER **[hogtie]** self-mute-user"),
-    MuteStr.NON_MOD_MUTE        : Template("$author PLACEHOLDER **[hogtie]** non-mod-mute"),
-    # User mutes
-    MuteStr.MISSING_MUTE        : Template("$author PLACEHOLDER **[hogtie]** missing-mute"),
-    MuteStr.SINGLE_MUTE         : Template("$author PLACEHOLDER **[hogtie]** single-mute"),
-    MuteStr.MULTI_MUTE          : Template("$author PLACEHOLDER **[hogtie]** multi-mute"),
-    MuteStr.SINGLE_MUTE_FAIL    : Template("$author PLACEHOLDER **[hogtie]** single-mute-failed"),
-    MuteStr.MULTI_MUTE_FAIL     : Template("$author PLACEHOLDER **[hogtie]** multi-mute-failed"),
-    # Generic
-    MuteStr.PAST_TENSE          : "hogtied"
+templates[MuteType.HOGTIE] = {
+    # MrFreeze
+    MuteStr.FREEZE          : Template("Hogtie myself? Why don't you come over here and make me?!"),
+    MuteStr.FREEZE_SELF     : Template("As lovely as it would be to be tied together with your smuddy ass, I think I'm gonna have to pass."),
+    MuteStr.FREEZE_OTHERS   : Template("I can think of at least a thousand things I'd rather do than tie myself to those smuds."),
+    # Mod mutes
+    MuteStr.SELF            : Template("You're into some kinky shit, I'll give you that."),
+    MuteStr.MOD             : Template("Oh get a room you two..."),
+    MuteStr.MODS            : Template("As much as I'd love to participate in your kink fest, it seems I'm all out of rope."),
+    # At user mutes (mods muting users)
+    MuteStr.NONE            : Template("Right, zero hogties coming up. That's saving me a lot of rope."),
+    MuteStr.SINGLE          : Template("$victims is all tied up and ready, just the way you like it... $timestamp"),
+    MuteStr.MULTI           : Template("$victims are all tied up nice and tight. Don't know why and don't want to know. $timestamp"),
+    MuteStr.FAIL            : Template("The ropes snapped and I wasn't able to tie $fails. The ropes most likely suffered from $errors."),
+    MuteStr.FAILS           : Template("The ropes snapped and I wasn't able to tie $fails. The ropes most likely suffered from $errors."),
+    MuteStr.SINGLE_FAIL     : Template("I was able to tie $victims up nice and tight, but my ropes snapped due to $errors before I was able to do the same to $fails. $timestamp"),
+    MuteStr.SINGLE_FAILS    : Template("I was able to tie $victims up nice and tight, but my ropes snapped due to $errors before I was able to do the same to $fails. $timestamp"),
+    MuteStr.MULTI_FAIL      : Template("I was able to tie $victims up nice and tight, but my ropes snapped due to $errors before I was able to do the same to $fails. $timestamp"),
+    MuteStr.MULTI_FAILS     : Template("I was able to tie $victims up nice and tight, but my ropes snapped due to $errors before I was able to do the same to $fails. $timestamp"),
+    # By users mutes (users trying to mute)
+    MuteStr.USER_SELF       : Template("Trying to hogtie yourself... good luck with that?"),
+    MuteStr.USER_USER       : Template("I hate $victims too, but I hate you more so... nah."),
+    MuteStr.USER_MIXED      : Template("..."),
+    # Timestamp (appeneded to the original message)
+    MuteStr.TIMESTAMP       : Template("The knots will last for about $duration."),
 }
 
 class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
@@ -234,15 +282,150 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
     @discord.ext.commands.command(name='banish', aliases=all_aliases)
     @discord.ext.commands.check(checks.is_mod)
     async def _banish(self, ctx, *args):
-        print("banish")
+        """Mute one or more users (can only be invoked by mods)"""
+        # Lists where we will store our results
+        success_list = list()
+        fails_list = list()
+
+        # Variables checking for specific exceptions
+        http_exception = False
+        forbidden_exception = False
+        other_exception = False
+
+        # Message parsing
+        mentions = ctx.message.mentions
+        bot = self.bot.user in mentions
+        slf = ctx.author in mentions
+        mod = [ user for user in mentions if await checks.is_mod(user) and user != self.bot.user ]
+        usr = [ user for user in mentions if user not in mod and user != self.bot.user ]
+
+        invocation = ctx.invoked_with
+        if invocation[:2] == "un":  unmute = True
+        else:                       unmute = False
+
+        if invocation == "banish":          invocation = MuteType.BANISH
+        elif invocation in banish_aliases:  invocation = MuteType.BANISH
+        elif invocation in hogtie_aliases:  invocation = MuteType.HOGTIE
+        elif invocation in mute_aliases:    invocation = MuteType.MUTE
+
+        duration, end_date = self.bot.extract_time(args)
+
+        if len(mentions) == 0:
+            template = MuteStr.NONE
+
+        elif bot and not unmute:
+            # Freeze mutes: FREEZE, FREEZE_SELF, FREEZE_OTHERS
+            if len(mentions) == 1:              template = MuteStr.FREEZE
+            elif len(mentions) == 2 and slf:    template = MuteStr.FREEZE_SELF
+            else:                               template = MuteStr.FREEZE_OTHERS
+            fails_list = usr + mod
+
+        elif mod and not unmute:
+            # Mod mutes: SELF, MOD, MODS
+            if len(mentions) == 1 and slf:      template = MuteStr.SELF
+            elif len(mentions) == 1:            template = MuteStr.MOD
+            else:                               template = MuteStr.MODS
+            fails_list = mod
+
+        elif unmute:
+            # Unmuting muted users
+            pass
+
+        else:
+            # Working mutes (at user mutes):
+            # SINGLE, MULTI, FAIL, FAILS, SINGLE_FAIL, SINGLE_FAILS, MULTI_FAIL, MULTI_FAILS
+            for member in usr:
+                error = await self.carry_out_banish(member, end_date)
+
+                if isinstance(error, Exception):
+                    fails_list.append(member)
+                    if isinstance(error, discord.HTTPException):    http_exception = True
+                    elif isinstance(error, discord.Forbidden):      forbidden_exception = True
+                    else:                                           other_exception = True
+
+                else:
+                    success_list.append(member)
+
+            successes   = len(success_list)
+            no_success  = (successes == 0)
+            single      = (successes == 1)
+            multi       = (successes > 1)
+            failures    = len(fails_list)
+            no_fails    = (failures == 0)
+            fail        = (failures == 1)
+            fails       = (failures > 1)
+
+            if single and no_fails:     template = MuteStr.SINGLE
+            elif multi and no_fails:    template = MuteStr.MULTI
+            elif fail and no_success:   template = MuteStr.FAIL
+            elif fails and no_success:  template = MuteStr.FAILS
+            elif single and fail:       template = MuteStr.SINGLE_FAIL
+            elif single and fails:      template = MuteStr.SINGLE_FAILS
+            elif multi and fail:        template = MuteStr.MULTI_FAIL
+            elif multi and fails:       template = MuteStr.MULTI_FAILS
+
+        # TESTING THINGIE - leave commented unless testing
+        # fails_list = success_list
+        # template = MuteStr.FAIL
+        # template = MuteStr.FAILS
+        # template = MuteStr.SINGLE_FAIL
+        # template = MuteStr.SINGLE_FAILS
+        # template = MuteStr.MULTI_FAIL
+        # template = MuteStr.MULTI_FAILS
+        # template = MuteStr.MULTI_FAIL
+        # http_exception = True
+        # forbidden_exception = True
+        # other_exception = True
+
+        # Turn successes, fails and exceptions into strings
+        success_list = self.bot.mentions_list(success_list)
+        fails_list = self.bot.mentions_list(fails_list)
+        error = str()
+
+        if http_exception and forbidden_exception and other_exception:  error = "**a wild mix of crazy exceptions**"
+        elif http_exception and forbidden_exception:                    error = "**a mix of HTTP exception and lack of privilegies**"
+        elif http_exception and other_exception:                        error = "**a wild mix of HTTP exception and other stuff**"
+        elif forbidden_exception and other_exception:                   error = "**a wild mix of lacking privilegies and some other stuff**"
+        elif http_exception:                                            error = "**an HTTP exception**"
+        elif forbidden_exception:                                       error = "**a lack of privilegies**"
+        else:                                                           error = "**some unidentified error**"
+
+        # Create string
+        timestamp = templates[invocation][MuteStr.TIMESTAMP].substitute(
+               duration=self.bot.parse_timedelta(duration)
+        )
+
+        reply =f"{ctx.author.mention} " + templates[invocation][template].substitute(
+            author=ctx.author.mention, victims=success_list, fails=fails_list, errors=error, timestamp=timestamp
+        )
+        await ctx.send(reply)
 
     @_banish.error
     async def _banish_error(self, ctx, error):
+        """Try (and fail) to mute one or more users (can only be invoked by non-mods)"""
+
         if not isinstance(error, discord.ext.commands.CheckFailure):
             # Only run this on Check Failure.
             return
 
         await ctx.send("special banish error")
+
+    async def carry_out_banish(self, member, end_date):
+        """Add the antarctica role to a user, then add them to the db.
+        Return None if successfull, Exception otherwise."""
+        server = member.guild
+        roles = member.roles
+        mute_role = self.bot.servertuples[server.id].mute_role
+        result = True
+
+        if mute_role not in roles:
+            try:                    await member.add_roles(mute_role)
+            except Exception as e:  result = e
+
+        if not isinstance(result, Exception):
+            self.mdb_add(member, end_date=end_date)
+
+        return result
 
     ###################################################
     # Below are all commands relating to the database #
@@ -336,7 +519,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
                     f"\n{self.bot.RED}==> {error}{self.bot.RESET}")
                 return False
 
-    def mdb_add(self, user, voluntary=False, end_date=None, prolong=False):
+    def mdb_add(self, user, voluntary=False, end_date=None, prolong=True):
         """Add a new user to the mutes database."""
         is_member = isinstance(user, discord.Member)
         if not is_member:
@@ -377,18 +560,13 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
 
                 sql = f"INSERT INTO {self.mdbname}(id, server, voluntary, until) VALUES(?,?,?,?)"
 
-                try:
-                    c.execute(sql, (uid, server, voluntary, end_date))
-                except Exception as e:
-                    error = e
+                try:                    c.execute(sql, (uid, server, voluntary, end_date))
+                except Exception as e:  error = e
     
             elif end_date == None:
-
                 sql = f"INSERT INTO {self.mdbname}(id, server, voluntary) VALUES(?,?,?)"
-                try:
-                    c.execute(sql, (uid, server, voluntary))
-                except Exception as e:
-                    error = e
+                try:                    c.execute(sql, (uid, server, voluntary))
+                except Exception as e:  error = e
     
         if error == None:
             print(f"{self.bot.current_time()} {self.bot.GREEN_B}Mutes DB:{self.bot.CYAN} added user to DB: " +
