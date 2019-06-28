@@ -5,6 +5,7 @@ import asyncio                      # Required for adding asynchronous loops
 import sqlite3                      # Required for database stuff
 import os                           # Required for creation of folders and reading of files
 import sys                          # Required for exiting when necessary files can't be created.
+import re                           # Required for extract_time()
 from collections import namedtuple  # Required for the ServerTuple
 
 # Usage note!
