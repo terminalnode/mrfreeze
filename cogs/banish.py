@@ -57,9 +57,11 @@ class MuteStr(Enum):
     UNMULTI_FAIL        = auto()    # Successfully unmuted more than one, failed to unmute one
     UNMULTI_FAILS       = auto()    # Successfully unmuted more than one, failed to unmute more than one
     # By user mutes (users trying to mute)
+    USER_NONE           = auto()    # User invoked mute with no arguments
     USER_SELF           = auto()    # User tried muting themselves
     USER_USER           = auto()    # User tried muting other user(s)
     USER_MIXED          = auto()    # User tried musing themselves and other user(s)
+    USER_FAIL           = auto()    # User punishment failed
     # Timestamp
     TIMESTAMP           = auto()    # The time stamp appended to the end of the message
 
@@ -96,9 +98,11 @@ templates[MuteType.MUTE] = {
     MuteStr.UNMULTI_FAIL    : Template("Oh yay, it seems $victims are allowed to talk again. However due to $errors $fails will remain muted for a while longer."),
     MuteStr.UNMULTI_FAILS   : Template("Oh yay, it seems $victims are allowed to talk again. However due to $errors $fails will remain muted for a while longer."),
     # By users mutes (users trying to mute)
-    MuteStr.USER_SELF       : Template("Muting yourself, that's a new one. Have you tried just not talking so damn much?"),
-    MuteStr.USER_USER       : Template("I hate $victims too, but I hate you more so... nope."),
-    MuteStr.USER_MIXED      : Template("Those are some prime victims you've got there, too bad I don't listen to you."),
+    MuteStr.USER_NONE       : Template("You forgot to specify who I'm supposed to mute $author, perhaps you should leave that command to the mods? You'll be muted $timestamp for your incompetency."),
+    MuteStr.USER_SELF       : Template("So you want mute $author? Oh I'll give you mute! $timestamp of it!"),
+    MuteStr.USER_USER       : Template("Oh, look. The smuds are fighting again. Perhaps if I mute $author for $timestamp things will calm down for a while."),
+    MuteStr.USER_MIXED      : Template("No fear $fails! $author is a filthy smud unauthorized to use that command anyway. They won't be bothering you for the next $timestamp."),
+    MuteStr.USER_FAIL       : Template("$author is a filthy smud trying to use access powers well beyond their capabilities, unfortunately I wasn't able to punish them for it due to $errors."),
     # Timestamp (appeneded to the original message)
     MuteStr.TIMESTAMP       : Template("This will last for about $duration."),
 }
@@ -133,9 +137,11 @@ templates[MuteType.BANISH] = {
     MuteStr.UNMULTI_FAIL    : Template("Ew, $victims have been let back in. However $fails is being detained by the penguin police, suspected of having caused $errors."),
     MuteStr.UNMULTI_FAILS   : Template("Ew, $victims have been let back in. However $fails are being detained by penguin police, suspected of having caused $errors."),
     # By users mutes (users trying to mute)
-    MuteStr.USER_SELF       : Template("You're not allowed to banish anyone, including yourself."),
-    MuteStr.USER_USER       : Template("I hate $victims too, but I hate you more so... nah."),
-    MuteStr.USER_MIXED      : Template("I'm not letting *anyone* in here unless the mods force me to."),
+    MuteStr.USER_NONE       : Template("If you're gonna be playing with mod tools $author you might at least use them correctly... you forgot to mention anyone. Congratulations, you've earned yourself $timestamp with the penguins!"),
+    MuteStr.USER_SELF       : Template("Well, technically you're not even allowed to banish yourself $author but... how about I banish you for $timestamp instead?"),
+    MuteStr.USER_USER       : Template("$author Ignorant smud, you're not allowed to banish people. For your transgression you will be banished for $timestamp!"),
+    MuteStr.USER_MIXED      : Template("Sorry $author, it seems $fails had to cancel their trip. You'll have $timestamp all to yourself in the frozen wastelands of Antarctica. Enjoy!"),
+    MuteStr.USER_FAIL       : Template("Ugh, my tools are malfunctioning. Due to $errors I was unable to punish $author for unauthorized use of the Antarctica Beam. I'll get them next time."),
     # Timestamp (appeneded to the original message)
     MuteStr.TIMESTAMP       : Template("They will be stuck in the frozen hells of Antarctica for a good $duration."),
 }
@@ -170,9 +176,11 @@ templates[MuteType.HOGTIE] = {
     MuteStr.UNMULTI_FAIL    : Template("I managed to untie $victims, but for $fails I used a very special knot implementing $errors, and I can't seem to get it undone."),
     MuteStr.UNMULTI_FAILS   : Template("I managed to untie $victims, but for $fails I used a very special knot implementing $errors, and I can't seem to get it undone."),
     # By users mutes (users trying to mute)
-    MuteStr.USER_SELF       : Template("Trying to hogtie yourself... good luck with that?"),
-    MuteStr.USER_USER       : Template("I hate $victims too, but I hate you more so... nah."),
-    MuteStr.USER_MIXED      : Template("..."),
+    MuteStr.USER_NONE       : Template("$author fumbles with the ropes and accidentally entangle themselves. Roll a d20 for mods to help you out or wait $timestamp."),
+    MuteStr.USER_SELF       : Template("Looks like $author tied themselves up AGAIN. Ugh, I'll help them out... in $timestamp or so."),
+    MuteStr.USER_USER       : Template("No worries $fails, these ropes are MOD ONLY and last time I checked $author was just a filthy smud. Now they'll be a hogtied filthy smud for the next $timestamp."),
+    MuteStr.USER_MIXED      : Template("$fails want nothing to do with your smuddy kinks $author, perhaps $timestamp in the ropes will teach you a lesson."),
+    MuteStr.USER_FAIL       : Template("Looks like $author is trying to access the mod tools again. I'd tie them up myself but my ropes are currently suffering from $errors. Maybe next time."),
     # Timestamp (appeneded to the original message)
     MuteStr.TIMESTAMP       : Template("The knots will last for about $duration."),
 }
@@ -181,8 +189,18 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
     """Good mod! Read the manual! Or if you're not mod - sod off!"""
     def __init__(self, bot, mdbname="mutes", rdbname="regions"):
         self.bot = bot
-        self.default_interval = 5
-        self.mute_intervals = dict()
+
+        # Server setting names
+        # Mute interval governs how often to check for unmutes.
+        self.mute_interval_name = 'mute_interval'
+        self.default_mute_interval = 5
+        self.mute_interval_dict = dict()
+
+        # Self mute interval governs how long to banish unauthorized uses of !mute/!banish etc
+        self.self_mute_time_name = 'self_mute_time'
+        self.default_self_mute_time = 20
+        self.self_mute_time_dict = dict()
+
         self.BanishTuple = namedtuple('BanishTuple', ['member', 'voluntary', 'until'])
 
         # Mutes database creation
@@ -209,39 +227,62 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         # Complete list of tables and their rows in this database.
         # Primary key(s) is marked with an asterisk (*).
         # Mandatory but not primary keys are marked with a pling (!).
-        # TABLE         ROWS        TYPE        FUNCTION
-        # self.rdbname  role*       integer     Role ID
-        #               server*     integer     Server ID
-        #               triggers!   string      String of keywords for the region
+        # TABLE             ROWS        TYPE        FUNCTION
+        # self.rdbname      role*       integer     Role ID
+        #                   server*     integer     Server ID
+        #                   triggers!   string      String of keywords for the region
+        # self.rdbname_bl   uid*        integer     User ID
+        #                   sid*        integer     Server ID
         rdbtable = f"""CREATE TABLE IF NOT EXISTS {self.rdbname}(
             role        integer NOT NULL,
             server      integer NOT NULL,
             triggers    str NOT NULL,
             CONSTRAINT  server_user PRIMARY KEY (role, server));"""
-        bot.db_create(self.rdbname, rdbtable)
 
-        # Server setting names
-        self.interval = 'mute_interval'
+        rdbtable_bl = f"""CREATE TABLE IF NOT EXISTS {self.rdbname}_bl(
+            uid         integer NOT NULL,
+            sid         integer NOT NULL,
+            CONSTRAINT  sid_uid PRIMARY KEY (uid, sid));"""
+
+        bot.db_create(self.rdbname, rdbtable)
+        bot.db_create(self.rdbname, rdbtable_bl)
+
 
     @discord.ext.commands.Cog.listener()
     async def on_ready(self):
-        for server in self.bot.guilds:
-            server_interval = self.bot.read_server_setting(server, self.interval)
-            if server_interval:
-                try:
-                    self.mute_intervals[server.id] = int(server_interval)
-                except:
-                    pass
+        # Server setting names
+        # Mute interval governs how often to check for unmutes.
+        # self.mute_interval_name = 'mute_interval'
+        # self.default_mute_interval = 5
+        # self.mute_interval_dict = dict()
 
+        # Self mute interval governs how long to banish unauthorized uses of !mute/!banish etc
+        # self.self_mute_time_name = 'self_mute_time'
+        # self.default_self_mute_time = 20
+        # self.self_mute_time_dict = dict()
+
+        for server in self.bot.guilds:
+            # Set intervals in which to check mutes
+            mute_interval = self.bot.read_server_setting(server, self.mute_interval_name)
+            if mute_interval and mute_interval.isdigit():
+                self.mute_interval_dict[server.id] = int(mute_interval)
+            else:
+                self.mute_interval_dict[server.id] = self.default_mute_interval
+
+            # Add unbanish loop to bot
             self.bot.add_bg_task(self.unbanish_loop(server), f'unbanish@{server.id}')
+
+            # Set how long a member should be punished for after unauthorized !mute usage
+            self_mute_time = self.bot.read_server_setting(server, self.self_mute_time_name)
+            if self_mute_time and self_mute_time.isdigit():
+                self.self_mute_time_dict[server.id] = int(self_mute_time)
+            else:
+                self.self_mute_time_dict[server.id] = self.default_self_mute_time
 
     async def unbanish_loop(self, server):
         """This loop checks for people to unbanish every self.banish_interval seconds.""" 
-        if not server.id in self.mute_intervals:
-            self.mute_intervals[server.id] = self.default_interval
-
         while not self.bot.is_closed():
-            await asyncio.sleep(self.mute_intervals[server.id])
+            await asyncio.sleep(self.mute_interval_dict[server.id])
 
             current_time = datetime.datetime.now()
             server_mutes = self.mdb_fetch(server)
@@ -258,8 +299,8 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
 
                 if until < current_time:
                     diff = self.bot.parse_timedelta(current_time - until)
-                    if diff != "":  diff = f"{diff} ago"
-                    else:           diff = "now"
+                    if diff == "":  diff = "now"
+                    else:           diff = f"{diff} ago"
 
                     self.mdb_del(member) # Remove from database
                     if mute_role in member.roles:
@@ -299,25 +340,58 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         for arg in args:
             if arg.isdigit():
                 interval = int(arg)
+                break
         
         if interval == None:
             await ctx.send(f"{author} You didn't specify a valid interval. Please try again.")
 
-        elif interval == self.mute_intervals[server.id]:
+        elif interval == self.mute_interval_dict[server.id]:
             await ctx.send(f"{author} The interval for this server is already set to {interval}.")
 
         elif interval < 5:
             await ctx.send(f"{author} You greedy little smud you, trying to steal my CPU cycles like that. Minimum interval is 5 seconds.")
 
         else:
-            oldinterval = self.mute_intervals[server.id]
-            self.mute_intervals[server.id] = interval
-            setting_saved = self.bot.write_server_setting(server, self.interval, str(interval))
+            oldinterval = self.mute_interval_dict[server.id]
+            self.mute_interval_dict[server.id] = interval
+            setting_saved = self.bot.write_server_setting(server, self.mute_interval_name, str(interval))
             if setting_saved:
                 await ctx.send(f"{author} The interval has been changed from {oldinterval} to {interval} seconds.")
             else:
                 await ctx.send(f"{author} The interval has been changed from {oldinterval} to {interval} seconds, *BUT* " +
                     f"for some reason I was unable to save this setting, so it will be reset to {oldinterval} once I restart.")
+
+    @discord.ext.commands.command(name='selfmutetime', aliases=['smt', 'selfmute', 'mutetime'])
+    @discord.ext.commands.check(checks.is_mod)
+    async def _selfmutetime(self, ctx, *args):
+        author = ctx.author.mention
+        server = ctx.guild
+        proposed_time = None
+
+        # Look for first number in args and use as new self mute time.
+        for arg in args:
+            if arg.isdigit():
+                proposed_time = int(arg)
+                break
+
+        if proposed_time == None:
+            await ctx.send(f"{author} Please specify the time in minutes and try again.")
+
+        elif proposed_time == self.self_mute_time_dict[server.id]:
+            await ctx.send(f"{author} The self mute time for this server is already set to {proposed_time}.")
+
+        elif proposed_time == 0:
+            await ctx.send(f"{author} Zero is not a valid self mute time, smud.")
+
+        else:
+            old_time = self.self_mute_time_dict[server.id]
+            self.self_mute_time_dict[server.id] = proposed_time
+            setting_saved = self.bot.write_server_setting(server, self.self_mute_time_name, str(proposed_time))
+            if setting_saved:
+                await ctx.send(f"{author} The self mute time has been changed from {old_time} to {proposed_time} minutes.")
+            else:
+                await ctx.send(f"{author} The self mute time has been changed from {old_time} to {proposed_time} minutes, *BUT* " +
+                        f"for some reason I was unable to save this setting, so it will be reset to {old_time} once I restart.")
 
     @discord.ext.commands.command(name='banish', aliases=all_aliases)
     @discord.ext.commands.check(checks.is_mod)
@@ -463,7 +537,49 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
             # Only run this on Check Failure.
             return
 
-        await ctx.send("special banish error")
+        # Only three cases to check for in this function:
+        # USER_NONE     # User invoked mute with no arguments
+        # USER_SELF     # User tried muting themselves
+        # USER_USER     # User tried muting other user(s)
+        # USER_MIXED    # User tried musing themselves and other user(s)
+        
+        mentions = ctx.message.mentions
+        author = ctx.author
+        server = ctx.guild
+
+        invocation = ctx.invoked_with
+        if invocation == "banish":          invocation = MuteType.BANISH
+        elif invocation in banish_aliases:  invocation = MuteType.BANISH
+        elif invocation in hogtie_aliases:  invocation = MuteType.HOGTIE
+        elif invocation in mute_aliases:    invocation = MuteType.MUTE
+
+        none     = (len(mentions) == 0)
+        selfmute = (len(mentions) == 1 and author in mentions)
+        mix      = (not selfmute and author in mentions)
+        user     = (not selfmute and not mix and len(mentions) > 0)
+        fails    = self.bot.mentions_list([ mention for mention in mentions if mention != author ])
+
+        if none:        template = MuteStr.USER_NONE
+        elif selfmute:  template = MuteStr.USER_SELF
+        elif user:      template = MuteStr.USER_USER
+        elif mix:       template = MuteStr.USER_MIXED
+
+        duration = datetime.timedelta(minutes = self.self_mute_time_dict[server.id])
+        end_date = datetime.datetime.now() + duration
+        duration = self.bot.parse_timedelta(duration)
+        error = await self.carry_out_banish(author, end_date)
+
+        if isinstance(error, Exception):
+            if isinstance(error, discord.Forbidden):        error = "**a lack of privilegies**"
+            elif isinstance(error, discord.HTTPException):  error = "**an HTTP exception**"
+            else:                                           error = "**an unknown error**"
+            template = MuteStr.USER_FAIL
+
+        reply=templates[invocation][template].substitute(
+            author=author.mention, fails=fails, errors=error, timestamp=duration
+        )
+
+        await ctx.send(reply)
 
     async def carry_out_banish(self, member, end_date):
         """Add the antarctica role to a user, then add them to the db.
