@@ -1,7 +1,6 @@
 import discord                      # Basic discord functionality
 import asyncio                      # Required for the unbanish loop
 import datetime                     # Required for outputing the time until / duration of banishes to the log
-from string import Template         # Required to generate a wide variety of responses
 from collections import namedtuple  # Required for producing the output of the mdb_fetch()/db_parse()
 from internals import checks        # Required to check who's allowed to issue these commands
 
