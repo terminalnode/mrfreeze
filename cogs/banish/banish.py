@@ -75,8 +75,8 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
             sid         integer NOT NULL,
             CONSTRAINT  sid_uid PRIMARY KEY (uid, sid));"""
 
-        bot.db_create(self.bot, self.rdbname, rdbtable)
-        bot.db_create(self.bot, self.rdbname, rdbtable_bl)
+        bot.db_create(self.bot, self.rdbname, rdbtable, comment="region table")
+        bot.db_create(self.bot, self.rdbname, rdbtable_bl, comment="blacklist table")
 
     @discord.ext.commands.Cog.listener()
     async def on_ready(self):
