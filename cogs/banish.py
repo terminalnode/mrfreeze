@@ -143,7 +143,7 @@ templates[MuteType.BANISH] = {
     MuteStr.USER_MIXED      : Template("Sorry $author, it seems $fails had to cancel their trip. You'll have $timestamp all to yourself in the frozen wastelands of Antarctica. Enjoy!"),
     MuteStr.USER_FAIL       : Template("Ugh, my tools are malfunctioning. Due to $errors I was unable to punish $author for unauthorized use of the Antarctica Beam. I'll get them next time."),
     # Timestamp (appeneded to the original message)
-    MuteStr.TIMESTAMP       : Template("They will be stuck in the frozen hells of Antarctica for a good $duration."),
+    MuteStr.TIMESTAMP       : Template("They will be stuck in the frozen hells of Antarctica for about $duration."),
 }
 
 templates[MuteType.HOGTIE] = {
@@ -730,8 +730,10 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
             old_until = current_mute[0].until
             if old_until != None: # if current mute is permanent just replace it with a timed one
                 diff = end_date - datetime.datetime.now()
-                end_date = old_until + diff
-
+                try:
+                    end_date = old_until + diff
+                except OverflowError:
+                    end_date = datetime.datetime.max
     
         with self.bot.db_connect(self.mdbname) as conn:
             c = conn.cursor()

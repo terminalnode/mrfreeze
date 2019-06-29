@@ -280,7 +280,12 @@ class MrFreeze(commands.Bot):
                 minutes =   time_dict['minutes'],
                 seconds =   time_dict['seconds'])
         current_date = datetime.datetime.now()
-        end_date = current_date + add_time
+
+        try:
+            end_date = current_date + add_time
+        except OverflowError:
+            end_date = datetime.datetime.max
+            add_time = datetime.datetime.max - current_date
     
         # If nothing was found, assume all numbers are minutes.
         if (end_date == current_date) and fallback_minutes:
