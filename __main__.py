@@ -19,7 +19,7 @@ load_cogs = [
     # Mostly for owner/mods
     'cogs.maintenance',         # Owner-only commands
     'cogs.moderation',          # Mod-only commands.
-    'cogs.banish',              # Banish command.
+    'cogs.banish.banish',       # Banish command.
     # Functions directed towards regular users.
     'cogs.user_cmds',           # Various smaller commands: !vote, !mrfreeze
     'cogs.about',               # !dummies, !readme, !source
