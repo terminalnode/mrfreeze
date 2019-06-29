@@ -7,7 +7,7 @@ from collections import namedtuple  # Required for the ServerTuple
 
 # Importing MrFreeze submodules 
 from .server_settings import *
-from .path import *
+from .paths import *
 from .time import *
 from .colors import *
 from .greeting import *
