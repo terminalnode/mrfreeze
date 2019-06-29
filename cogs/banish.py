@@ -619,94 +619,6 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
     # Below are all commands relating to the database #
     # (they are numerous and need a separete section) #
     ###################################################
-
-    @discord.ext.commands.command(name='dbadd')
-    @discord.ext.commands.check(checks.is_owner)
-    async def _dbadd(self, ctx, *args):
-        """Tests adding users to the database."""
-        for mention in ctx.message.mentions:
-            self.mdb_add(mention)
-
-    @discord.ext.commands.command(name='dbtime')
-    @discord.ext.commands.check(checks.is_owner)
-    async def _dbtime(self, ctx, *args):
-        """Tests adding users to the database for 30 seconds."""
-        until = datetime.datetime.now() + datetime.timedelta(seconds=30)
-        for mention in ctx.message.mentions:
-            self.mdb_add(mention, end_date=until, prolong=True)
-
-    @discord.ext.commands.command(name='dbcheck')
-    @discord.ext.commands.check(checks.is_owner)
-    async def _dbcheck(self, ctx, *args):
-        """Tests mdb_fetch to see that it outputs with useful parsing."""
-        # Server fetch
-        server = ctx.guild
-        serveroutput = str()
-        serverfetch = self.mdb_fetch(server)
-        for entry in serverfetch:
-            member = entry.member
-            voluntary = entry.voluntary
-            serveroutput += "\n---------------\n"
-            serveroutput += f"Member:    {entry.member}\n"
-            serveroutput += f"Voluntary: {entry.voluntary}\n"
-            serveroutput += f"Until:     {entry.until}"
-        print(f"Server output ({len(serverfetch)} entries):{serveroutput}")
-
-        # User fetch
-        for mention in ctx.message.mentions:
-            userfetch = self.mdb_fetch(mention)
-            if len(userfetch) == 0:
-                print(f"No entry for {mention.name}#{mention.discriminator}")
-            else:
-                print(userfetch)
-
-    @discord.ext.commands.command(name='dbdel')
-    @discord.ext.commands.check(checks.is_owner)
-    async def _dbdel(self, ctx, *args):
-        """Test removing users from the database."""
-        for mention in ctx.message.mentions:
-            self.mdb_del(mention)
-
-    @discord.ext.commands.command(name='dbfetch')
-    @discord.ext.commands.check(checks.is_owner)
-    async def _dbfetch(self, ctx, *args):
-        """Test listing all mutes on a server."""
-        pass
-
-    def mdb_del(self, user):
-        """Removes a user from the mutes database."""
-        is_member = isinstance(user, discord.Member)
-        if not is_member:
-            # This should never happen, no point in even logging it.
-            raise TypeError(f"Expected discord.Member, got {type(user)}")
-
-        uid = user.id
-        server = user.guild.id
-        servername = user.guild.name
-        name = f"{user.name}#{user.discriminator}"
-
-        is_muted = len(self.mdb_fetch(user)) != 0
-        if not is_muted:
-            print(f"{self.bot.current_time()} {self.bot.GREEN_B}Mutes DB:{self.bot.CYAN} user already not in DB: " +
-                f"{self.bot.CYAN_B}{name} @ {servername}{self.bot.CYAN}.{self.bot.RESET}")
-            return True
-    
-        with self.bot.db_connect(self.mdbname) as conn:
-            c = conn.cursor()
-            sql = f"DELETE FROM {self.mdbname} WHERE id = ? AND server = ?"
-    
-            try:
-                c.execute(sql, (uid, server))
-                print(f"{self.bot.current_time()} {self.bot.GREEN_B}Mutes DB:{self.bot.CYAN} removed user from DB: " +
-                    f"{self.bot.CYAN_B}{name} @ {servername}{self.bot.CYAN}.{self.bot.RESET}")
-                return True
-    
-            except Exception as error:
-                print(f"{self.bot.current_time()} {self.bot.RED_B}Mutes DB:{self.bot.CYAN} failed to remove from DB: " +
-                    f"{self.bot.CYAN_B}{name} @ {servername}{self.bot.CYAN}:" +
-                    f"\n{self.bot.RED}==> {error}{self.bot.RESET}")
-                return False
-
     def mdb_add(self, user, voluntary=False, end_date=None, prolong=True):
         """Add a new user to the mutes database."""
         is_member = isinstance(user, discord.Member)
@@ -768,6 +680,40 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
                     f"{self.bot.CYAN_B}{name} @ {servername}{self.bot.CYAN}:" +
                     f"\n{self.bot.RED}==> {error}{self.bot.RESET}")
             return False
+
+    def mdb_del(self, user):
+        """Removes a user from the mutes database."""
+        is_member = isinstance(user, discord.Member)
+        if not is_member:
+            # This should never happen, no point in even logging it.
+            raise TypeError(f"Expected discord.Member, got {type(user)}")
+
+        uid = user.id
+        server = user.guild.id
+        servername = user.guild.name
+        name = f"{user.name}#{user.discriminator}"
+
+        is_muted = len(self.mdb_fetch(user)) != 0
+        if not is_muted:
+            print(f"{self.bot.current_time()} {self.bot.GREEN_B}Mutes DB:{self.bot.CYAN} user already not in DB: " +
+                f"{self.bot.CYAN_B}{name} @ {servername}{self.bot.CYAN}.{self.bot.RESET}")
+            return True
+    
+        with self.bot.db_connect(self.mdbname) as conn:
+            c = conn.cursor()
+            sql = f"DELETE FROM {self.mdbname} WHERE id = ? AND server = ?"
+    
+            try:
+                c.execute(sql, (uid, server))
+                print(f"{self.bot.current_time()} {self.bot.GREEN_B}Mutes DB:{self.bot.CYAN} removed user from DB: " +
+                    f"{self.bot.CYAN_B}{name} @ {servername}{self.bot.CYAN}.{self.bot.RESET}")
+                return True
+    
+            except Exception as error:
+                print(f"{self.bot.current_time()} {self.bot.RED_B}Mutes DB:{self.bot.CYAN} failed to remove from DB: " +
+                    f"{self.bot.CYAN_B}{name} @ {servername}{self.bot.CYAN}:" +
+                    f"\n{self.bot.RED}==> {error}{self.bot.RESET}")
+                return False
 
     def mdb_fetch(self, in_data):
         """If input is a server, return a list of all users from that server in the database.
