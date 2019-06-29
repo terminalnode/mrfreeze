@@ -51,7 +51,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
             voluntary   boolean NOT NULL,
             until       date,
             CONSTRAINT  server_user PRIMARY KEY (id, server));"""
-        bot.db_create(self.mdbname, mdbtable)
+        bot.db_create(self.bot, self.mdbname, mdbtable)
 
         # Region database creation
         self.rdbname = rdbname
@@ -75,14 +75,14 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
             sid         integer NOT NULL,
             CONSTRAINT  sid_uid PRIMARY KEY (uid, sid));"""
 
-        bot.db_create(self.rdbname, rdbtable)
-        bot.db_create(self.rdbname, rdbtable_bl)
+        bot.db_create(self.bot, self.rdbname, rdbtable)
+        bot.db_create(self.bot, self.rdbname, rdbtable_bl)
 
     @discord.ext.commands.Cog.listener()
     async def on_ready(self):
         for server in self.bot.guilds:
             # Set intervals in which to check mutes
-            mute_interval = self.bot.read_server_setting(server, self.mute_interval_name)
+            mute_interval = self.bot.read_server_setting(self.bot, server, self.mute_interval_name)
             if mute_interval and mute_interval.isdigit():
                 self.mute_interval_dict[server.id] = int(mute_interval)
             else:
@@ -92,7 +92,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
             self.bot.add_bg_task(self.unbanish_loop(server), f'unbanish@{server.id}')
 
             # Set how long a member should be punished for after unauthorized !mute usage
-            self_mute_time = self.bot.read_server_setting(server, self.self_mute_time_name)
+            self_mute_time = self.bot.read_server_setting(self.bot, server, self.self_mute_time_name)
             if self_mute_time and self_mute_time.isdigit():
                 self.self_mute_time_dict[server.id] = int(self_mute_time)
             else:
@@ -173,7 +173,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         else:
             oldinterval = self.mute_interval_dict[server.id]
             self.mute_interval_dict[server.id] = interval
-            setting_saved = self.bot.write_server_setting(server, self.mute_interval_name, str(interval))
+            setting_saved = self.bot.write_server_setting(self.bot, server, self.mute_interval_name, str(interval))
             if setting_saved:
                 await ctx.send(f"{author} The interval has been changed from {oldinterval} to {interval} seconds.")
             else:
@@ -205,7 +205,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         else:
             old_time = self.self_mute_time_dict[server.id]
             self.self_mute_time_dict[server.id] = proposed_time
-            setting_saved = self.bot.write_server_setting(server, self.self_mute_time_name, str(proposed_time))
+            setting_saved = self.bot.write_server_setting(self.bot, server, self.self_mute_time_name, str(proposed_time))
             if setting_saved:
                 await ctx.send(f"{author} The self mute time has been changed from {old_time} to {proposed_time} minutes.")
             else:
@@ -466,7 +466,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
                 except OverflowError:
                     end_date = datetime.datetime.max
     
-        with self.bot.db_connect(self.mdbname) as conn:
+        with self.bot.db_connect(self.bot, self.mdbname) as conn:
             c = conn.cursor()
             if end_date != None:
                 # Collect time info in string format for the log
@@ -518,7 +518,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
                 f"{self.bot.CYAN_B}{name} @ {servername}{self.bot.CYAN}.{self.bot.RESET}")
             return True
     
-        with self.bot.db_connect(self.mdbname) as conn:
+        with self.bot.db_connect(self.bot, self.mdbname) as conn:
             c = conn.cursor()
             sql = f"DELETE FROM {self.mdbname} WHERE id = ? AND server = ?"
     
@@ -544,7 +544,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
             # This should never happen, no point in even logging it.
             raise TypeError(f"Expected discord.Member or discord.Guild, got {type(in_data)}")
 
-        with self.bot.db_connect(self.mdbname) as conn:
+        with self.bot.db_connect(self.bot, self.mdbname) as conn:
             c = conn.cursor()
             fetch_id = in_data.id
             if is_member:

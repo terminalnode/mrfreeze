@@ -6,11 +6,12 @@ import sqlite3                      # Required for database stuff
 from collections import namedtuple  # Required for the ServerTuple
 
 # Importing MrFreeze submodules 
-from .server_settings import *
-from .paths import *
-from .time import *
-from .colors import *
-from .greeting import *
+from .server_settings import *      # Functions for reading and writing server settings.
+from .paths import *                # Functions for creating the required paths.
+from .time import *                 # Functions for extracting time statements from text and parse timedeltas into text.
+from .colors import *               # Functions for creating colors and printing out a one-line colour test.
+from .greeting import *             # Function for printing out the console greeting thing when the bot is ready.
+from .databases import *            # Functions for creating and managing databases.
 
 # Usage note!
 # The bot supports adding periodic asynchronous checks through the function add_bg_task(task, name).
@@ -29,9 +30,15 @@ class MrFreeze(commands.Bot):
         super().__init__(*args, **kwargs)
         self.bg_tasks = dict() # Background task manager
 
-        # Setting up imported functions
+        # Setting up imported functions so they can be accessed by all cogs
         self.extract_time = extract_time
         self.parse_timedelta = parse_timedelta
+        self.read_server_setting = read_server_setting
+        self.write_server_setting = write_server_setting
+        self.create_server_settings = create_server_settings
+        self.db_connect = db_connect
+        self.db_create = db_create
+        self.db_time = db_time
 
         # Initialize bot colors
         create_colors(self)
@@ -71,50 +78,8 @@ class MrFreeze(commands.Bot):
             self.get_mute_role(server)
         )
 
-    # Database-related utility functions
-    def db_connect(self, dbname):
-        """Creates a connection to the regionbl database."""
-        db_file = f'{self.db_prefix}/{dbname}.db'
-        conn = sqlite3.connect(db_file)
-        return conn
-
-    def db_create(self, dbname, tables):
-        """Create a database file from the provided tables."""
-        conn = self.db_connect(dbname)
-        with conn:
-            try:
-                c = conn.cursor()
-                c.execute(tables)
-                print(f'{self.CYAN}DB created: {self.GREEN_B}{dbname}{self.RESET}')
-
-            except sqlite3.Error as e:
-                print(f'{self.CYAN}DB failure: {self.RED_B}{dbname}\n{str(e)}{self.RESET}')
-
-    def db_time(self, in_data):
-        """Pase datetime to string, string to datetime and everything else to None."""
-        timeformat = "%Y-%m-%d %H:%M:%S"
-    
-        if isinstance(in_data, datetime.datetime):
-            return datetime.datetime.strftime(in_data, timeformat)
-        elif isinstance(in_data, str):
-            return datetime.datetime.strptime(in_data, timeformat)
-        else:
-            return None
-
     # Various utility functions universal to the bot.
     # Most of these are copied from internals/*.py so cogs won't have to import so much stuff.
-    def read_server_setting(self, server, setting):
-        """Reads and returns a setting stored in self.servers_prefix/server.id/setting."""
-        return read_server_setting(self, server, setting)
-
-    def write_server_setting(self, server, setting, content):
-        """Writes content to self.servers_prefix/server.id/setting"""
-        return write_server_setting(self, server, setting, content)
-
-    def create_server_settings(self, server):
-        """Creates the directory in which server settings are stored."""
-        return create_server_settings(self, server)
-
     def add_bg_task(self, task, name):
         """Add a task to run in the background in the bot.
         Useful for periodic checks/updates."""
