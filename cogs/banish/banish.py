@@ -1,13 +1,13 @@
 import discord                      # Basic discord functionality
 import asyncio                      # Required for the unbanish loop
 import datetime                     # Required for outputing the time until / duration of banishes to the log
-from collections import namedtuple  # Required for producing the output of the mdb_fetch()/db_parse()
 from internals import checks        # Required to check who's allowed to issue these commands
 
 # Importing the banish submodules
 from .enums import *
 from .templates import *
 from .mute_aliases import *
+from .mute_db import *
 
 # This cog is for the banish/mute command and the region command.
 # banish/mute is closely connected to the region command since they both use the antarctica mechanics.
@@ -31,8 +31,6 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         self.self_mute_time_name = 'self_mute_time'
         self.default_self_mute_time = 20
         self.self_mute_time_dict = dict()
-
-        self.BanishTuple = namedtuple('BanishTuple', ['member', 'voluntary', 'until'])
 
         # Mutes database creation
         self.mdbname = mdbname
@@ -104,7 +102,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
             await asyncio.sleep(self.mute_interval_dict[server.id])
 
             current_time = datetime.datetime.now()
-            server_mutes = self.mdb_fetch(server)
+            server_mutes = mdb_fetch(self.bot, self.mdbname, server)
             mute_role = self.bot.servertuples[server.id].mute_role
             mute_channel = self.bot.servertuples[server.id].mute_channel
             unmuted = list()
@@ -121,7 +119,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
                     if diff == "":  diff = "now"
                     else:           diff = f"{diff} ago"
 
-                    self.mdb_del(member) # Remove from database
+                    mdb_del(self.bot, self.mdbname, member) # Remove from database
                     if mute_role in member.roles:
                         try:
                             await member.remove_roles(mute_role)
@@ -264,8 +262,8 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
             # Working mutes (at user mutes):
             # SINGLE, MULTI, FAIL, FAILS, SINGLE_FAIL, SINGLE_FAILS, MULTI_FAIL, MULTI_FAILS
             for member in usr:
-                if unmute:  error = await self.carry_out_unbanish(member)
-                else:       error = await self.carry_out_banish(member, end_date)
+                if unmute:  error = await self.carry_out_unbanish(self.bot, self.mdbname, member)
+                else:       error = await self.carry_out_banish(self.bot, self.mdbname, member, end_date)
 
                 if isinstance(error, Exception):
                     fails_list.append(member)
@@ -386,7 +384,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         duration = datetime.timedelta(minutes = self.self_mute_time_dict[server.id])
         end_date = datetime.datetime.now() + duration
         duration = self.bot.parse_timedelta(duration)
-        error = await self.carry_out_banish(author, end_date)
+        error = await self.carry_out_banish(self.bot, self.mdbname, author, end_date)
 
         if isinstance(error, Exception):
             if isinstance(error, discord.Forbidden):        error = "**a lack of privilegies**"
@@ -400,173 +398,6 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
 
         await ctx.send(reply)
 
-    async def carry_out_banish(self, member, end_date):
-        """Add the antarctica role to a user, then add them to the db.
-        Return None if successful, Exception otherwise."""
-        server = member.guild
-        roles = member.roles
-        mute_role = self.bot.servertuples[server.id].mute_role
-        result = None
-
-        if mute_role not in roles:
-            try:                    await member.add_roles(mute_role)
-            except Exception as e:  result = e
-
-        if not isinstance(result, Exception):
-            self.mdb_add(member, end_date=end_date)
-
-        return result
-
-    async def carry_out_unbanish(self, member):
-        """Remove the antarctica role from a user, then remove them from the db.
-        Return None if successful, Exception otherwise."""
-        server = member.guild
-        roles = member.roles
-        mute_role = self.bot.servertuples[server.id].mute_role
-        result = None
-
-        if mute_role in roles:
-            try:                    await member.remove_roles(mute_role)
-            except Exception as e:  result = e
-
-        if not isinstance(result, Exception):
-            self.mdb_del(member)
-
-        return result
-
-    ###################################################
-    # Below are all commands relating to the database #
-    # (they are numerous and need a separete section) #
-    ###################################################
-    def mdb_add(self, user, voluntary=False, end_date=None, prolong=True):
-        """Add a new user to the mutes database."""
-        is_member = isinstance(user, discord.Member)
-        if not is_member:
-            # This should never happen, no point in even logging it.
-            raise TypeError(f"Expected discord.Member, got {type(user)}")
-
-        uid = user.id
-        server = user.guild.id
-        servername = user.guild.name
-        name = f"{user.name}#{user.discriminator}"
-        error = None
-        until = str()    # this string is filled in if called with an end_date
-        duration = str() # this string too
-
-        current_mute = self.mdb_fetch(user)
-        is_muted = len(current_mute) != 0
-        if is_muted: self.mdb_del(user) # Always delete existing mutes
-
-        if is_muted and end_date != None and prolong:
-            old_until = current_mute[0].until
-            if old_until != None: # if current mute is permanent just replace it with a timed one
-                diff = end_date - datetime.datetime.now()
-                try:
-                    end_date = old_until + diff
-                except OverflowError:
-                    end_date = datetime.datetime.max
-    
-        with self.bot.db_connect(self.bot, self.mdbname) as conn:
-            c = conn.cursor()
-            if end_date != None:
-                # Collect time info in string format for the log
-                until = self.bot.db_time(end_date)
-                until = f"\n{self.bot.GREEN}==> Until: {until} {self.bot.RESET}"
-
-                duration = end_date - datetime.datetime.now()
-                duration = self.bot.parse_timedelta(duration)
-                duration = f"{self.bot.YELLOW}(in {duration}){self.bot.RESET}"
-
-                end_date = self.bot.db_time(end_date) # Turn datetime object into string
-
-                sql = f"INSERT INTO {self.mdbname}(id, server, voluntary, until) VALUES(?,?,?,?)"
-
-                try:                    c.execute(sql, (uid, server, voluntary, end_date))
-                except Exception as e:  error = e
-    
-            elif end_date == None:
-                sql = f"INSERT INTO {self.mdbname}(id, server, voluntary) VALUES(?,?,?)"
-                try:                    c.execute(sql, (uid, server, voluntary))
-                except Exception as e:  error = e
-    
-        if error == None:
-            print(f"{self.bot.current_time()} {self.bot.GREEN_B}Mutes DB:{self.bot.CYAN} added user to DB: " +
-                    f"{self.bot.CYAN_B}{name} @ {servername}{self.bot.CYAN}.{self.bot.RESET}{until}{duration}")
-            return True
-    
-        else:
-            print(f"{self.bot.current_time()} {self.bot.RED_B}Mutes DB:{self.bot.CYAN} failed adding to DB: " +
-                    f"{self.bot.CYAN_B}{name} @ {servername}{self.bot.CYAN}:" +
-                    f"\n{self.bot.RED}==> {error}{self.bot.RESET}")
-            return False
-
-    def mdb_del(self, user):
-        """Removes a user from the mutes database."""
-        is_member = isinstance(user, discord.Member)
-        if not is_member:
-            # This should never happen, no point in even logging it.
-            raise TypeError(f"Expected discord.Member, got {type(user)}")
-
-        uid = user.id
-        server = user.guild.id
-        servername = user.guild.name
-        name = f"{user.name}#{user.discriminator}"
-
-        is_muted = len(self.mdb_fetch(user)) != 0
-        if not is_muted:
-            print(f"{self.bot.current_time()} {self.bot.GREEN_B}Mutes DB:{self.bot.CYAN} user already not in DB: " +
-                f"{self.bot.CYAN_B}{name} @ {servername}{self.bot.CYAN}.{self.bot.RESET}")
-            return True
-    
-        with self.bot.db_connect(self.bot, self.mdbname) as conn:
-            c = conn.cursor()
-            sql = f"DELETE FROM {self.mdbname} WHERE id = ? AND server = ?"
-    
-            try:
-                c.execute(sql, (uid, server))
-                print(f"{self.bot.current_time()} {self.bot.GREEN_B}Mutes DB:{self.bot.CYAN} removed user from DB: " +
-                    f"{self.bot.CYAN_B}{name} @ {servername}{self.bot.CYAN}.{self.bot.RESET}")
-                return True
-    
-            except Exception as error:
-                print(f"{self.bot.current_time()} {self.bot.RED_B}Mutes DB:{self.bot.CYAN} failed to remove from DB: " +
-                    f"{self.bot.CYAN_B}{name} @ {servername}{self.bot.CYAN}:" +
-                    f"\n{self.bot.RED}==> {error}{self.bot.RESET}")
-                return False
-
-    def mdb_fetch(self, in_data):
-        """If input is a server, return a list of all users from that server in the database.
-        If input is a member, return what we've got on that member."""
-        is_member = isinstance(in_data, discord.Member)
-        is_server = isinstance(in_data, discord.Guild)
-
-        if not is_member and not is_server:
-            # This should never happen, no point in even logging it.
-            raise TypeError(f"Expected discord.Member or discord.Guild, got {type(in_data)}")
-
-        with self.bot.db_connect(self.bot, self.mdbname) as conn:
-            c = conn.cursor()
-            fetch_id = in_data.id
-            if is_member:
-                server = in_data.guild
-                sql = f' SELECT * FROM {self.mdbname} WHERE id = ? AND server = ? '
-                c.execute(sql, (fetch_id, server.id))
-
-            elif is_server:
-                server = in_data
-                sql = f' SELECT * FROM {self.mdbname} WHERE server = ? '
-                c.execute(sql, (fetch_id,))
-            
-            output = [
-                self.BanishTuple(
-                    member = discord.utils.get(server.members, id=int(entry[0])),
-                    voluntary = bool(entry[2]),
-                    until = self.bot.db_time(entry[3])
-                )
-                for entry in c.fetchall()
-            ]
-
-        return output
 
     ########################################################################### 
     # Various shenanigans that may need to be implemented into the bot proper #
