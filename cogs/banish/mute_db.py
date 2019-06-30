@@ -4,6 +4,19 @@ from collections import namedtuple
 
 BanishTuple = namedtuple('BanishTuple', ['member', 'voluntary', 'until'])
 
+# Complete list of tables and their rows in this database.
+# (These are created via the banish cog)
+# 
+# Complete list of tables and their rows in this database.
+# Primary key(s) is marked with an asterisk (*).
+# Mandatory but not primary keys are marked with a pling (!).
+# TABLE         ROWS        TYPE        FUNCTION
+# self.mdbname  id*         integer     User ID
+#               server*     integer     Server ID
+#               voluntary!  boolean     If this mute was self-inflicted or not.
+#               until       date        The date when the user should be unbanned.
+#                                       Leave empty if indefinite.
+
 async def carry_out_banish(bot, mdbname, member, end_date):
     """Add the antarctica role to a user, then add them to the db.
     Return None if successful, Exception otherwise."""

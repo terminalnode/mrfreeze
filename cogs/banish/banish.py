@@ -34,15 +34,6 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
 
         # Mutes database creation
         self.mdbname = mdbname
-        # Complete list of tables and their rows in this database.
-        # Primary key(s) is marked with an asterisk (*).
-        # Mandatory but not primary keys are marked with a pling (!).
-        # TABLE         ROWS        TYPE        FUNCTION
-        # self.mdbname  id*         integer     User ID
-        #               server*     integer     Server ID
-        #               voluntary!  boolean     If this mute was self-inflicted or not.
-        #               until       date        The date when the user should be unbanned.
-        #                                       Leave empty if indefinite.
         mdbtable = f"""CREATE TABLE IF NOT EXISTS {self.mdbname}(
             id          integer NOT NULL,
             server      integer NOT NULL,
