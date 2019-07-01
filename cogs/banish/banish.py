@@ -221,17 +221,39 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         mod = [ user for user in mentions if await checks.is_mod(user) and user != self.bot.user ]
         usr = [ user for user in mentions if user not in mod and user != self.bot.user ]
 
-        invocation = ctx.invoked_with
+        invocation = ctx.invoked_with.lower()
         if invocation[:2] == "un":  unmute = True
         else:                       unmute = False
+
+        is_super = 'super' in invocation
+        is_mega = 'mega' in invocation
 
         if invocation == "banish":          invocation = MuteType.BANISH
         elif invocation in banish_aliases:  invocation = MuteType.BANISH
         elif invocation in hogtie_aliases:  invocation = MuteType.HOGTIE
         elif invocation in mute_aliases:    invocation = MuteType.MUTE
 
+        # Extract durations from statement
+        # If no time is stated both of these will be None
         duration, end_date = self.bot.extract_time(args)
 
+        # Add time if invocation is super or mega
+        if is_super or is_mega:
+            # Make sure a timedelta exists first.
+            if duration == None:
+                duration = datetime.timedelta()
+
+            # Super adds a week, mega adds a year
+            # (or 365 days because timedelta doesn't support years)
+            current_time = datetime.datetime.now()
+            try:
+                if is_super:    duration += datetime.timedelta(weeks=1)
+                elif is_mega:   duration += datetime.timedelta(days=365)
+                end_date = current_time + duration
+            except OverflowError:
+                end_date = datetime.datetime.max
+                duration = end_date - current_time
+        
         if len(mentions) == 0:
             template = MuteStr.NONE
 
@@ -253,8 +275,8 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
             # Working mutes (at user mutes):
             # SINGLE, MULTI, FAIL, FAILS, SINGLE_FAIL, SINGLE_FAILS, MULTI_FAIL, MULTI_FAILS
             for member in usr:
-                if unmute:  error = await self.carry_out_unbanish(self.bot, self.mdbname, member)
-                else:       error = await self.carry_out_banish(self.bot, self.mdbname, member, end_date)
+                if unmute:  error = await carry_out_unbanish(self.bot, self.mdbname, member)
+                else:       error = await carry_out_banish(self.bot, self.mdbname, member, end_date)
 
                 if isinstance(error, Exception):
                     fails_list.append(member)
@@ -375,7 +397,9 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         duration = datetime.timedelta(minutes = self.self_mute_time_dict[server.id])
         end_date = datetime.datetime.now() + duration
         duration = self.bot.parse_timedelta(duration)
-        error = await self.carry_out_banish(self.bot, self.mdbname, author, end_date)
+
+        # Carry out the banish with resulting end date
+        error = await carry_out_banish(self.bot, self.mdbname, author, end_date)
 
         if isinstance(error, Exception):
             if isinstance(error, discord.Forbidden):        error = "**a lack of privilegies**"
