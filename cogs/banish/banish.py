@@ -191,6 +191,9 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         elif proposed_time == 0:
             await ctx.send(f"{author} Zero is not a valid self mute time, smud.")
 
+        elif proposed_time > 3600 * 24 * 7:
+            await ctx.send(f"{author} I may be evil, but even I think more than a weeks punishment is a bit harsh...")
+
         else:
             old_time = self.self_mute_time_dict[server.id]
             self.self_mute_time_dict[server.id] = proposed_time
