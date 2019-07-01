@@ -1,5 +1,6 @@
-import re
-import datetime
+import re       # Required for parsing time statements
+import datetime # Required for obvious reasons
+import sys      # Required for handling C int overflow errors
 
 def extract_time(args, fallback_minutes=True):
     """Extract time expressions from a set of arguments.
@@ -35,29 +36,35 @@ def extract_time(args, fallback_minutes=True):
 
     # Create a new datetime object based on these numbers.
     # Months and years are converted to 30 and 365 days respectively.
-    add_time = datetime.timedelta(
-            days    =   time_dict['days'] + (time_dict['months'] * 30) + (time_dict['years'] * 365),
-            weeks   =   time_dict['weeks'],
-            hours   =   time_dict['hours'],
-            minutes =   time_dict['minutes'],
-            seconds =   time_dict['seconds'])
-    current_date = datetime.datetime.now()
+    time_dict['days'] += (time_dict['months'] * 30) + (time_dict['years'] * 365)
+    current_time = datetime.datetime.now()
 
     try:
-        end_date = current_date + add_time
-    except OverflowError:
-        end_date = datetime.datetime.max
-        add_time = datetime.datetime.max - current_date
+        add_time = datetime.timedelta(
+            weeks   = time_dict['weeks'],
+            days    = time_dict['days'],
+            hours   = time_dict['hours'],
+            minutes = time_dict['minutes'],
+            seconds = time_dict['seconds']
+        )
+        end_date = current_time + add_time
+    
+        # If nothing was found, assume all numbers are minutes.
+        if (end_date == current_time) and fallback_minutes:
+            no_minutes = sum([ int(arg) for arg in args if arg.isdigit() ])
+            add_time = datetime.timedelta(minutes = no_minutes)
+            end_date = current_time + add_time
 
-    # If nothing was found, assume all numbers are minutes.
-    if (end_date == current_date) and fallback_minutes:
-        no_minutes = sum([ int(arg) for arg in args if arg.isdigit() ])
-        add_time = datetime.timedelta(minutes = no_minutes)
-        end_date = current_date + add_time
+    except OverflowError:
+        # If overflowing, just set the end_date to maximum.
+        end_date = datetime.datetime.max
+        add_time = end_date - current_time
 
     # Return None if current date and end date are different.
-    if end_date != current_date:    return add_time, end_date
-    else:                           return None, None
+    if end_date != current_time:
+        return add_time, end_date
+    else:
+        return None, None
 
 def parse_timedelta(time_delta):
     """Takes a timedelta object and outputs a string such as '1 day, 2 hours[...]'"""
