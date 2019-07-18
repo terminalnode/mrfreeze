@@ -596,3 +596,19 @@ class ModCmdsCog(discord.ext.commands.Cog, name='Moderation'):
 
             await ctx.send(
                 f"{ctx.author.mention} Something went wrong with your Great Purge and I don't really know what.")
+
+    @discord.ext.commands.command(name='idban')
+    @discord.ext.commands.check(checks.is_mod)
+    async def _idban(self, ctx, *args):
+        """Quick and dirty function for banishing via ID. Might flesh it out later or merge with the real ban function."""
+        if len(args) > 0 and args[0].isdigit():
+            banlist = await ctx.guild.bans()
+            new_id = int(args[0])
+            new_user = discord.Object(id=new_id)
+            try:
+                await ctx.guild.ban(new_user)
+                await ctx.send('That little smud, whoever it is, has been banned!')
+            except Exception as e:
+                print(e)
+        else:
+            await ctx.send(f"{ctx.author.mention} PAPERS PLEASE! :rage:")
