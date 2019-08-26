@@ -1,9 +1,5 @@
 import discord # Basic discord functionality
 
-# Useful links for testing out embeds:
-# https://leovoel.github.io/embed-visualizer/
-# https://cog-creators.github.io/discord-embed-sandbox/
-
 def setup(bot):
     bot.add_cog(AboutCog(bot))
  
@@ -14,13 +10,13 @@ class AboutCog(discord.ext.commands.Cog, name='About'):
 
     @discord.ext.commands.command(name='readme')
     async def _readme(self, ctx):
-        """Hands you a link to the readme file over on Gitlab."""
-        url = "https://gitlab.com/terminalnode/MrFreeze/blob/master/README.md"
+        """Hands you a link to the readme file over on Github."""
+        url = "https://github.com/terminalnode/mrfreeze/blob/master/README.md"
 
         embed = discord.Embed(color=0x00dee9)
         embed.add_field(
             name = "Readme",
-            value = f"My readme file is available [on Gitlab]({url})")
+            value = f"My readme file is available [on Github]({url})")
 
         image = discord.File("images/readme.png")
         embed.set_thumbnail(url="attachment://readme.png")
@@ -33,7 +29,7 @@ class AboutCog(discord.ext.commands.Cog, name='About'):
         embed = discord.Embed(color=0x00dee9)
         embed.add_field(
             name="Source code",
-            value="My source code is available on [Gitlab](https://gitlab.com/terminalnode/MrFreeze/)!")
+            value="My source code is available on [Github](https://github.com/terminalnode/mrfreeze)!")
 
         image = discord.File("images/source.png")
         embed.set_thumbnail(url="attachment://source.png")
@@ -50,7 +46,7 @@ class AboutCog(discord.ext.commands.Cog, name='About'):
             description = (
                 f"Here's a link for inviting me, **{botname}**, to a server." +
                 f"The link will invite *this* version of me, be it the beta or regular version. Not the impostor.\n\n" +
-                f"Note that **!banish** and **!region** won't function properly without the right infrastructure."))
+                f"Note that **!banish** and **!region** won't function properly without the right server infrastructure (roles etc.)."))
         embed.add_field(
             name=f"Invite link for {botname}",
             value=(f"[Invite {botname} to a server.]({url})"))
@@ -82,7 +78,7 @@ class AboutCog(discord.ext.commands.Cog, name='About'):
     @discord.ext.commands.command(name='todo', aliases=['TODO', 'TODOs', 'ToDo', 'ToDos', 'todos', 'whatsnext', 'whatnext'])
     async def _todos(self, ctx):
         """Supplies you with a list of my planned features."""
-        url = "https://gitlab.com/terminalnode/MrFreeze/blob/master/TODO.md"
+        url = "https://github.com/terminalnode/mrfreeze/blob/master/TODO.md"
 
         embed = discord.Embed(color=0x00dee9)
         embed.add_field(
