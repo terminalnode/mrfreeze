@@ -1,7 +1,8 @@
-import discord                  # Basic discord functionality
-import re                       # Required for certain commands
-import asyncio                  # Required for banger !purge message
-from internals import checks    # Required to check for mod privilegies
+import discord                          # Basic discord functionality
+import re                               # Required for certain commands
+import asyncio                          # Required for banger !purge message
+from internals import checks            # Required to check for mod privilegies
+from internals.cogbase import CogBase   # Required inherit colors and stuff
 
 # This cog is for commands restricted to mods on a server.
 # It features commands such as !ban, !kick, etc.
@@ -9,10 +10,11 @@ from internals import checks    # Required to check for mod privilegies
 def setup(bot):
     bot.add_cog(ModCmdsCog(bot))
 
-class ModCmdsCog(discord.ext.commands.Cog, name='Moderation'):
+class ModCmdsCog(CogBase, name='Moderation'):
     """Good mod! Read the manual! Or if you're not mod - sod off!"""
     def __init__(self, bot):
         self.bot = bot
+        self.initialize_colors()
 
     def extract_reason(self, reason):
         # This is a simple function that will return anything after the list of mentions.
@@ -150,8 +152,8 @@ class ModCmdsCog(discord.ext.commands.Cog, name='Moderation'):
                 fail_list.append(victim)
 
         # And now we compile a response.
-        ment_success = self.bot.mentions_list(success_list)
-        ment_fail = self.bot.mentions_list(fail_list)
+        ment_success = self.mentions_list(success_list)
+        ment_fail = self.mentions_list(fail_list)
 
         # Error list:
         if forbidden_error and not http_error:
@@ -288,8 +290,8 @@ class ModCmdsCog(discord.ext.commands.Cog, name='Moderation'):
             error_str = 'unknown error'
 
         # Now all we need is a reply string.
-        ment_success = self.bot.mentions_list(success_list)
-        ment_fail = self.bot.mentions_list(fail_list)
+        ment_success = self.mentions_list(success_list)
+        ment_fail = self.mentions_list(fail_list)
 
 
         if showbans:
@@ -404,7 +406,7 @@ class ModCmdsCog(discord.ext.commands.Cog, name='Moderation'):
         # If they tried to kick a mod christmas is cancelled.
         mod_role = discord.utils.get(ctx.guild.roles, name='Administration')
         mods_list = [ user for user in ctx.message.mentions if mod_role in user.roles ]
-        ment_mods = self.bot.mentions_list(mods_list)
+        ment_mods = self.mentions_list(mods_list)
 
         if len(mods_list) == 0: tried_to_kick_mod = False
         else:                   tried_to_kick_mod = True
@@ -416,33 +418,33 @@ class ModCmdsCog(discord.ext.commands.Cog, name='Moderation'):
                 try:
                     if reason == None:
                         await ctx.guild.kick(victim)
-                        print(f"{self.bot.WHITE_B}{victim.name}#{victim.discriminator}{self.bot.CYAN} was " +
-                            f"{self.bot.RED_B} kicked from {ctx.guild.name} {self.bot.CYAN}by {self.bot.GREEN_B}" +
+                        print(f"{self.WHITE_B}{victim.name}#{victim.discriminator}{self.CYAN} was " +
+                            f"{self.RED_B}kicked from {ctx.guild.name} {self.CYAN}by {self.GREEN_B}" +
                             f"{ctx.author.name}#{ctx.author.discriminator}")
                     else:
                         await ctx.guild.kick(victim, reason=reason)
-                        print(f"{self.bot.WHITE_B}{victim.name}#{victim.discriminator}{self.bot.CYAN} was " +
-                            f"{self.bot.RED_B}kicked from {ctx.guild.name} {self.bot.CYAN}by {self.bot.GREEN_B}" +
-                            f"{ctx.author.name}#{ctx.author.discriminator}{self.bot.CYAN}.\n{self.bot.WHITE_B}Reason given: " +
-                            f"{self.bot.WHITE}{reason}{self.bot.RESET}")
+                        print(f"{self.WHITE_B}{victim.name}#{victim.discriminator}{self.CYAN} was " +
+                            f"{self.RED_B}kicked from {ctx.guild.name} {self.CYAN}by {self.GREEN_B}" +
+                            f"{ctx.author.name}#{ctx.author.discriminator}{self.CYAN}.\n{self.WHITE_B}Reason given: " +
+                            f"{self.WHITE}{reason}{self.RESET}")
                     success_list.append(victim)
 
                 except discord.Forbidden:
                     fail_list.append(victim)
                     forbidden_error = True
-                    print(f"{self.bot.RED_B}ERROR {self.bot.CYAN}I was not allowed to {self.bot.RED_B}!kick {self.bot.WHITE_B}{victim.name}#{victim.discriminator}" +
-                        f"{self.bot.CYAN} in {self.bot.RED_B}{ctx.guild.name}{self.bot.CYAN}.{self.bot.RESET}")
+                    print(f"{self.RED_B}ERROR {self.CYAN}I was not allowed to {self.RED_B}!kick {self.WHITE_B}{victim.name}#{victim.discriminator}" +
+                        f"{self.CYAN} in {self.RED_B}{ctx.guild.name}{self.CYAN}.{self.RESET}")
 
                 except discord.HTTPException:
                     fail_list.append(victim)
                     http_error = True
-                    print(f"{self.bot.RED_B}ERROR {self.bot.CYAN}I couldn't {self.bot.RED_B}!kick {self.bot.WHITE_B}{victim.name}#{victim.discriminator}" +
-                        f"{self.bot.CYAN} in {self.bot.RED_B}{ctx.guild.name} {self.bot.CYAN}due to an HTTP Exception.{self.bot.RESET}")
+                    print(f"{self.RED_B}ERROR {self.CYAN}I couldn't {self.RED_B}!kick {self.WHITE_B}{victim.name}#{victim.discriminator}" +
+                        f"{self.CYAN} in {self.RED_B}{ctx.guild.name} {self.CYAN}due to an HTTP Exception.{self.RESET}")
 
         # This will convert the lists into mentions suitable for text display:
         # user1, user2 and user 3
-        ment_success = self.bot.mentions_list(success_list)
-        ment_fail = self.bot.mentions_list(fail_list)
+        ment_success = self.mentions_list(success_list)
+        ment_fail = self.mentions_list(fail_list)
 
         ### Preparation of replystrings.
         ### Errors are added further down.
@@ -452,7 +454,7 @@ class ModCmdsCog(discord.ext.commands.Cog, name='Moderation'):
 
             # Singular
             if len(success_list) == 1:
-                replystr = f"{ctx.author.mention} The smud who goes by the name of {ment_success}"
+                replystr = f"{ctx.author.mention} The smud who goes by the name of {ment_success} "
                 replystr += "has been kicked from the server, never to be seen again!"
 
             # Plural
@@ -572,27 +574,27 @@ class ModCmdsCog(discord.ext.commands.Cog, name='Moderation'):
             await ctx.channel.purge(limit=delete_no, check=check_func)
 
         except discord.Forbidden:
-            print(f"{self.bot.RED_B}!purge failed{self.bot.CYAN} in " +
-                f"{self.bot.CYAN_B}#{ctx.channel.name}{self.bot.YELLOW_B} @ {self.bot.CYAN_B}{ctx.guild.name}" +
-                f"{self.bot.RED_B} (Forbidden){self.bot.RESET}")
+            print(f"{self.RED_B}!purge failed{self.CYAN} in " +
+                f"{self.CYAN_B}#{ctx.channel.name}{self.YELLOW_B} @ {self.CYAN_B}{ctx.guild.name}" +
+                f"{self.RED_B} (Forbidden){self.RESET}")
 
             await ctx.send(
                 f"{ctx.author.mention} An error occured, it seems I'm lacking the" +
                 "privilegies to carry out your Great Purge.")
 
         except discord.HTTPException:
-            print(f"{self.bot.RED_B}!purge failed{self.bot.CYAN} in " +
-                f"{self.bot.CYAN_B}#{ctx.channel.name}{self.bot.YELLOW_B} @ {self.bot.CYAN_B}{ctx.guild.name}" +
-                f"{self.bot.RED_B} (HTTP Exception){self.bot.RESET}")
+            print(f"{self.RED_B}!purge failed{self.CYAN} in " +
+                f"{self.CYAN_B}#{ctx.channel.name}{self.YELLOW_B} @ {self.CYAN_B}{ctx.guild.name}" +
+                f"{self.RED_B} (HTTP Exception){self.RESET}")
 
             await ctx.send(
                 f"{ctx.author.mention} An error occured, it seems my HTTP sockets are " +
                 "glitching out and thus I couldn't carry out your Great Purge.")
 
         except Exception as e:
-            print(f"{self.bot.RED_B}!purge failed{self.bot.CYAN} in " +
-                f"{self.bot.CYAN_B}#{ctx.channel.name}{self.bot.YELLOW_B} @ {self.bot.CYAN_B}{ctx.guild.name}" +
-                f"{self.bot.RED_B}\n({e}){self.bot.RESET}")
+            print(f"{self.RED_B}!purge failed{self.CYAN} in " +
+                f"{self.CYAN_B}#{ctx.channel.name}{self.YELLOW_B} @ {self.CYAN_B}{ctx.guild.name}" +
+                f"{self.RED_B}\n({e}){self.RESET}")
 
             await ctx.send(
                 f"{ctx.author.mention} Something went wrong with your Great Purge and I don't really know what.")
