@@ -11,6 +11,4 @@ experimentation.py
 # Garbage files.
 .DS_Store
 __pycache__
-
-# Pyenv stuff
-.python-version
+.mypy_cache/
