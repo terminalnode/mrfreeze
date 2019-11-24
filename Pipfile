@@ -1,0 +1,18 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pylint = "*"
+jedi = "*"
+mypy = "*"
+flake8 = "*"
+
+[packages]
+discord-py = "*"
+airtable-python-wrapper = "*"
+inflect = "*"
+
+[requires]
+python_version = "3.8"
