@@ -1,23 +1,52 @@
-import discord                  # Basic discord functionality
-import csv                      # Required for parsing the list of inks
-import os                       # To check if an inkfile already exists
-from airtable import airtable   # To update the inkdatabase, which is stored on airtable
-from internals import checks    # Only owner is allowed to update the ink database
+import discord
+# Airtable data is saved locally to file
+import csv
+# To ensure if the inkfile exists and if airtable settings exist
+import os
+# To check for inks in messages
+import re
+# The database is stored in an Airtable base
+from airtable.airtable import Airtable
+# To ensure only the bot owner can update the database
+from internals import checks
+# CogBase is a common base for all the cogs
+from internals.cogbase import CogBase
 
-# Small script listening to all incoming messages looking for
-# mentions of inks. Based on The Inkcyclopedia by klundtasaur:
+# Some imports used in type hints
+from discord import Message
+from discord.ext.commands.context import Context
+from internals.mrfreeze import MrFreeze
+from typing import Optional
+from typing import NamedTuple
+from typing import Pattern
+from typing import Set
+
+# Small cog listening to all incoming messages looking for mentions of inks.
+# Based on The Inkcyclopedia by klundtasaur:
 # https://www.reddit.com/r/fountainpens/comments/5egjsa/klundtasaurs_inkcyclopedia_for_rfountainpens/
+
+
 def setup(bot):
     bot.add_cog(InkcyclopediaCog(bot))
 
-class InkcyclopediaCog(discord.ext.commands.Cog, name='Inkcyclopedia'):
-    """Type an ink inside {curly brackets} and I'll tell you what it looks like!"""
-    def __init__(self, bot):
-        self.bot = bot
-        self.inkydb = list()
-        self.inkdb_path = "databases/dbfiles/inkcyclopedia.csv"
-        self.inkdb_enc = "utf-8-sig"
-        self.airtable = None
+
+class InkyTuple(NamedTuple):
+    name:  str
+    url:   str
+    regex: Pattern[str]
+
+
+class InkcyclopediaCog(CogBase, name="Inkcyclopedia"):
+    """Type an ink inside {curly brackets} and I'll tell you what
+    it looks like!"""
+    def __init__(self, bot: MrFreeze) -> None:
+        self.bot: MrFreeze = bot
+        self.initialize_colors()
+
+        self.inkydb:     Set[InkyTuple] = set()
+        self.inkdb_path: str = "databases/dbfiles/inkcyclopedia.csv"
+        self.inkdb_enc:  str = "utf-8-sig"
+        self.airtable:   Optional[Airtable] = None
 
         # File config/airtable should have format:
         # base = <your base id here>
@@ -25,19 +54,20 @@ class InkcyclopediaCog(discord.ext.commands.Cog, name='Inkcyclopedia'):
         # apikey = <your api_key here>
         try:
             with open("config/airtable", "r") as airtable_file:
-                content = [ i.split("=") for i in airtable_file.readlines() ]
-                content = [ [i[0].strip(), i[1].strip()] for i in content ]
-                keys = { i[0] : i[1] for i in content }
-                self.airtable = airtable.Airtable(
+                content = [i.split("=") for i in airtable_file.readlines()]
+                content = [[i[0].strip(), i[1].strip()] for i in content]
+                keys = {i[0]: i[1] for i in content}
+                self.airtable = Airtable(
                         keys["base"],
                         keys["table"],
-                        api_key = keys["apikey"]
+                        api_key=keys["apikey"]
                 )
-        except:
-            self.cog_unload()
+        except Exception:
+            print("Failed to open or parse ./config/airtable.")
+            print("The Inkcyclopedia will not be able to update.")
 
     @discord.ext.commands.Cog.listener()
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         # Fetch inks if db does not exist
         if not os.path.isfile(self.inkdb_path):
             await self.fetch_inks()
@@ -46,38 +76,66 @@ class InkcyclopediaCog(discord.ext.commands.Cog, name='Inkcyclopedia'):
         await self.update_db()
 
         # Print that the ink database has been loaded and with how many inks.
-        print('\033[0;36mThe ink database has been loaded with \033[35;1m{} inks\033[0;36m!\033[0m'.format(str(len(self.inkydb))))
+        print(
+            f"{self.CYAN}The ink database has been loaded with " +
+            f"{self.MAGENTA_B}{len(self.inkydb)} inks{self.CYAN}!{self.RESET}"
+        )
 
-    async def fetch_inks(self):
+    async def fetch_inks(self) -> None:
+        """Fetches the latest version of the Inkcyclopedia from Airtable."""
         with open(self.inkdb_path, "w", encoding=self.inkdb_enc) as inkfile:
-            fetch = self.airtable.get_all()
+            # Abort if self.airtable is not set.
+            if self.airtable is not None:
+                fetch = self.airtable.get_all()
+            else:
+                return
+
             writer = csv.writer(inkfile)
             for row in fetch:
                 try:
                     fields = row["fields"]
-                    to_file = [ fields["Ink Name"], fields["RegEx"], fields["Inkbot version"] ]
+                    inkname = fields["Ink Name"]
+                    to_file = [
+                        fields["Ink Name"],
+                        fields["RegEx"],
+                        fields["Inkbot version"]
+                    ]
                     writer.writerow(to_file)
-                except:
+                except Exception:
+                    # One of the fields is missing, we can't use this row
+                    print(f"Failed to add {inkname}")
                     pass
 
-    async def update_db(self):
+    async def update_db(self) -> None:
         with open(self.inkdb_path, encoding=self.inkdb_enc) as inkfile:
             reader = csv.reader(inkfile)
 
             for row in reader:
-                ink_name = row[0]
-                regex    = row[1]
-                url      = row[2]
-                self.inkydb.append((ink_name, regex, url))
-
+                ink = row[0]
+                regex = "{" + row[1] + "}"
+                url = row[2]
+                self.inkydb.add(
+                    InkyTuple(ink, url, re.compile(regex, re.IGNORECASE))
+                )
 
     @discord.ext.commands.command(name="inkupdate")
     @discord.ext.commands.check(checks.is_owner)
-    async def inkupdate(self, ctx):
+    async def inkupdate(self, ctx: Context) -> None:
         await self.fetch_inks()
         await self.update_db()
-        await ctx.send(f"There are now {len(self.inkydb)} inks in the database!")
+        await ctx.send(
+            f"There are now {len(self.inkydb)} inks in the database!")
+        self.log_command(
+            ctx, f"Inkcyclopedia updated, now has {len(self.inkydb)} entries.")
 
     @discord.ext.commands.Cog.listener()
-    async def on_message(self, message):
-        pass
+    async def on_message(self, message: Message) -> None:
+        content: str = message.content
+        for ink in self.inkydb:
+            if (ink.regex.findall(content)):
+                image = discord.Embed()
+                image.set_image(url=ink.url)
+                await message.channel.send(
+                    f"Found a match for {ink.name}!",
+                    embed=image
+                )
