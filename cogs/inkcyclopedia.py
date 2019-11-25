@@ -16,6 +16,7 @@ from internals.cogbase import CogBase
 from discord import Message
 from discord.ext.commands.context import Context
 from internals.mrfreeze import MrFreeze
+from typing import List
 from typing import Optional
 from typing import NamedTuple
 from typing import Pattern
@@ -95,12 +96,13 @@ class InkcyclopediaCog(CogBase, name="Inkcyclopedia"):
                 try:
                     fields = row["fields"]
                     inkname = fields["Ink Name"]
-                    to_file = [
+                    to_file: List[str, str, str] = [
                         fields["Ink Name"],
                         fields["RegEx"],
                         fields["Inkbot version"]
                     ]
-                    writer.writerow(to_file)
+                    if not "N38sjv2.jpg" in to_file[2]:
+                        writer.writerow(to_file)
                 except Exception:
                     # One of the fields is missing, we can't use this row
                     print(f"Failed to add {inkname}")
@@ -109,6 +111,7 @@ class InkcyclopediaCog(CogBase, name="Inkcyclopedia"):
     async def update_db(self) -> None:
         with open(self.inkdb_path, encoding=self.inkdb_enc) as inkfile:
             reader = csv.reader(inkfile)
+            self.inkydb = set()
 
             for row in reader:
                 ink = row[0]
@@ -130,6 +133,9 @@ class InkcyclopediaCog(CogBase, name="Inkcyclopedia"):
 
     @discord.ext.commands.Cog.listener()
     async def on_message(self, message: Message) -> None:
+        if message.author.bot:
+            return
+
         content: str = message.content
         for ink in self.inkydb:
             if (ink.regex.findall(content)):
@@ -139,3 +145,5 @@ class InkcyclopediaCog(CogBase, name="Inkcyclopedia"):
                     f"Found a match for {ink.name}!",
                     embed=image
                 )
+                # Only return the first hit, then return.
+                return
