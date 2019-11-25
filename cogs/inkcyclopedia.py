@@ -96,7 +96,7 @@ class InkcyclopediaCog(CogBase, name="Inkcyclopedia"):
                 try:
                     fields = row["fields"]
                     inkname = fields["Ink Name"]
-                    to_file: List[str, str, str] = [
+                    to_file: List[str] = [
                         fields["Ink Name"],
                         fields["RegEx"],
                         fields["Inkbot version"]
