@@ -23,7 +23,7 @@ from typing import List, Optional, Pattern, Set, NamedTuple
 # Based on The Inkcyclopedia by klundtasaur:
 # https://www.reddit.com/r/fountainpens/comments/5egjsa/klundtasaurs_inkcyclopedia_for_rfountainpens/
 def setup(bot):
-    bot.add_cog(InkcyclopediaCog(bot))
+    bot.add_cog(Inkcyclopedia(bot))
 
 
 class InkyTuple(NamedTuple):
@@ -32,7 +32,7 @@ class InkyTuple(NamedTuple):
     regex: Pattern[str]
 
 
-class InkcyclopediaCog(CogBase, name="Inkcyclopedia"):
+class Inkcyclopedia(CogBase):
     """Type an ink inside {curly brackets} and I'll tell you what
     it looks like!"""
     def __init__(self, bot: MrFreeze) -> None:
