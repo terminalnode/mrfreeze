@@ -16,17 +16,12 @@ from internals.cogbase import CogBase
 from discord import Message
 from discord.ext.commands.context import Context
 from internals.mrfreeze import MrFreeze
-from typing import List
-from typing import Optional
-from typing import NamedTuple
-from typing import Pattern
-from typing import Set
+from typing import List, Optional, Pattern, Set, NamedTuple
+
 
 # Small cog listening to all incoming messages looking for mentions of inks.
 # Based on The Inkcyclopedia by klundtasaur:
 # https://www.reddit.com/r/fountainpens/comments/5egjsa/klundtasaurs_inkcyclopedia_for_rfountainpens/
-
-
 def setup(bot):
     bot.add_cog(InkcyclopediaCog(bot))
 
@@ -48,6 +43,7 @@ class InkcyclopediaCog(CogBase, name="Inkcyclopedia"):
         self.inkdb_path: str = "databases/dbfiles/inkcyclopedia.csv"
         self.inkdb_enc:  str = "utf-8-sig"
         self.airtable:   Optional[Airtable] = None
+        self.bracketmatch = re.compile("[{]([\w\-\s]+)[}]")
 
         # File config/airtable should have format:
         # base = <your base id here>
@@ -67,7 +63,7 @@ class InkcyclopediaCog(CogBase, name="Inkcyclopedia"):
             print("Failed to open or parse ./config/airtable.")
             print("The Inkcyclopedia will not be able to update.")
 
-    @discord.ext.commands.Cog.listener()
+    @CogBase.listener()
     async def on_ready(self) -> None:
         # Fetch inks if db does not exist
         if not os.path.isfile(self.inkdb_path):
@@ -101,7 +97,7 @@ class InkcyclopediaCog(CogBase, name="Inkcyclopedia"):
                         fields["RegEx"],
                         fields["Inkbot version"]
                     ]
-                    if not "N38sjv2.jpg" in to_file[2]:
+                    if "N38sjv2.jpg" not in to_file[2]:
                         writer.writerow(to_file)
                 except Exception:
                     # One of the fields is missing, we can't use this row
@@ -115,7 +111,7 @@ class InkcyclopediaCog(CogBase, name="Inkcyclopedia"):
 
             for row in reader:
                 ink = row[0]
-                regex = "{" + row[1] + "}"
+                regex = row[1]
                 url = row[2]
                 self.inkydb.add(
                     InkyTuple(ink, url, re.compile(regex, re.IGNORECASE))
@@ -131,19 +127,20 @@ class InkcyclopediaCog(CogBase, name="Inkcyclopedia"):
         self.log_command(
             ctx, f"Inkcyclopedia updated, now has {len(self.inkydb)} entries.")
 
-    @discord.ext.commands.Cog.listener()
+    @CogBase.listener()
     async def on_message(self, message: Message) -> None:
-        if message.author.bot:
+        matches: List[str] = self.bracketmatch.findall(message.content)
+        # Stop the function if message was sent by a bot or contains no matches
+        if message.author.bot or not matches:
             return
 
-        content: str = message.content
-        for ink in self.inkydb:
-            if (ink.regex.findall(content)):
-                image = discord.Embed()
-                image.set_image(url=ink.url)
-                await message.channel.send(
-                    f"Found a match for {ink.name}!",
-                    embed=image
-                )
-                # Only return the first hit, then return.
-                return
+        for match in matches:
+            for ink in self.inkydb:
+                if ink.regex.findall(match):
+                    image = discord.Embed()
+                    image.set_image(url=ink.url)
+                    await message.channel.send(
+                        f"Found a match for {ink.name}!",
+                        embed=image)
+                    # Only return the first hit, then return.
+                    return
