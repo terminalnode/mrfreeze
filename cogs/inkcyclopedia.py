@@ -43,7 +43,7 @@ class Inkcyclopedia(CogBase):
         self.inkdb_path: str = "databases/dbfiles/inkcyclopedia.csv"
         self.inkdb_enc:  str = "utf-8-sig"
         self.airtable:   Optional[Airtable] = None
-        self.bracketmatch = re.compile("[{]([\w\-\s]+)[}]")
+        self.bracketmatch = re.compile(r"[{]([\w\-\s]+)[}]")
 
         # File config/airtable should have format:
         # base = <your base id here>
