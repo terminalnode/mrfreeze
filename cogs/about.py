@@ -10,7 +10,7 @@ from discord.ext.commands import Context
 
 
 def setup(bot):
-    bot.add_cog(AboutCog(bot))
+    bot.add_cog(About(bot))
 
 
 source_aliases: List[str] = [
@@ -21,7 +21,7 @@ todo_aliases: List[str] = [
         "TODO", "TODOs", "ToDo", "ToDos", "todos", "whatsnext", "whatnext"]
 
 
-class AboutCog(CogBase, name="About"):
+class About(CogBase):
     """Use these commands to unlock my deepest, darkest inner secrets!"""
     def __init__(self, bot: MrFreeze):
         self.bot = bot
