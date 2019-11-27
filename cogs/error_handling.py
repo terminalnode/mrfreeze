@@ -85,13 +85,18 @@ class ErrorHandler(CogBase):
 
             bucket = error.cooldown.type
             if bucket == BucketType.user:
-                er_type = " for every user"
+                er_type = " per user"
             elif bucket == BucketType.member:
-                er_type = " for every member"
+                er_type = " per member"
             elif bucket == BucketType.guild:
-                er_type = " in every server"
+                er_type = " per server"
             elif bucket == BucketType.channel:
-                er_type = " in every channel"
+                er_type = " per channel"
+            # Coming in discord.py 1.3
+            # elif bucket == BucketType.role:
+            #     er_type = " per role"
+            elif bucket == BucketType.category:
+                er_type = " per channel category"
             else:
                 er_type = ""
 
