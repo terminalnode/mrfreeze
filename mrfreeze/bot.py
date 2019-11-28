@@ -53,10 +53,10 @@ class MrFreeze(commands.Bot):
         # Check that the necessary directories exist and
         # are directories, otherwise create them.
         # All paths are relative to the working directory.
-        self.db_prefix = 'databases/dbfiles'
+        self.db_prefix = "databases"
         paths.path_setup(self, self.db_prefix, "DB prefix")
 
-        self.servers_prefix = 'config/servers'
+        self.servers_prefix = "config/servers"
         paths.path_setup(self, self.servers_prefix, "Servers prefix")
 
     async def on_ready(self):

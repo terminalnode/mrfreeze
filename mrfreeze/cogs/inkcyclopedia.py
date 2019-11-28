@@ -40,7 +40,7 @@ class Inkcyclopedia(CogBase):
         self.initialize_colors()
 
         self.inkydb:     Set[InkyTuple] = set()
-        self.inkdb_path: str = "databases/dbfiles/inkcyclopedia.csv"
+        self.inkdb_path: str = f"{bot.db_prefix}/inkcyclopedia.csv"
         self.inkdb_enc:  str = "utf-8-sig"
         self.airtable:   Optional[Airtable] = None
         self.bracketmatch = re.compile(r"[{]([\w\-\s]+)[}]")

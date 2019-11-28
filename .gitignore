@@ -4,6 +4,7 @@ token
 # Local files
 config/*
 !config/mrfreezequotes
+databases
 
 # File to test various code snippets.
 experimentation.py
