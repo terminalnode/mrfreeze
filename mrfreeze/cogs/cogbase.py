@@ -23,28 +23,37 @@ class CogBase(Cog):
         self.RESET                    = '\033[00000m'
 
     def current_time(self) -> str:
-        """Good time stamps for consistent console messages throughout the bot."""
+        """
+        Good time stamps for consistent console messages throughout the bot.
+        """
         current_time = datetime.datetime.now()
         formated_time = datetime.datetime.strftime(current_time, '%Y-%m-%d %H:%M')
         return f"{self.CYAN_B}{formated_time}{self.RESET}"
 
     def mentions_list(self, mentions: List[User]) -> str:
-        """Create a string of mentions from a list of user objects."""
+        """
+        Create a string of mentions from a list of user objects.
+        """
         mentions = [ user.mention for user in mentions ]
         if len(mentions) == 0:      return "No one"
         elif len(mentions) == 1:    return mentions[0]
         else:                       return ", ".join(mentions[:-1]) + f" and {mentions[-1]}"
 
     def get_mute_role(self, guild: Guild) -> Optional[Role]:
-        """Currently just gives the role with the name antarctica.
-        In the future this may be expanded so servers can designate whatever role they want as Antarctica."""
+        """
+        Currently just gives the role with the name antarctica.
+        In the future this may be expanded so servers can designate
+        whatever role they want as Antarctica.
+        """
         for role in guild.roles:
             if role.name.lower() == "antarctica":
                 return role
         return None
 
     def log_command(self, ctx: Context, text: str = "") -> None:
-        """Prints a message to the log whenever a command is executed."""
+        """
+        Prints a message to the log whenever a command is executed.
+        """
 
         print("Printed by selflogger:") # temporary, this will be removed once all cogs have transitioned
         time     = f"{self.CYAN_B}{self.current_time()}"
@@ -59,5 +68,7 @@ class CogBase(Cog):
             print(f"{time} {author} {command} {location}{text}{self.RESET}")
 
     def log_generic(self, text: str) -> None:
-        """Prints a more generic message to the log, used for other things than commands."""
+        """
+        Prints a more generic message to the log, used for other things than commands.
+        """
         pass

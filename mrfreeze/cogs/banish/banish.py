@@ -1,25 +1,50 @@
-import discord                      # Basic discord functionality
-import asyncio                      # Required for the unbanish loop
-import datetime                     # Required for outputing the time until / duration of banishes to the log
-from internals import checks        # Required to check who's allowed to issue these commands
+# Basic discord functionality
+import discord
+# Required for the unbanish loop
+import asyncio
+# Required for outputing the time until / duration of banishes to the log
+import datetime
+# Required to check who's allowed to issue these commands
+from mrfreeze import checks
+from mrfreeze.cogs.cogbase import CogBase
 
 # Importing the banish submodules
-from .enums import *
-from .templates import *
-from .mute_aliases import *
-from .mute_db import *
+from mrfreeze.cogs.banish.enums import MuteType, MuteStr
+from mrfreeze.cogs.banish.templates import templates
+from mrfreeze.cogs.banish import mute_db
 
 # This cog is for the banish/mute command and the region command.
-# banish/mute is closely connected to the region command since they both use the antarctica mechanics.
+# banish/mute is closely connected to the region command since
+# they both use the antarctica mechanics.
 # Therefor they're both in a cog separate from everything else.
 
-def setup(bot):
-    bot.add_cog(BanishRegionCog(bot))
+banish_aliases = ["unbanish", "microbanish",
+                  "superbanish", "SUPERBANISH",
+                  "megabanish", "MEGABANISH"]
 
-class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
+hogtie_aliases = ["hogtie", "unhogtie", "microhogtie",
+                  "tie", "untie", "microtie",
+                  "superhogtie", "SUPERHOGTIE",
+                  "supertie", "SUPERTIE",
+                  "megahogtie", "MEGAHOGTIE",
+                  "megatie", "MEGATIE"]
+
+mute_aliases = ["mute", "unmute", "micromute",
+                "supermute", "SUPERMUTE",
+                "megamute", "MEGAMUTE"]
+
+all_aliases = banish_aliases + hogtie_aliases + mute_aliases
+
+
+def setup(bot):
+    bot.add_cog(BanishAndRegion(bot))
+
+
+class BanishAndRegion(CogBase):
     """Good mod! Read the manual! Or if you're not mod - sod off!"""
     def __init__(self, bot, mdbname="mutes", rdbname="regions"):
         self.bot = bot
+        self.initialize_colors()
 
         # Server setting names
         # Mute interval governs how often to check for unmutes.
@@ -27,7 +52,8 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         self.default_mute_interval = 5
         self.mute_interval_dict = dict()
 
-        # Self mute interval governs how long to banish unauthorized uses of !mute/!banish etc
+        # Self mute interval governs how long to banish
+        # unauthorized uses of !mute/!banish etc
         self.self_mute_time_name = 'self_mute_time'
         self.default_self_mute_time = 20
         self.self_mute_time_dict = dict()
@@ -47,12 +73,12 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         # Complete list of tables and their rows in this database.
         # Primary key(s) is marked with an asterisk (*).
         # Mandatory but not primary keys are marked with a pling (!).
-        # TABLE             ROWS        TYPE        FUNCTION
-        # self.rdbname      role*       integer     Role ID
-        #                   server*     integer     Server ID
-        #                   triggers!   string      String of keywords for the region
-        # self.rdbname_bl   uid*        integer     User ID
-        #                   sid*        integer     Server ID
+        # TABLE            ROWS       TYPE     FUNCTION
+        # self.rdbname     role*      integer  Role ID
+        #                  server*    integer  Server ID
+        #                  triggers!  string   String of keywords for region
+        # self.rdbname_bl  uid*       integer  User ID
+        #                  sid*       integer  Server ID
         rdbtable = f"""CREATE TABLE IF NOT EXISTS {self.rdbname}(
             role        integer NOT NULL,
             server      integer NOT NULL,
@@ -67,7 +93,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         bot.db_create(self.bot, self.rdbname, rdbtable, comment="region table")
         bot.db_create(self.bot, self.rdbname, rdbtable_bl, comment="blacklist table")
 
-    @discord.ext.commands.Cog.listener()
+    @CogBase.listener()
     async def on_ready(self):
         for server in self.bot.guilds:
             # Set intervals in which to check mutes
@@ -93,13 +119,13 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
             await asyncio.sleep(self.mute_interval_dict[server.id])
 
             current_time = datetime.datetime.now()
-            server_mutes = mdb_fetch(self.bot, self.mdbname, server)
+            server_mutes = mute_db.mdb_fetch(self.bot, self.mdbname, server)
             mute_role = self.bot.servertuples[server.id].mute_role
             mute_channel = self.bot.servertuples[server.id].mute_channel
             unmuted = list()
 
             for mute in server_mutes:
-                if mute.until == None:
+                if mute.until is None:
                     continue
                 
                 member = mute.member
@@ -110,24 +136,24 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
                     if diff == "":  diff = "now"
                     else:           diff = f"{diff} ago"
 
-                    mdb_del(self.bot, self.mdbname, member) # Remove from database
+                    mute_db.mdb_del(self.bot, self.mdbname, member) # Remove from database
                     if mute_role in member.roles:
                         try:
                             await member.remove_roles(mute_role)
                             # Members are only considered unmuted if they had the antarctica role
                             unmuted.append(member)
                         except Exception as e:
-                            print(f"{self.bot.current_time()} {self.bot.RED_B}Mutes DB:{self.bot.CYAN} failed to remove " +
-                                f"mute role of{self.bot.CYAN_B} {member.name}#{member.discriminator} @ {server.name}.\n" +
-                                f"{self.bot.RED}==> {e}")
+                            print(f"{self.current_time()} {self.RED_B}Mutes DB:{self.CYAN} failed to remove " +
+                                f"mute role of{self.CYAN_B} {member.name}#{member.discriminator} @ {server.name}.\n" +
+                                f"{self.RED}==> {e}")
 
-                    print(f"{self.bot.current_time()} {self.bot.GREEN_B}Mutes DB:{self.bot.CYAN} auto-unmuted " +
-                        f"{self.bot.CYAN_B}{member.name}#{member.discriminator} @ {server.name}." +
-                        f"{self.bot.YELLOW} (due {diff}){self.bot.RESET}")
+                    print(f"{self.current_time()} {self.GREEN_B}Mutes DB:{self.CYAN} auto-unmuted " +
+                        f"{self.CYAN_B}{member.name}#{member.discriminator} @ {server.name}." +
+                        f"{self.YELLOW} (due {diff}){self.RESET}")
 
             # Time for some great regrets
             if len(unmuted) > 0:
-                unmuted = self.bot.mentions_list(unmuted)
+                unmuted = self.mentions_list(unmuted)
                 if len(unmuted) == 1:
                     await mute_channel.send(
                         f"It's with great regret that I must inform you all that {unmuted}'s exile has come to an end."
@@ -150,7 +176,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
                 interval = int(arg)
                 break
         
-        if interval == None:
+        if interval is None:
             await ctx.send(f"{author} You didn't specify a valid interval. Please try again.")
 
         elif interval == self.mute_interval_dict[server.id]:
@@ -182,7 +208,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
                 proposed_time = int(arg)
                 break
 
-        if proposed_time == None:
+        if proposed_time is None:
             await ctx.send(f"{author} Please specify the time in minutes and try again.")
 
         elif proposed_time == self.self_mute_time_dict[server.id]:
@@ -243,7 +269,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         # Add time if invocation is super or mega
         if is_super or is_mega:
             # Make sure a timedelta exists first.
-            if duration == None:
+            if duration is None:
                 duration = datetime.timedelta()
 
             # Super adds a week, mega adds a year
@@ -278,8 +304,10 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
             # Working mutes (at user mutes):
             # SINGLE, MULTI, FAIL, FAILS, SINGLE_FAIL, SINGLE_FAILS, MULTI_FAIL, MULTI_FAILS
             for member in usr:
-                if unmute:  error = await carry_out_unbanish(self.bot, self.mdbname, member)
-                else:       error = await carry_out_banish(self.bot, self.mdbname, member, end_date)
+                if unmute:
+                    error = await mute_db.carry_out_unbanish(self.bot, self.mdbname, member)
+                else:
+                    error = await mute_db.carry_out_banish(self.bot, self.mdbname, member, end_date)
 
                 if isinstance(error, Exception):
                     fails_list.append(member)
@@ -340,8 +368,8 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         # other_exception = True
 
         # Turn successes, fails and exceptions into strings
-        success_list = self.bot.mentions_list(success_list)
-        fails_list = self.bot.mentions_list(fails_list)
+        success_list = self.mentions_list(success_list)
+        fails_list = self.mentions_list(fails_list)
         error = str()
 
         if http_exception and forbidden_exception and other_exception:  error = "**a wild mix of crazy exceptions**"
@@ -390,7 +418,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         selfmute = (len(mentions) == 1 and author in mentions)
         mix      = (not selfmute and author in mentions)
         user     = (not selfmute and not mix and len(mentions) > 0)
-        fails    = self.bot.mentions_list([ mention for mention in mentions if mention != author ])
+        fails    = self.mentions_list([ mention for mention in mentions if mention != author ])
 
         if none:        template = MuteStr.USER_NONE
         elif selfmute:  template = MuteStr.USER_SELF
@@ -402,7 +430,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
         duration = self.bot.parse_timedelta(duration)
 
         # Carry out the banish with resulting end date
-        error = await carry_out_banish(self.bot, self.mdbname, author, end_date)
+        error = await mute_db.carry_out_banish(self.bot, self.mdbname, author, end_date)
 
         if isinstance(error, Exception):
             if isinstance(error, discord.Forbidden):        error = "**a lack of privilegies**"
@@ -434,7 +462,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
 
     #     if old_antarctica != new_antarctica:
     #         self.antarctica_role[guild.id] = new_antarctica
-    #         if new_antarctica != None:  new_antarctica = f"{var.green}@{new_antarctica}"
+    #         if new_antarctica is not None:  new_antarctica = f"{var.green}@{new_antarctica}"
     #         else:                       new_antarctica = f"{var.red}undefined"
     #         print(f"{var.cyan}The {var.boldwhite}Antarctica role{var.cyan} in",
     #               f"{var.red}{guild.name}{var.cyan} was updated to: {new_antarctica}{var.reset}")
@@ -453,7 +481,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
     #     if old_antarctica != new_antarctica:
     #         self.antarctica_channel[guild.id] = new_antarctica
 
-    #         if new_antarctica != None:  new_antarctica = f"{var.green}#{new_antarctica.name}{var.reset}"
+    #         if new_antarctica is not None:  new_antarctica = f"{var.green}#{new_antarctica.name}{var.reset}"
     #         else:                       new_antarctica = f"{var.red}undefined"
 
     #         print(f"{var.cyan}The {var.boldwhite}Antarctica channel{var.cyan} in",
@@ -468,7 +496,7 @@ class BanishRegionCog(discord.ext.commands.Cog, name='BanishRegionCog'):
     #     if old_trash != new_trash:
     #         self.trash_channel[guild.id] = new_trash
 
-    #         if new_trash != None:   new_trash = f"{var.green}#{new_trash.name}"
+    #         if new_trash is not None:   new_trash = f"{var.green}#{new_trash.name}"
     #         else:                   new_trash = f"{var.red}undefined"
 
     #         print(f"{var.cyan}The {var.boldwhite}trash channel{var.cyan} in",

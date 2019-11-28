@@ -1,10 +1,10 @@
 import discord
 from discord import Embed
-from internals.cogbase import CogBase
+from .cogbase import CogBase
 
 # Some imports used in type hints
 from discord import Member, TextChannel
-from internals.mrfreeze import MrFreeze
+from mrfreeze.bot import MrFreeze
 from typing import List
 
 

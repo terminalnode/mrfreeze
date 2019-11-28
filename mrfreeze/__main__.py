@@ -1,27 +1,28 @@
-from internals import mrfreeze  # The bot class itself
-import traceback                # Debugging loading of cogs
-import sys                      # Printing to stderr, exiting etc
+from mrfreeze import bot  # The bot class itself
+import traceback          # Debugging loading of cogs
+import sys                # Printing to stderr, exiting etc
 
 # Instantiate the bot.
-bot = mrfreeze.MrFreeze(command_prefix=["!"])
+bot = bot.MrFreeze(command_prefix=["!"])
 
 # Loading all the cogs.
 # One line for each cog makes it easy to disable.
 load_cogs = [
     # Silent(ish) bot functions.
-    "cogs.command_log",         # Logs all executed commands.
-    "cogs.inkcyclopedia",       # Listen for inkzzz.
-    "cogs.error_handling",      # How the bot deals with errors.
-    "cogs.temp_converter",      # How the bot deals with messages.
-    "cogs.departures",          # How the bot deals with departures.
-    "cogs.pin_handling",        # How the bot handles pins.
+    "mrfreeze.cogs.command_log",
+    "mrfreeze.cogs.inkcyclopedia",
+    "mrfreeze.cogs.error_handling",
+    "mrfreeze.cogs.temp_converter",
+    "mrfreeze.cogs.departures",
+    "mrfreeze.cogs.pin_handling",
     # Mostly for owner/mods
-    "cogs.maintenance",         # Owner-only commands
-    "cogs.moderation",          # Mod-only commands.
-    "cogs.banish.banish",       # Banish command.
+    "mrfreeze.cogs.maintenance",
+    "mrfreeze.cogs.moderation",
+    "mrfreeze.cogs.banish.banish",
+
     # Functions directed towards regular users.
-    "cogs.user_cmds",           # Various smaller commands: !vote, !mrfreeze
-    "cogs.about",               # !dummies, !readme, !source
+    "mrfreeze.cogs.user_cmds",
+    "mrfreeze.cogs.about",
 ]
 
 # Actual loading of cogs take place here.

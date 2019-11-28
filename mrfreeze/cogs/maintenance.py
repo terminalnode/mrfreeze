@@ -1,16 +1,17 @@
-import discord                      # Basic discord functionality
+# Basic discord functionality
+import discord
 # Required for bot restart
 import sys
 import os
 # Required to run shell commands
 from subprocess import run, PIPE
 # Required to check that only bot owner can run commands
-from internals import checks
-from internals.cogbase import CogBase
+from mrfreeze import checks
+from .cogbase import CogBase
 
 # Some imports used in type hints
 from discord.ext.commands.context import Context
-from internals.mrfreeze import MrFreeze
+from mrfreeze.bot import MrFreeze
 from typing import Tuple
 
 
@@ -59,7 +60,8 @@ class Maintenance(CogBase):
 
         # git seems to like to change how this message is written.
         do_restart: bool = False
-        if "alreadyuptodate" not in gitpull.lower().replace("-", "").replace(" ", ""):
+        sanitized_gitpull = gitpull.lower().replace("-", "").replace(" ", "")
+        if "alreadyuptodate" not in sanitized_gitpull:
             do_restart = True
 
         output: str = (f"**git fetch:**\n{gitfetch}\n\n" +

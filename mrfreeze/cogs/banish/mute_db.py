@@ -1,22 +1,28 @@
 import discord
-import datetime
-from collections import namedtuple
+from typing import NamedTuple
 
-BanishTuple = namedtuple('BanishTuple', ['member', 'voluntary', 'until'])
+from discord import Member
+from datetime import datetime
+
+
+class BanishTuple(NamedTuple):
+    member: Member
+    voluntary: bool
+    until: datetime
+
 
 # Complete list of tables and their rows in this database.
 # (These are created via the banish cog)
-# 
+#
 # Complete list of tables and their rows in this database.
 # Primary key(s) is marked with an asterisk (*).
 # Mandatory but not primary keys are marked with a pling (!).
 # TABLE         ROWS        TYPE        FUNCTION
 # self.mdbname  id*         integer     User ID
 #               server*     integer     Server ID
-#               voluntary!  boolean     If this mute was self-inflicted or not.
-#               until       date        The date when the user should be unbanned.
-#                                       Leave empty if indefinite.
-
+#               voluntary!  boolean     If this mute was self-inflicted or not
+#               until       date        The date when the user will be unbanned
+#                                       Leave empty if indefinite
 async def carry_out_banish(bot, mdbname, member, end_date):
     """Add the antarctica role to a user, then add them to the db.
     Return None if successful, Exception otherwise."""
@@ -26,13 +32,16 @@ async def carry_out_banish(bot, mdbname, member, end_date):
     result = None
 
     if mute_role not in roles:
-        try:                    await member.add_roles(mute_role)
-        except Exception as e:  result = e
+        try:
+            await member.add_roles(mute_role)
+        except Exception as e:
+            result = e
 
     if not isinstance(result, Exception):
         mdb_add(bot, mdbname, member, end_date=end_date)
 
     return result
+
 
 async def carry_out_unbanish(bot, mdbname, member):
     """Remove the antarctica role from a user, then remove them from the db.
@@ -43,13 +52,16 @@ async def carry_out_unbanish(bot, mdbname, member):
     result = None
 
     if mute_role in roles:
-        try:                    await member.remove_roles(mute_role)
-        except Exception as e:  result = e
+        try:
+            await member.remove_roles(mute_role)
+        except Exception as e:
+            result = e
 
     if not isinstance(result, Exception):
         mdb_del(bot, mdbname, member)
 
     return result
+
 
 def mdb_add(bot, mdbname, user, voluntary=False, end_date=None, prolong=True):
     """Add a new user to the mutes database."""
@@ -63,44 +75,54 @@ def mdb_add(bot, mdbname, user, voluntary=False, end_date=None, prolong=True):
     servername = user.guild.name
     name = f"{user.name}#{user.discriminator}"
     error = None
-    until = str()    # this string is filled in if called with an end_date
-    duration = str() # this string too
+    until = str()     # this string is filled in if called with an end_date
+    duration = str()  # this string too
 
     current_mute = mdb_fetch(bot, mdbname, user)
     is_muted = len(current_mute) != 0
-    if is_muted: mdb_del(bot, mdbname, user) # Always delete existing mutes
+    if is_muted:
+        # Always delete existing mutes
+        mdb_del(bot, mdbname, user)
 
-    if is_muted and end_date != None and prolong:
+    if is_muted and end_date is not None and prolong:
         old_until = current_mute[0].until
-        if old_until != None: # if current mute is permanent just replace it with a timed one
-            diff = end_date - datetime.datetime.now()
+        # if current mute is permanent just replace it with a timed one
+        if old_until is not None:
+            diff = end_date - datetime.now()
             try:
                 end_date = old_until + diff
             except OverflowError:
-                end_date = datetime.datetime.max
+                end_date = datetime.max
 
     with bot.db_connect(bot, mdbname) as conn:
         c = conn.cursor()
-        if end_date != None:
+        if end_date is not None:
             # Collect time info in string format for the log
             until = bot.db_time(end_date)
             until = f"\n{bot.GREEN}==> Until: {until} {bot.RESET}"
 
-            duration = end_date - datetime.datetime.now()
+            duration = end_date - datetime.now()
             duration = bot.parse_timedelta(duration)
             duration = f"{bot.YELLOW}(in {duration}){bot.RESET}"
 
-            end_date = bot.db_time(end_date) # Turn datetime object into string
+            # Turn datetime object into string
+            end_date = bot.db_time(end_date)
 
-            sql = f"INSERT INTO {mdbname}(id, server, voluntary, until) VALUES(?,?,?,?)"
+            sql = (f"INSERT INTO {mdbname}(id, server, voluntary, until) " +
+                   "VALUES(?,?,?,?)")
 
-            try:                    c.execute(sql, (uid, server, voluntary, end_date))
-            except Exception as e:  error = e
+            try:
+                c.execute(sql, (uid, server, voluntary, end_date))
+            except Exception as e:
+                error = e
 
-        elif end_date == None:
-            sql = f"INSERT INTO {mdbname}(id, server, voluntary) VALUES(?,?,?)"
-            try:                    c.execute(sql, (uid, server, voluntary))
-            except Exception as e:  error = e
+        elif end_date is None:
+            sql = (f"INSERT INTO {mdbname}(id, server, voluntary) " +
+                   "VALUES(?,?,?)")
+            try:
+                c.execute(sql, (uid, server, voluntary))
+            except Exception as e:
+                error = e
 
     if error == None:
         print(f"{bot.current_time()} {bot.GREEN_B}Mutes DB:{bot.CYAN} added user to DB: " +

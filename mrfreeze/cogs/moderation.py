@@ -1,74 +1,86 @@
 import discord                          # Basic discord functionality
 import re                               # Required for certain commands
 import asyncio                          # Required for banger !purge message
-from internals import checks            # Required to check for mod privilegies
-from internals.cogbase import CogBase   # Required inherit colors and stuff
+from mrfreeze import checks            # Required to check for mod privilegies
+from .cogbase import CogBase   # Required inherit colors and stuff
+
 
 # This cog is for commands restricted to mods on a server.
 # It features commands such as !ban, !kick, etc.
-
 def setup(bot):
-    bot.add_cog(ModCmdsCog(bot))
+    bot.add_cog(Moderation(bot))
 
-class ModCmdsCog(CogBase, name='Moderation'):
-    """Good mod! Read the manual! Or if you're not mod - sod off!"""
+
+class Moderation(CogBase):
+    """
+    Good mod! Read the manual! Or if you're not mod - sod off!
+    """
     def __init__(self, bot):
         self.bot = bot
         self.initialize_colors()
 
     def extract_reason(self, reason):
-        # This is a simple function that will return anything after the list of mentions.
+        # This is a simple function that will return
+        # anything after the list of mentions.
         # It's extremely clunky, but it gets the job done.
 
         output = reason
         in_mention = False
         for letter in range(len(reason)):
 
-            # If the current and two following characters form <@ and a digit, we
-            # assume that we're in a mention.
+            # If the current and two following characters form <@ and a digit,
+            # we assume that we're in a mention.
             if (reason[letter:letter+2] == '<@') and (reason[letter+2].isdigit()):
                 in_mention = True
 
-            # If we're in a mention and detect the closing >, we'll add all trailing
-            # characters to the output. These two steps are repeated until we have
-            # an output void of any mentions.
+            # If we're in a mention and detect the closing >, we'll add all
+            # trailing characters to the output. These two steps are repeated
+            # until we have an output void of any mentions.
             if in_mention and (reason[letter] == '>'):
                 in_mention = False
                 output = reason[(letter+1):]
 
         # If there's nothing left after these steps we'll return None.
         # Otherwise we'll return the output.
-        if len(output.strip()) == 0:    return None
-        else:                           return output.strip()
-
+        if len(output.strip()) == 0:
+            return None
+        else:
+            return output.strip()
 
     @discord.ext.commands.command(name='say', aliases=['speak', 'chat'])
     @discord.ext.commands.check(checks.is_mod)
-    async def _say(self, ctx, channel : discord.TextChannel, *args):
-        """Let me be your voice!"""
+    async def _say(self, ctx, channel: discord.TextChannel, *args):
+        """
+        Let me be your voice!
+        """
         replystr = ' '.join(args)
 
         # Now let's find all the custom emoji to make sure they all work.
         # If any of them don't, halt operations.
-        emoji = re.findall('<a?:\w+:(\d+)(?=>)', replystr)
+        emoji = re.findall(r"<a?:\w+:(\d+)(?=>)", replystr)
         impossible = False
         for i in emoji:
-            if self.bot.get_emoji(int(i)) == None:
+            if self.bot.get_emoji(int(i)) is None:
                 impossible = True
                 break
 
         # If a string of numbers is found, see if it's a user ID.
         # 1. Find strings of numbers not belonging to a mention.
         # 2. See if that number is a user ID for anyone we know.
-        users = re.findall('(?:\s|^)(\d+)', replystr)
-        users = [ ctx.guild.get_member(int(user)) for user in users if ctx.guild.get_member(int(user)) != None ]
+        users = re.findall(r"(?:\s|^)(\d+)", replystr)
+        users = [ctx.guild.get_member(int(user))
+                 for user in users
+                 if ctx.guild.get_member(int(user)) is not None]
         for user in users:
             replystr = replystr.replace(str(user.id), user.mention)
             replystr = replystr.replace(f'<@!<@!{user.id}>>', user.mention)
 
-        if impossible:  await ctx.channel.send(f"{ctx.author.mention} Abort! Abort! There are emoji in your message that I can't use..")
-        else:           await channel.send(replystr)
-
+        if impossible:
+            await ctx.channel.send(
+                    f"{ctx.author.mention} Abort! Abort! There are emoji " +
+                    "in your message that I can't use..")
+        else:
+            await channel.send(replystr)
 
     @discord.ext.commands.command(name='rules', aliases=['rule'])
     async def _rules(self, ctx, *args):
@@ -81,18 +93,19 @@ class ModCmdsCog(CogBase, name='Moderation'):
         }
 
         rule_triggers = {
-            1: ('1', 'joke', 'jokes', 'joking', 'sex', 'sexual', 'weight', 'race', 'skin',
-                'color', 'colour', 'gender', 'nice', 'decent', 'hate'),
-            2: ('2', 'civil', 'civility', 'mature', 'maturity', 'disagreement', 'dismissive',
-                'dismissal', 'opinion', 'opinions', 'shoe', 'shoes', 'shoesize', 'age', 'act',
-                'behave'),
-            3: ('3', 'topic', 'ontopic', 'offtopic', 'spam', 'nonsense')
+            1: ("1", "joke", "jokes", "joking", "sex", "sexual", "weight",
+                "race", "skin", "color", "colour", "gender", "nice", "decent",
+                "hate"),
+            2: ("2", "civil", "civility", "mature", "maturity", "disagreement",
+                "dismissive", "dismissal", "opinion", "opinions", "shoe",
+                "shoes", "shoesize", "age", "act", "behave"),
+            3: ("3", "topic", "ontopic", "offtopic", "spam", "nonsense")
         }
 
-        request = ' '.join(args).lower()
+        request = " ".join(args).lower()
         called_rules = str()
 
-        if 'all' in request:
+        if "all" in request:
             for rule in rules:
                 called_rules += f"{rules[rule]}\n"
         else:
@@ -101,45 +114,51 @@ class ModCmdsCog(CogBase, name='Moderation'):
                     if keyword in request and str(rule) not in called_rules:
                         called_rules += f"{rules[rule]}\n"
 
-        if len(called_rules) == 0:  await ctx.send(f"Sorry {ctx.author.mention}, your terms don't seem to match any rules. :thinking:")
-        else:                       await ctx.send(called_rules.strip())
+        if len(called_rules) == 0:
+            await ctx.send(f"Sorry {ctx.author.mention}, your terms don't " +
+                           "seem to match any rules. :thinking:")
+        else:
+            await ctx.send(called_rules.strip())
 
     @discord.ext.commands.command(name='ban', aliases=['purgeban', 'banpurge'])
     @discord.ext.commands.check(checks.is_mod)
     async def _ban(self, ctx, *args):
         """Remove a user from our sight - permanently."""
-        # This function simply bans a user from the server in which it's issued.
+        # This function simply bans a user from the server in which it's issued
         reason = self.extract_reason(' '.join(args))
         forbidden_error = False
         http_error = False
         success_list = list()
         fail_list = list()
 
-        if 'list' in args:
+        if "list" in args:
             # This is just a shortcut to invoke the listban command.
             banlist = True
         else:
             banlist = False
 
-        if ctx.invoked_with == 'ban':
+        if ctx.invoked_with == "ban":
             do_purge = False
         else:
             do_purge = True
 
-        mod_role = discord.utils.get(ctx.guild.roles, name='Administration')
-        mods_list = [ user for user in ctx.message.mentions if mod_role in user.roles ]
+        mod_role = discord.utils.get(ctx.guild.roles, name="Administration")
+        mods_list = [user
+                     for user in ctx.message.mentions
+                     if mod_role in user.roles]
 
-        if len(mods_list) > 0:
-            tried_to_ban_mod = True
-        else:
-            tried_to_ban_mod = False
-
-        for victim in [ user for user in ctx.message.mentions if user not in mods_list]:
+        for victim in [user
+                       for user in ctx.message.mentions
+                       if user not in mods_list]:
             try:
                 if not do_purge:
-                    await ctx.guild.ban(victim, reason=reason, delete_message_days=0)
+                    await ctx.guild.ban(victim,
+                                        reason=reason,
+                                        delete_message_days=0)
                 else:
-                    await ctx.guild.ban(victim, reason=reason, delete_message_days=7)
+                    await ctx.guild.ban(victim,
+                                        reason=reason,
+                                        delete_message_days=7)
 
                 success_list.append(victim)
 
@@ -211,18 +230,18 @@ class ModCmdsCog(CogBase, name='Moderation'):
         if not banlist:
             await ctx.send(replystr)
 
-
-    @discord.ext.commands.command(name='unban')
+    @discord.ext.commands.command(name="unban")
     @discord.ext.commands.check(checks.is_mod)
     async def _unban(self, ctx, *args):
-        """Unpermanent removal from sight of a previously banned user."""
-        # This function simply remover the ban of a user from the server in which it's issued.
+        """
+        Unpermanent removal from sight of a previously banned user.
+        """
         forbidden_error = False
         http_error = False
         banlist = list()
 
         # This is a shortcut to invoke the banlist command with !unban list.
-        if args == ('list',):
+        if args == ("list",):
             showbans = True
         else:
             showbans = False
@@ -237,23 +256,22 @@ class ModCmdsCog(CogBase, name='Moderation'):
         # We will assume that all args that are digits are ids
         # and all args of the form characters#fourdigits are
         # user names.
-        usr_names = re.findall('(?<=\s)\S+#\d{4}(?=\s)', (' ' + ctx.message.content + ' '))
-        usr_ids = re.findall('(?<=\s)\d+(?=\s)', (' ' + ctx.message.content + ' '))
+        usr_names = re.findall(r"(?<=\s)\S+#\d{4}(?=\s)", (" " + ctx.message.content + " "))
+        usr_ids = re.findall(r"(?<=\s)\d+(?=\s)", (" " + ctx.message.content + " "))
 
         success_list = list()
         fail_list = list()
         found_anyone = False
         for ban_entry in banlist:
             user = ban_entry.user
-            user_str = ('%s#%s' % (user.name, str(user.discriminator)))
+            user_str = f"{user.name}#{user.discriminator}"
 
-            # Below is an easy and expandable way to add criterias for unbanning.
+            # Below is an easy and expandable way to add criterias for unban.
             # Every if-statement corresponds to one criteria.
             #
-            # For example we could easily add this as an extra criteria if we wanted to.
-            # This would match any username, not requiring the #identifier
-            # elif (' ' + user.name + ' ') in (' ' + ctx.message.content + ' '):
-            #     entry_hit = True
+            # For example we could easily add this as an extra criteria
+            # if we wanted to. This would match any username, not requiring
+            # the #identifier
 
             if user_str in usr_names:
                 entry_hit = True
@@ -262,7 +280,7 @@ class ModCmdsCog(CogBase, name='Moderation'):
             else:
                 entry_hit = False
 
-            # If any of the above resulted in a hit, we'll try to remove the ban.
+            # If any of the above resulted in a hit we'll try to remove the ban
             if entry_hit:
                 found_anyone = True
                 try:
@@ -277,8 +295,9 @@ class ModCmdsCog(CogBase, name='Moderation'):
                     http_error = True
                     fail_list.append(user)
 
-        if forbidden_error or http_error:   any_error = True
-        else:                               any_error = False
+        any_error = False
+        if forbidden_error or http_error:
+            any_error = True
 
         if forbidden_error and http_error:
             error_str = 'a mix of insufficient privilegies and HTTP issues'
@@ -292,7 +311,6 @@ class ModCmdsCog(CogBase, name='Moderation'):
         # Now all we need is a reply string.
         ment_success = self.mentions_list(success_list)
         ment_fail = self.mentions_list(fail_list)
-
 
         if showbans:
             # This is just a shortcut to invoke the listban command.
@@ -340,16 +358,16 @@ class ModCmdsCog(CogBase, name='Moderation'):
         if not showbans:
             await ctx.send(replystr)
 
-
-
-    @discord.ext.commands.command(name='listban', aliases=['banlist','listbans','banslist'])
+    @discord.ext.commands.command(name="listban", aliases=["banlist", "listbans", "banslist"])
     @discord.ext.commands.check(checks.is_mod)
     async def _listban(self, ctx):
-        """Get a list of all banned users (useful for unbanning)."""
-        # Because it's tricky to find the exact user name/id when you can't highlight people,
-        # this function exists to get easy access to the list of bans in order to unban.
+        """
+        Get a list of all banned users (useful for unbanning).
+        """
+        # Because it's tricky to find the exact user name/id when you can't
+        # highlight people, this function exists to get easy access to the
+        # list of bans in order to unban.
 
-        # Viewing list of bans requires mod permissions.
         forbidden_error = False
         http_error = False
 
@@ -363,12 +381,12 @@ class ModCmdsCog(CogBase, name='Moderation'):
         general_error = (forbidden_error or http_error)
 
         if forbidden_error and not http_error:
-            error_str = 'insufficient privilegies'
+            error_str = "insufficient privilegies"
         elif not forbidden_error and http_error:
-            error_str = 'HTTP issues'
+            error_str = "HTTP issues"
         else:
             # This shouldn't happen, but you can never be too sure.
-            error_str = 'a mix of insufficient privilegies and HTTP issues'
+            error_str = "a mix of insufficient privilegies and HTTP issues"
 
         if not general_error:
             if len(banlist) == 0:
@@ -390,7 +408,6 @@ class ModCmdsCog(CogBase, name='Moderation'):
 
         await ctx.send(replystr)
 
-
     @discord.ext.commands.command(name='kick')
     @discord.ext.commands.check(checks.is_mod)
     async def _kick(self, ctx, *args):
@@ -401,16 +418,18 @@ class ModCmdsCog(CogBase, name='Moderation'):
         mods_list = list()
         forbidden_error = False
         http_error = False
-        reason = self.extract_reason(' '.join(args))
+        reason = self.extract_reason(" ".join(args))
 
         # If they tried to kick a mod christmas is cancelled.
-        mod_role = discord.utils.get(ctx.guild.roles, name='Administration')
-        mods_list = [ user for user in ctx.message.mentions if mod_role in user.roles ]
+        mod_role = discord.utils.get(ctx.guild.roles, name="Administration")
+        mods_list = [user
+                     for user in ctx.message.mentions
+                     if mod_role in user.roles]
         ment_mods = self.mentions_list(mods_list)
 
-        if len(mods_list) == 0: tried_to_kick_mod = False
-        else:                   tried_to_kick_mod = True
-
+        tried_to_kick_mod = False
+        if len(mods_list) > 0:
+            tried_to_kick_mod = True
 
         # Start the kicking.
         if len(ctx.message.mentions) > 0 and not tried_to_kick_mod:
@@ -439,15 +458,15 @@ class ModCmdsCog(CogBase, name='Moderation'):
                     fail_list.append(victim)
                     http_error = True
                     print(f"{self.RED_B}ERROR {self.CYAN}I couldn't {self.RED_B}!kick {self.WHITE_B}{victim.name}#{victim.discriminator}" +
-                        f"{self.CYAN} in {self.RED_B}{ctx.guild.name} {self.CYAN}due to an HTTP Exception.{self.RESET}")
+                          f"{self.CYAN} in {self.RED_B}{ctx.guild.name} {self.CYAN}due to an HTTP Exception.{self.RESET}")
 
         # This will convert the lists into mentions suitable for text display:
         # user1, user2 and user 3
         ment_success = self.mentions_list(success_list)
         ment_fail = self.mentions_list(fail_list)
 
-        ### Preparation of replystrings.
-        ### Errors are added further down.
+        # Preparation of replystrings.
+        # Errors are added further down.
 
         # Had at least one success and no fails.
         if (len(success_list) > 0) and (len(fail_list) == 0):
@@ -484,7 +503,7 @@ class ModCmdsCog(CogBase, name='Moderation'):
             # Singular and plural don't matter here.
             replystr = f"{ctx.author.mention} You forgot to mention anyone you doofus. Who exactly am I meant to kick??"
 
-        ### Now we're adding in the error codes if there are any.
+        # Now we're adding in the error codes if there are any.
         if forbidden_error and http_error:
             replystr += "Insufficient privilegies and HTTP exception."
         elif not forbidden_error and http_error:
@@ -492,7 +511,7 @@ class ModCmdsCog(CogBase, name='Moderation'):
         elif forbidden_error and not http_error:
             replystr += "Insufficient privilegies."
 
-        ### Finally, a special message to people who tried to kick a mod.
+        # Finally, a special message to people who tried to kick a mod.
         if tried_to_kick_mod:
             if (len(mods_list) == 1) and ctx.author in mods_list:
                 replystr = f"{ctx.author.mention} You can't kick yourself, silly."
@@ -501,11 +520,12 @@ class ModCmdsCog(CogBase, name='Moderation'):
 
         await ctx.send(replystr)
 
-
-    @discord.ext.commands.command(name='purge', aliases=['superpurge'])
+    @discord.ext.commands.command(name="purge", aliases=["superpurge"])
     @discord.ext.commands.check(checks.is_mod)
     async def _purge(self, ctx, *args):
-        """Delete a certain number of posts all at once."""
+        """
+        Delete a certain number of posts all at once.
+        """
         # This function will remove the last X number of posts in the channel.
         # Features:
         # - If message contains mentions, it will only delete messages by
@@ -514,14 +534,16 @@ class ModCmdsCog(CogBase, name='Moderation'):
         # - Also deletes message which called the function.
 
         # Delete the message containing the purge command.
-        try:    await ctx.message.delete()
-        except: pass
+        try:
+            await ctx.message.delete()
+        except Exception:
+            pass
 
         # We'll use the first number we can find in the arguments.
-        # We'll also parse negative numbers so the error message will be better.
+        # We'll also parse negative numbers so the error message will be better
         delete_no = 0
         for arg in args:
-            if arg.isdigit() or (arg[0] == '-' and arg[1:].isdigit()):
+            if arg.isdigit() or (arg[0] == "-" and arg[1:].isdigit()):
                 delete_no = int(arg)
                 break
 
@@ -529,27 +551,30 @@ class ModCmdsCog(CogBase, name='Moderation'):
             await ctx.send(f"{ctx.author.mention} You want me to delete {delete_no} messages? Good joke.")
             delete_no = 0
 
-        elif delete_no > 100 and ctx.invoked_with != 'superpurge':
+        elif delete_no > 100 and ctx.invoked_with != "superpurge":
             # For big deletes we post a warning message for a few seconds before deleting.
-            message = await ctx.send('`Purge overload detected, engaging safety protocols.`')
+            message = await ctx.send("`Purge overload detected, engaging safety protocols.`")
             await asyncio.sleep(1)
 
-            await message.edit(content=message.content + '\n`Purge size successfully contained to 100 messages.`')
+            await message.edit(
+                    content=(message.content +
+                             "\n`Purge size successfully contained " +
+                             "to 100 messages.`"))
             await asyncio.sleep(1)
 
-            await message.edit(content=message.content + '\n`Charging phasers...`')
+            await message.edit(content=message.content +
+                               "\n`Charging phasers...`")
             await asyncio.sleep(1)
 
-            oldmessage = message.content + '\n'
+            oldmessage = message.content + "\n"
 
             countdown = 3
             while countdown > 0:
                 if countdown == 0:
                     break
 
-                await message.edit(content=
-                        oldmessage + f'`Phaser at full charge in... {countdown}`'
-                )
+                await message.edit(content=oldmessage +
+                                   f"`Phaser at full charge in... {countdown}")
                 countdown -= 1
                 await asyncio.sleep(1)
 
@@ -565,10 +590,14 @@ class ModCmdsCog(CogBase, name='Moderation'):
             mentions = ctx.message.mentions
             no_mentions = (len(mentions) == 0)
 
-            if message.pinned:          return False
-            elif no_mentions:           return True
-            elif author in mentions:    return True
-            else:                       return False
+            if message.pinned:
+                return False
+            elif no_mentions:
+                return True
+            elif author in mentions:
+                return True
+            else:
+                return False
 
         try:
             await ctx.channel.purge(limit=delete_no, check=check_func)
@@ -602,14 +631,17 @@ class ModCmdsCog(CogBase, name='Moderation'):
     @discord.ext.commands.command(name='idban')
     @discord.ext.commands.check(checks.is_mod)
     async def _idban(self, ctx, *args):
-        """Quick and dirty function for banishing via ID. Might flesh it out later or merge with the real ban function."""
+        """
+        Quick and dirty function for banishing via ID.
+        Might flesh it out later or merge with the real ban function.
+        """
         if len(args) > 0 and args[0].isdigit():
-            banlist = await ctx.guild.bans()
             new_id = int(args[0])
             new_user = discord.Object(id=new_id)
             try:
                 await ctx.guild.ban(new_user)
-                await ctx.send('That little smud, whoever it is, has been banned!')
+                await ctx.send("That little smud, whoever it " +
+                               "is, has been banned!")
             except Exception as e:
                 print(e)
         else:

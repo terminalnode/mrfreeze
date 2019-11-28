@@ -1,7 +1,7 @@
 import inflect    # Used to convert number to word
 import traceback  # Debugging
 import sys        # Debugging
-from internals.cogbase import CogBase
+from .cogbase import CogBase
 
 # Various errors that we're going to be testing for
 from discord.ext.commands import CheckFailure, BadArgument, CommandInvokeError
@@ -10,7 +10,7 @@ from discord.ext.commands.cooldowns import BucketType
 
 # Some imports used in type hints
 from discord.ext.commands.context import Context
-from internals.mrfreeze import MrFreeze
+from mrfreeze.bot import MrFreeze
 
 
 def setup(bot: MrFreeze):

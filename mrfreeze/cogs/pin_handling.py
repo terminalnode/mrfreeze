@@ -1,15 +1,19 @@
 import discord  # Basic discord functionality
+from .cogbase import CogBase
+
 
 def setup(bot):
-    bot.add_cog(PinHandlerCog(bot))
+    bot.add_cog(PinHandler(bot))
 
-class PinHandlerCog(discord.ext.commands.Cog, name='PinHandler'):
+
+class PinHandler(CogBase):
     """Posts the content of a message that was just pinned to chat."""
     def __init__(self, bot):
         self.bot = bot
         self.pinsDict = None
+        self.initialize_colors()
 
-    @discord.ext.commands.Cog.listener()
+    @CogBase.listener()
     async def on_ready(self):
         pinsDict = dict()
         for guild in self.bot.guilds:
@@ -30,17 +34,20 @@ class PinHandlerCog(discord.ext.commands.Cog, name='PinHandler'):
         self.pinsDict = pinsDict
         print (f"{self.bot.CYAN_B}PinsDict all done!{self.bot.RESET}")
 
-    @discord.ext.commands.Cog.listener()
+    @CogBase.listener()
     async def on_guild_channel_pins_update(self, channel, last_pin):
         # Unfortunately we have to cast an empty return
         # if the dict isn't finished yet.
-        if self.pinsDict == None:
-            print (f"{self.bot.CYAN}The {self.bot.RED_B}pinsDict{self.bot.CYAN} isn't finished yet!{self.bot.RESET}")
+        if self.pinsDict is None:
+            print(f"{self.bot.CYAN}The {self.bot.RED_B}pinsDict " +
+                  "{self.bot.CYAN}isn't finished yet!{self.bot.RESET}")
             return
 
         # The channel might be new, if so we need to create an entry for it.
-        try:                self.pinsDict[channel.guild.id][channel.id]
-        except KeyError:    self.pinsDict[channel.guild.id][channel.id] = 0
+        try:
+            self.pinsDict[channel.guild.id][channel.id]
+        except KeyError:
+            self.pinsDict[channel.guild.id][channel.id] = 0
 
         # For comparisson between the two. These numbers will be
         # used to determine whether a pin was added or removed.
@@ -52,8 +59,9 @@ class PinHandlerCog(discord.ext.commands.Cog, name='PinHandler'):
 
         # If a pin was added when the bot was starting up, this won't work.
         # But it will work the next time as the pinsDict is updated.
-        if new_pins > old_pins: was_added = True
-        else:                   was_added = False
+        was_added = False
+        if new_pins > old_pins:
+            was_added = True
 
         # Updating the list of pins.
         self.pinsDict[channel.guild.id][channel.id] = new_pins
@@ -68,10 +76,14 @@ class PinHandlerCog(discord.ext.commands.Cog, name='PinHandler'):
 
             channel_history = message.channel.history(limit=10)
             for i in range(10):
-                sys_msg = await channel_history.next()
-                if isinstance(sys_msg.type, type(discord.MessageType.pins_add)):
-                    author = sys_msg.author.mention # This is the person who pinned the message.
-                    await sys_msg.delete()
-                    break # No need to look further.
+                sysmsg = await channel_history.next()
+                if isinstance(sysmsg.type, type(discord.MessageType.pins_add)):
+                    # This is the person who pinned the message.
+                    author = sysmsg.author.mention
+                    await sysmsg.delete()
+                    # No need to look further.
+                    break
 
-            await channel.send(f"The following message was just pinned by {author}:\n", embed=pinned_message)
+            await channel.send(
+                    f"The following message was just pinned by {author}:\n",
+                    embed=pinned_message)

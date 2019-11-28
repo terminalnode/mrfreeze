@@ -8,14 +8,14 @@ import re
 # The database is stored in an Airtable base
 from airtable.airtable import Airtable
 # To ensure only the bot owner can update the database
-from internals import checks
+from mrfreeze import checks
 # CogBase is a common base for all the cogs
-from internals.cogbase import CogBase
+from .cogbase import CogBase
 
 # Some imports used in type hints
 from discord import Message
 from discord.ext.commands.context import Context
-from internals.mrfreeze import MrFreeze
+from mrfreeze.bot import MrFreeze
 from typing import List, Optional, Pattern, Set, NamedTuple
 
 
