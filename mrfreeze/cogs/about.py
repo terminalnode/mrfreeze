@@ -28,27 +28,27 @@ class About(CogBase):
         self.initialize_colors()
 
     @discord.ext.commands.command(name="readme")
-    async def _readme(self, ctx: Context) -> None:
+    async def readme(self, ctx: Context) -> None:
         """Hands you a link to the readme file over on Github."""
         url = "https://github.com/terminalnode/mrfreeze/blob/master/README.md"
 
         embed = Embed(color=0x00dee9)
         embed.add_field(
             name="Readme",
-            value=f"My readme file is available [on Github]({url})")
+            value=f"My readme file is available [on Github]({url})!")
 
         image = File("images/readme.png")
         embed.set_thumbnail(url="attachment://readme.png")
         await ctx.send(embed=embed, file=image)
 
     @discord.ext.commands.command(name="source", aliases=source_aliases)
-    async def _source(self, ctx: Context) -> None:
+    async def source(self, ctx: Context) -> None:
         """Hands you a link to the MrFreeze repository over on Gitlab."""
         embed = Embed(color=0x00dee9)
         embed.add_field(
             name="Source code",
-            value=("My source code is available on " +
-                   "[Github](https://github.com/terminalnode/mrfreeze)!")
+            value=("My source code is available [on " +
+                   "Github](https://github.com/terminalnode/mrfreeze)!")
         )
 
         image = File("images/source.png")

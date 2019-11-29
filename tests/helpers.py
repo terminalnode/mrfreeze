@@ -3,67 +3,122 @@
 # And by derives I mean that it's basically copy-paste with small changes.
 
 import collections
-import itertools
 import inspect
-import unittest.mock
-from typing import Any
-from typing import Iterable
-from typing import Optional
+import itertools
+from typing import Any, Iterable, Optional
+from unittest.mock import AsyncMock, MagicMock
 
 import discord
+from discord.ext.commands import Context
 
 from mrfreeze.bot import MrFreeze
 
 guild_data = {
-    'id': 1,
-    'name': 'guild',
-    'region': 'Europe',
-    'verification_level': 2,
-    'default_notications': 1,
-    'afk_timeout': 100,
-    'icon': "icon.png",
-    'banner': 'banner.png',
-    'mfa_level': 1,
-    'splash': 'splash.png',
-    'system_channel_id': 464033278631084042,
-    'description': 'mocking is fun',
-    'max_presences': 10_000,
-    'max_members': 100_000,
-    'preferred_locale': 'UTC',
-    'owner_id': 1,
-    'afk_channel_id': 464033278631084042,
-}
+    "id": 1,
+    "name": "guild",
+    "region": "Europe",
+    "verification_level": 2,
+    "default_notications": 1,
+    "afk_timeout": 100,
+    "icon": "icon.png",
+    "banner": "banner.png",
+    "mfa_level": 1,
+    "splash": "splash.png",
+    "system_channel_id": 464033278631084042,
+    "description": "mocking is painful",
+    "max_presences": 10_000,
+    "max_members": 100_000,
+    "preferred_locale": "UTC",
+    "owner_id": 1,
+    "afk_channel_id": 464033278631084042}
 
 guild_instance = discord.Guild(
     data=guild_data,
-    state=unittest.mock.MagicMock()
-)
+    state=MagicMock())
 
-member_data = {'user': 'lemon', 'roles': [1]}
-state_mock = unittest.mock.MagicMock()
+member_data = {"user": "lemon", "roles": [1]}
+state_mock = MagicMock()
 member_instance = discord.Member(
     data=member_data,
     guild=guild_instance,
     state=state_mock)
 
-role_data = {'name': 'role', 'id': 1}
+role_data = {"name": "role", "id": 1}
 role_instance = discord.Role(
     guild=guild_instance,
-    state=unittest.mock.MagicMock(),
-    data=role_data
-)
+    state=MagicMock(),
+    data=role_data)
 
-bot_instance = MrFreeze(command_prefix=unittest.mock.MagicMock())
+# Create a Context instance to get a realistic MagicMock of `discord.ext.commands.Context`
+context_instance = Context(message=MagicMock(), prefix=MagicMock())
+
+# Create a Message instance to get a realistic MagicMock of `discord.Message`
+message_data = {
+    "id": 1,
+    "webhook_id": 431341013479718912,
+    "attachments": [],
+    "embeds": [],
+    "application": "Python Discord",
+    "activity": "mocking",
+    "channel": MagicMock(),
+    "edited_timestamp": "2019-10-14T15:33:48+00:00",
+    "type": "message",
+    "pinned": False,
+    "mention_everyone": False,
+    "tts": None,
+    "content": "content",
+    "nonce": None}
+
+channel_data = {
+    "id": 1,
+    "type": "TextChannel",
+    "name": "channel",
+    "parent_id": 1234567890,
+    "topic": "topic",
+    "position": 1,
+    "nsfw": False,
+    "last_message_id": 1,
+}
+
+state = MagicMock()
+channel = MagicMock()
+message_instance = discord.Message(
+    state=state,
+    channel=channel,
+    data=message_data)
+guild = MagicMock()
+channel_instance = discord.TextChannel(state=state, guild=guild, data=channel_data)
+
+bot_instance = MrFreeze(command_prefix=MagicMock())
 bot_instance.http_session = None
 bot_instance.api_client = None
 
-class CustomMockMixin(unittest.mock.MagicMock):
-    child_mock_type = unittest.mock.MagicMock
+# Create a Message instance to get a realistic MagicMock of `discord.Message`
+message_data = {
+    "id": 1,
+    "webhook_id": 431341013479718912,
+    "attachments": [],
+    "embeds": [],
+    "application": "Python Discord",
+    "activity": "mocking",
+    "channel": MagicMock(),
+    "edited_timestamp": "2019-10-14T15:33:48+00:00",
+    "type": "message",
+    "pinned": False,
+    "mention_everyone": False,
+    "tts": None,
+    "content": "content",
+    "nonce": None}
+
+class CustomMockMixin(MagicMock):
+    child_mock_type = MagicMock
     discord_id = itertools.count(0)
 
     def __init__(self, spec_set: Any = None, **kwargs):
-        name = kwargs.pop('name', None)
-        super().__init__(spec_set=spec_set, **kwargs)
+        name = kwargs.pop("name", None)
+        super().__init__(
+                spec_set=spec_set,
+                **kwargs)
 
         if name:
             self.name = name
@@ -84,7 +139,7 @@ class CustomMockMixin(unittest.mock.MagicMock):
         for name, _method in inspect.getmembers(
                 source,
                 inspect.iscoroutinefunction):
-            setattr(self, name, unittest.mock.AsyncMock())
+            setattr(self, name, AsyncMock())
 
 
 class HashableMixin(discord.mixins.EqualityComparable):
@@ -102,66 +157,61 @@ class ColourMixin():
         self.colour = color
 
 
-class MockRole(CustomMockMixin, unittest.mock.AsyncMock, HashableMixin):
+class MockRole(CustomMockMixin, AsyncMock, HashableMixin):
     def __init__(self, **kwargs) -> None:
         default_kwargs = {
             "id": next(self.discord_id),
             "name":
             "role",
-            "position": 1
-        }
+            "position": 1}
 
         super().__init__(
             spec_set=role_instance,
-            **collections.ChainMap(kwargs, default_kwargs)
-        )
+            **collections.ChainMap(kwargs, default_kwargs))
 
         if "mention" not in kwargs:
             self.mention = f"&{self.name}"
 
     def __lt__(self, other):
-        """
-        Simplified position-based comparisons
-        similar to those of `discord.Role`.
-        """
         return self.position < other.position
 
 
-class MockGuild(CustomMockMixin, unittest.mock.AsyncMock, HashableMixin):
+class MockGuild(CustomMockMixin, AsyncMock, HashableMixin):
     def __init__(self, roles: Optional[Iterable[MockRole]] = None, **kwargs) -> None:
         default_kwargs = {
             "id": next(self.discord_id),
-            "members": []
-        }
+            "members": []}
+
         super().__init__(
             spec_set=guild_instance,
             **collections.ChainMap(
                 kwargs,
-                default_kwargs)
-            )
+                default_kwargs))
 
         self.roles = [MockRole(name="@everyone", position=1, id=0)]
         if roles:
             self.roles.extend(roles)
 
 
-class MockMember(CustomMockMixin, unittest.mock.AsyncMock, ColourMixin, HashableMixin):
+class MockMember(CustomMockMixin, AsyncMock, ColourMixin, HashableMixin):
     def __init__(self, roles: Optional[Iterable[MockRole]] = None, **kwargs) -> None:
-        default_kwargs = {'name': 'member', 'id': next(self.discord_id)}
+        default_kwargs = {
+            "name": "member",
+            "id": next(self.discord_id)}
+
         super().__init__(
             spec_set=member_instance,
-            **collections.ChainMap(kwargs, default_kwargs)
-        )
+            **collections.ChainMap(kwargs, default_kwargs))
 
         self.roles = [MockRole(name="@everyone", position=1, id=0)]
         if roles:
             self.roles.extend(roles)
 
-        if 'mention' not in kwargs:
+        if "mention" not in kwargs:
             self.mention = f"@{self.name}"
 
 
-class MockMrFreeze(CustomMockMixin, unittest.mock.AsyncMock):
+class MockMrFreeze(CustomMockMixin, AsyncMock):
     def __init__(self, **kwargs) -> None:
         super().__init__(spec_set=bot_instance, **kwargs)
 
@@ -169,10 +219,44 @@ class MockMrFreeze(CustomMockMixin, unittest.mock.AsyncMock):
         # coroutine nonetheless and and should therefore be awaited.
         # (The documentation calls it a coroutine as well, which
         # is technically incorrect, since it's a regular def.)
-        self.wait_for = unittest.mock.AsyncMock()
+        self.wait_for = AsyncMock()
 
         # Since calling `create_task` on our MockBot does not actually
         # schedule the coroutine object as a task in the asyncio loop,
         # this `side_effect` calls `close()` on the coroutine object
         # to prevent "has not been awaited"-warnings.
         self.loop.create_task.side_effect = lambda coroutine: coroutine.close()
+
+
+class MockTextChannel(CustomMockMixin, AsyncMock, HashableMixin):
+    def __init__(self, name: str = "channel", channel_id: int = 1, **kwargs) -> None:
+        default_kwargs = {
+            "id": next(self.discord_id),
+            "name": "channel",
+            "guild": MockGuild()}
+        super().__init__(
+            spec_set=channel_instance,
+            **collections.ChainMap(kwargs, default_kwargs))
+
+        if "mention" not in kwargs:
+            self.mention = f"#{self.name}"
+
+
+class MockContext(CustomMockMixin, AsyncMock):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(
+            spec_set=context_instance,
+            **kwargs)
+        self.bot = kwargs.get("bot", MockMrFreeze())
+        self.guild = kwargs.get("guild", MockGuild())
+        self.author = kwargs.get("author", MockMember())
+        self.channel = kwargs.get("channel", MockTextChannel())
+
+
+class MockMessage(CustomMockMixin, AsyncMock):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(
+            spec_set=message_instance,
+            **kwargs)
+        self.author = kwargs.get("author", MockMember())
+        self.channel = kwargs.get("channel", MockTextChannel())
