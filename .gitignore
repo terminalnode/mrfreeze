@@ -5,6 +5,7 @@ token
 config/*
 !config/mrfreezequotes
 databases
+.coverage
 
 # File to test various code snippets.
 experimentation.py

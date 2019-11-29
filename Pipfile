@@ -3,20 +3,28 @@ name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
-[dev-packages]
-pylint = "*"
-jedi = "*"
-mypy = "*"
-flake8 = "*"
-rope = "*"
-
 [packages]
 discord-py = "~=1.2"
 airtable-python-wrapper = "~=0.12"
 inflect = "~=3.0"
+
+[dev-packages]
+pylint = "*"
+jedi = "*"
+mypy = "*"
+rope = "*"
+flake8 = "*"
+flake8-docstrings = "*"
+flake8-annotations = "*"
+flake8-bugbear = "*"
+flake8-tidy-imports = "*"
+flake8-import-order = "*"
+coverage = "*"
 
 [requires]
 python_version = "3.8"
 
 [scripts]
 bot = "python -m mrfreeze"
+test = "coverage run -m unittest"
+report = "coverage report"
