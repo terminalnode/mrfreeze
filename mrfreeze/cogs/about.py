@@ -1,15 +1,18 @@
-import discord
-from discord import File
-from discord import Embed
-from .cogbase import CogBase
+"""A simple cog that provides some links and info to the user."""
 
-# Some imports used in type hints
 from typing import List
-from mrfreeze.bot import MrFreeze
+
+import discord
+from discord import Embed
+from discord import File
 from discord.ext.commands import Context
+
+from mrfreeze.bot import MrFreeze
+from mrfreeze.cogs.cogbase import CogBase
 
 
 def setup(bot):
+    """Add the cog to the bot."""
     bot.add_cog(About(bot))
 
 
@@ -22,14 +25,16 @@ todo_aliases: List[str] = [
 
 
 class About(CogBase):
-    """Use these commands to unlock my deepest, darkest inner secrets!"""
+    """Use these commands to unlock my deepest, darkest inner secrets."""
+
     def __init__(self, bot: MrFreeze):
+        """Initialize the About cog."""
         self.bot = bot
         self.initialize_colors()
 
     @discord.ext.commands.command(name="readme")
     async def readme(self, ctx: Context) -> None:
-        """Hands you a link to the readme file over on Github."""
+        """Get a link to the readme file over on Github."""
         url = "https://github.com/terminalnode/mrfreeze/blob/master/README.md"
 
         embed = Embed(color=0x00dee9)
@@ -43,7 +48,7 @@ class About(CogBase):
 
     @discord.ext.commands.command(name="source", aliases=source_aliases)
     async def source(self, ctx: Context) -> None:
-        """Hands you a link to the MrFreeze repository over on Gitlab."""
+        """Get a link to the MrFreeze repository over on Github."""
         embed = Embed(color=0x00dee9)
         embed.add_field(
             name="Source code",
@@ -56,8 +61,8 @@ class About(CogBase):
         await ctx.send(embed=embed, file=image)
 
     @discord.ext.commands.command(name="getfreeze", aliases=getfreeze_aliases)
-    async def _getfreeze(self, ctx: Context) -> None:
-        """Get an invite link to invite MrFreeze to your server!"""
+    async def getfreeze(self, ctx: Context) -> None:
+        """Get an invite link to invite MrFreeze to your server."""
         botname = self.bot.user.name
         url = ("https://discordapp.com/oauth2/authorize?" +
                f"client_id={self.bot.user.id}&scope=bot")
@@ -72,15 +77,15 @@ class About(CogBase):
                 "server infrastructure (roles etc.)."))
         embed.add_field(
             name=f"Invite link for {botname}",
-            value=(f"[Invite {botname} to a server.]({url})"))
+            value=(f"[Invite {botname} to a server]({url})"))
 
-        botpic = self.bot.user.avatar_url_as(static_format='png')
+        botpic = self.bot.user.avatar_url_as(static_format="png")
         embed.set_thumbnail(url=botpic)
         await ctx.send(embed=embed)
 
-    @discord.ext.commands.command(name='dummies')
-    async def _dummies(self, ctx: Context) -> None:
-        """Supplies you with links to invite Ba'athman and Robin."""
+    @discord.ext.commands.command(name="dummies")
+    async def dummies(self, ctx: Context) -> None:
+        """Get links to invite Ba'athman and Robin."""
         baathman_url: str = ("https://discordapp.com/oauth2/authorize?" +
                              "client_id=469030362119667712&scope=bot")
         robin_url: str = ("https://discordapp.com/oauth2/authorize?" +
@@ -95,17 +100,17 @@ class About(CogBase):
                 "such as trying out kick and ban commands.")
         )
         embed.add_field(
-            name='Dummy Bots',
-            value=(f"[Invite Ba'athman to a server.]({baathman_url})\n" +
-                   f"[Invite Robin to a server.]({robin_url})"))
+            name="Dummy Bots",
+            value=(f"[Invite Ba'athman to a server]({baathman_url})\n" +
+                   f"[Invite Robin to a server]({robin_url})"))
 
         image = File("images/dummies.png")
         embed.set_thumbnail(url="attachment://dummies.png")
         await ctx.send(embed=embed, file=image)
 
-    @discord.ext.commands.command(name='todo', aliases=todo_aliases)
-    async def _todos(self, ctx: Context) -> None:
-        """Supplies you with a list of my planned features."""
+    @discord.ext.commands.command(name="todo", aliases=todo_aliases)
+    async def todos(self, ctx: Context) -> None:
+        """Get a list of planned features for the bot."""
         url = "https://github.com/terminalnode/mrfreeze/blob/master/TODO.md"
 
         embed = Embed(color=0x00dee9)
