@@ -1,61 +1,58 @@
-import inflect    # Used to convert number to word
-import traceback  # Debugging
-import sys        # Debugging
+import sys
+import traceback
+
+import inflect
+
+from mrfreeze.bot import MrFreeze
+from mrfreeze import colors
+
 from .cogbase import CogBase
 
-# Various errors that we're going to be testing for
-from discord.ext.commands import CheckFailure, BadArgument, CommandInvokeError
-from discord.ext.commands import CommandOnCooldown, CommandNotFound
+from discord.ext.commands import BadArgument, CheckFailure, CommandInvokeError
+from discord.ext.commands import CommandNotFound, CommandOnCooldown
+from discord.ext.commands.context import Context
 from discord.ext.commands.cooldowns import BucketType
 
-# Some imports used in type hints
-from discord.ext.commands.context import Context
-from mrfreeze.bot import MrFreeze
-
-
 def setup(bot: MrFreeze):
+    """Add the cog to the bot."""
     bot.add_cog(ErrorHandler(bot))
 
 
 class ErrorHandler(CogBase):
-    """
-    How the bot acts when errors occur.
-    """
+    """How the bot acts when errors occur."""
+
     def __init__(self, bot: MrFreeze) -> None:
         self.bot = bot
-        self.initialize_colors()
 
     @CogBase.listener()
     async def on_command_error(self, ctx: Context, error) -> None:
-        """
-        What happens when we encounter a command error? This happens.
-        """
+        """What happens when we encounter a command error? This happens."""
         time: str = self.current_time()
         username: str = f"{ctx.author.name}#{ctx.author.discriminator}"
         mention: str = ctx.author.mention
-        invocation: str = f"{self.WHITE_B}{ctx.prefix}{ctx.invoked_with}"
+        invocation: str = f"{colors.WHITE_B}{ctx.prefix}{ctx.invoked_with}"
 
         if isinstance(error, CheckFailure):
-            print(f"{time} {self.RED_B}Check failure: {self.CYAN}" +
+            print(f"{time} {colors.RED_B}Check failure: {colors.CYAN}" +
                   f"{username} tried to illegaly invoke {invocation}" +
-                  f"{self.RESET}")
+                  f"{colors.RESET}")
 
         elif isinstance(error, BadArgument):
-            print(f"{time} {self.RED_B}Bad arguments: {self.CYAN}{username} " +
-                  f"while using command {invocation}{self.RESET}")
+            print(f"{time} {colors.RED_B}Bad arguments: {colors.CYAN}{username} " +
+                  f"while using command {invocation}{colors.RESET}")
             await ctx.send(f"{mention} That's not quite the information I " +
                            "need to execute that command.")
 
         elif isinstance(error, CommandNotFound):
-            print(f"{time} {self.RED_B}Command not found: {self.CYAN}" +
-                  f"{username} tried to use {invocation}{self.RESET}")
+            print(f"{time} {colors.RED_B}Command not found: {colors.CYAN}" +
+                  f"{username} tried to use {invocation}{colors.RESET}")
 
         elif isinstance(error, CommandInvokeError):
             # On Timeout Error, a CommandInvokeError containing the original
             # error is returned. Not the original TimeoutError itself.
             error_name: str = type(error.original).__name__
-            print(f"{time} {self.RED_B}{error_name}: {self.CYAN}" +
-                  f"{username} tried to use {invocation}{self.RESET}")
+            print(f"{time} {colors.RED_B}{error_name}: {colors.CYAN}" +
+                  f"{username} tried to use {invocation}{colors.RESET}")
 
         elif isinstance(error, CommandOnCooldown):
             if error.cooldown.rate == 1:
@@ -107,8 +104,8 @@ class ErrorHandler(CogBase):
 
         else:
             # Who knows what happened? The stack trace, that's who.
-            print(f"{time} {self.RED_B}Unclassified error: " +
-                  f"{self.WHITE_B}{error}{self.RESET}")
+            print(f"{time} {colors.RED_B}Unclassified error: " +
+                  f"{colors.WHITE_B}{error}{colors.RESET}")
             traceback.print_exception(
                     type(error),
                     error,

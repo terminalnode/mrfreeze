@@ -17,6 +17,7 @@ class TempUnit(Enum):
 
 
 def setup(bot):
+    """Add the cog to the bot."""
     bot.add_cog(TemperatureConverter(bot))
 
 
@@ -62,7 +63,7 @@ class TemperatureConverter(CogBase):
         # Calculate converted temperature,
         # see if it's above or equal to dog threshold.
         if statement["origin"] == TempUnit.C:
-            new_temp = self.celcius_table(
+            new_temp = self.celsius_table(
                 statement["temperature"],
                 statement["destination"])
             in_c = statement["temperature"]
@@ -130,12 +131,12 @@ class TemperatureConverter(CogBase):
         # Space or ° mandatory for kelvin to avoid
         # collision with k as in thousand.
         numbers = r"(?:(?:\s|^)-)?\d+(?:[,.]\d+)? ?"
-        celcius = r"°?(?:c|celcius|celsius|civili[sz]ed units?)"
+        celsius = r"°?(?:c|celcius|celsius|civili[sz]ed units?)"
         fahrenheit = r"°?(?:f|fahrenheit|freedom units?)"
         degrees = r"°?(?:deg|degrees)"
         kelvin = r"(?:k|kelvin)"
         rankine = r"°?(?:r|rankine)"
-        regex = (f"({numbers})(?:({celcius})|({fahrenheit})" +
+        regex = (f"({numbers})(?:({celsius})|({fahrenheit})" +
                  fr"|([ °]{kelvin})|({rankine})|({degrees}))(?:\s|$)")
         statement = re.search(regex, text, re.IGNORECASE)
         if not statement:
@@ -171,7 +172,7 @@ class TemperatureConverter(CogBase):
                 elif discord.utils.get(roles, name="North America") is not None:
                     result["origin"] = TempUnit.F
                 else:
-                    # Default is celcius
+                    # Default is celsius
                     result["origin"] = TempUnit.C
             else:
                 # DMs
@@ -179,10 +180,10 @@ class TemperatureConverter(CogBase):
 
         # Determine destination unit
         # First we'll look for force conversions
-        no_catch = (fr"(?:(?:{numbers}) ?(?:{celcius}|{fahrenheit}|" +
+        no_catch = (fr"(?:(?:{numbers}) ?(?:{celsius}|{fahrenheit}|" +
                     fr"{degrees}|[ °]{kelvin}|{rankine})) (?:for|in|as" +
                     fr"|(?:convert )?to|convert)")
-        find_convert = (fr"{no_catch} (?:({celcius})|({fahrenheit})" +
+        find_convert = (fr"{no_catch} (?:({celsius})|({fahrenheit})" +
                         fr"|(°?{kelvin})|({rankine}))(?:\s|$)")
         conversion = re.search(find_convert, text, re.IGNORECASE)
 
@@ -215,7 +216,7 @@ class TemperatureConverter(CogBase):
 
         return result
 
-    def celcius_table(self, temp, dest):
+    def celsius_table(self, temp, dest):
         if dest == TempUnit.C:
             return temp
         elif dest == TempUnit.F:
@@ -236,8 +237,8 @@ class TemperatureConverter(CogBase):
             return temp + 459.67
 
     def kelvin_table(self, temp, dest):
-        in_celcius = (temp - 273.15)
-        return self.celcius_table(in_celcius, dest)
+        in_celsius = (temp - 273.15)
+        return self.celsius_table(in_celsius, dest)
 
     def rankine_table(self, temp, dest):
         in_fahrenheit = (temp - 459.67)

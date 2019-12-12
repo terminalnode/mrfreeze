@@ -1,28 +1,24 @@
-import discord
-# Airtable data is saved locally to file
 import csv
-# To ensure if the inkfile exists and if airtable settings exist
 import os
-# To check for inks in messages
 import re
-# The database is stored in an Airtable base
-from airtable.airtable import Airtable
-# To ensure only the bot owner can update the database
-from mrfreeze import checks
-# CogBase is a common base for all the cogs
-from .cogbase import CogBase
+from typing import List, NamedTuple, Optional, Pattern, Set
 
-# Some imports used in type hints
+import discord
 from discord import Message
 from discord.ext.commands.context import Context
+
+from airtable.airtable import Airtable
+
+from mrfreeze import checks, colors
 from mrfreeze.bot import MrFreeze
-from typing import List, Optional, Pattern, Set, NamedTuple
+from .cogbase import CogBase
 
 
 # Small cog listening to all incoming messages looking for mentions of inks.
 # Based on The Inkcyclopedia by klundtasaur:
 # https://www.reddit.com/r/fountainpens/comments/5egjsa/klundtasaurs_inkcyclopedia_for_rfountainpens/
 def setup(bot):
+    """Add the cog to the bot."""
     bot.add_cog(Inkcyclopedia(bot))
 
 
@@ -37,7 +33,6 @@ class Inkcyclopedia(CogBase):
     it looks like!"""
     def __init__(self, bot: MrFreeze) -> None:
         self.bot: MrFreeze = bot
-        self.initialize_colors()
 
         self.inkydb:     Set[InkyTuple] = set()
         self.inkdb_path: str = f"{bot.db_prefix}/inkcyclopedia.csv"
@@ -74,8 +69,8 @@ class Inkcyclopedia(CogBase):
 
         # Print that the ink database has been loaded and with how many inks.
         print(
-            f"{self.CYAN}The ink database has been loaded with " +
-            f"{self.MAGENTA_B}{len(self.inkydb)} inks{self.CYAN}!{self.RESET}"
+            f"{colors.CYAN}The ink database has been loaded with " +
+            f"{colors.MAGENTA_B}{len(self.inkydb)} inks{colors.CYAN}!{colors.RESET}"
         )
 
     async def fetch_inks(self) -> None:

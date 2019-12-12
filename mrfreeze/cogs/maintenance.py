@@ -18,6 +18,7 @@ from typing import Tuple
 # This cog is for commands restricted to the owner of the bot (me!).
 # It has features like !restart and !gitupdate.
 def setup(bot):
+    """Add the cog to the bot."""
     bot.add_cog(Maintenance(bot))
 
 

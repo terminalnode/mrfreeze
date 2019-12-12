@@ -1,23 +1,25 @@
-import discord                          # Basic discord functionality
-import re                               # Required for certain commands
-import asyncio                          # Required for banger !purge message
-from mrfreeze import checks            # Required to check for mod privilegies
-from .cogbase import CogBase   # Required inherit colors and stuff
+import asyncio
+import re
+
+import discord
+
+from mrfreeze import checks
+from mrfreeze import colors
+
+from .cogbase import CogBase
 
 
 # This cog is for commands restricted to mods on a server.
 # It features commands such as !ban, !kick, etc.
 def setup(bot):
+    """Add the cog to the bot."""
     bot.add_cog(Moderation(bot))
 
 
 class Moderation(CogBase):
-    """
-    Good mod! Read the manual! Or if you're not mod - sod off!
-    """
+    """Good mod! Read the manual! Or if you're not mod - sod off!"""
     def __init__(self, bot):
         self.bot = bot
-        self.initialize_colors()
 
     def extract_reason(self, reason):
         # This is a simple function that will return
@@ -50,9 +52,7 @@ class Moderation(CogBase):
     @discord.ext.commands.command(name='say', aliases=['speak', 'chat'])
     @discord.ext.commands.check(checks.is_mod)
     async def _say(self, ctx, channel: discord.TextChannel, *args):
-        """
-        Let me be your voice!
-        """
+        """Let me be your voice."""
         replystr = ' '.join(args)
 
         # Now let's find all the custom emoji to make sure they all work.
@@ -86,10 +86,12 @@ class Moderation(CogBase):
     async def _rules(self, ctx, *args):
         """Remind users of what the rules are."""
         rules = {
-            1: "Rule 1: Be nice and decent to everyone. Hate speech will not be tolerated.",
+            1: "Rule 1: Be nice and decent to everyone. " +
+               "Hate speech will not be tolerated.",
             2: "Rule 2: Keep discussions civil and mature.",
             3: "Rule 3: Stay on topic and avoid spamming.",
-            4: "Rule 4: Please use common sense when posting here and follow usual Discord etiquette."
+            4: "Rule 4: Please use common sense when posting here and " +
+               "follow usual Discord etiquette."
         }
 
         rule_triggers = {
@@ -233,9 +235,7 @@ class Moderation(CogBase):
     @discord.ext.commands.command(name="unban")
     @discord.ext.commands.check(checks.is_mod)
     async def _unban(self, ctx, *args):
-        """
-        Unpermanent removal from sight of a previously banned user.
-        """
+        """Unpermanent removal from sight of a previously banned user."""
         forbidden_error = False
         http_error = False
         banlist = list()
@@ -361,9 +361,7 @@ class Moderation(CogBase):
     @discord.ext.commands.command(name="listban", aliases=["banlist", "listbans", "banslist"])
     @discord.ext.commands.check(checks.is_mod)
     async def _listban(self, ctx):
-        """
-        Get a list of all banned users (useful for unbanning).
-        """
+        """Get a list of all banned users (useful for unbanning)."""
         # Because it's tricky to find the exact user name/id when you can't
         # highlight people, this function exists to get easy access to the
         # list of bans in order to unban.
@@ -437,28 +435,28 @@ class Moderation(CogBase):
                 try:
                     if reason == None:
                         await ctx.guild.kick(victim)
-                        print(f"{self.WHITE_B}{victim.name}#{victim.discriminator}{self.CYAN} was " +
-                            f"{self.RED_B}kicked from {ctx.guild.name} {self.CYAN}by {self.GREEN_B}" +
+                        print(f"{colors.WHITE_B}{victim.name}#{victim.discriminator}{colors.CYAN} was " +
+                            f"{colors.RED_B}kicked from {ctx.guild.name} {colors.CYAN}by {colors.GREEN_B}" +
                             f"{ctx.author.name}#{ctx.author.discriminator}")
                     else:
                         await ctx.guild.kick(victim, reason=reason)
-                        print(f"{self.WHITE_B}{victim.name}#{victim.discriminator}{self.CYAN} was " +
-                            f"{self.RED_B}kicked from {ctx.guild.name} {self.CYAN}by {self.GREEN_B}" +
-                            f"{ctx.author.name}#{ctx.author.discriminator}{self.CYAN}.\n{self.WHITE_B}Reason given: " +
-                            f"{self.WHITE}{reason}{self.RESET}")
+                        print(f"{colors.WHITE_B}{victim.name}#{victim.discriminator}{colors.CYAN} was " +
+                            f"{colors.RED_B}kicked from {ctx.guild.name} {colors.CYAN}by {colors.GREEN_B}" +
+                            f"{ctx.author.name}#{ctx.author.discriminator}{colors.CYAN}.\n{colors.WHITE_B}Reason given: " +
+                            f"{colors.WHITE}{reason}{colors.RESET}")
                     success_list.append(victim)
 
                 except discord.Forbidden:
                     fail_list.append(victim)
                     forbidden_error = True
-                    print(f"{self.RED_B}ERROR {self.CYAN}I was not allowed to {self.RED_B}!kick {self.WHITE_B}{victim.name}#{victim.discriminator}" +
-                        f"{self.CYAN} in {self.RED_B}{ctx.guild.name}{self.CYAN}.{self.RESET}")
+                    print(f"{colors.RED_B}ERROR {colors.CYAN}I was not allowed to {colors.RED_B}!kick {colors.WHITE_B}{victim.name}#{victim.discriminator}" +
+                        f"{colors.CYAN} in {colors.RED_B}{ctx.guild.name}{colors.CYAN}.{colors.RESET}")
 
                 except discord.HTTPException:
                     fail_list.append(victim)
                     http_error = True
-                    print(f"{self.RED_B}ERROR {self.CYAN}I couldn't {self.RED_B}!kick {self.WHITE_B}{victim.name}#{victim.discriminator}" +
-                          f"{self.CYAN} in {self.RED_B}{ctx.guild.name} {self.CYAN}due to an HTTP Exception.{self.RESET}")
+                    print(f"{colors.RED_B}ERROR {colors.CYAN}I couldn't {colors.RED_B}!kick {colors.WHITE_B}{victim.name}#{victim.discriminator}" +
+                          f"{colors.CYAN} in {colors.RED_B}{ctx.guild.name} {colors.CYAN}due to an HTTP Exception.{colors.RESET}")
 
         # This will convert the lists into mentions suitable for text display:
         # user1, user2 and user 3
@@ -603,27 +601,27 @@ class Moderation(CogBase):
             await ctx.channel.purge(limit=delete_no, check=check_func)
 
         except discord.Forbidden:
-            print(f"{self.RED_B}!purge failed{self.CYAN} in " +
-                f"{self.CYAN_B}#{ctx.channel.name}{self.YELLOW_B} @ {self.CYAN_B}{ctx.guild.name}" +
-                f"{self.RED_B} (Forbidden){self.RESET}")
+            print(f"{colors.RED_B}!purge failed{colors.CYAN} in " +
+                f"{colors.CYAN_B}#{ctx.channel.name}{colors.YELLOW_B} @ {colors.CYAN_B}{ctx.guild.name}" +
+                f"{colors.RED_B} (Forbidden){colors.RESET}")
 
             await ctx.send(
                 f"{ctx.author.mention} An error occured, it seems I'm lacking the" +
                 "privilegies to carry out your Great Purge.")
 
         except discord.HTTPException:
-            print(f"{self.RED_B}!purge failed{self.CYAN} in " +
-                f"{self.CYAN_B}#{ctx.channel.name}{self.YELLOW_B} @ {self.CYAN_B}{ctx.guild.name}" +
-                f"{self.RED_B} (HTTP Exception){self.RESET}")
+            print(f"{colors.RED_B}!purge failed{colors.CYAN} in " +
+                f"{colors.CYAN_B}#{ctx.channel.name}{colors.YELLOW_B} @ {colors.CYAN_B}{ctx.guild.name}" +
+                f"{colors.RED_B} (HTTP Exception){colors.RESET}")
 
             await ctx.send(
                 f"{ctx.author.mention} An error occured, it seems my HTTP sockets are " +
                 "glitching out and thus I couldn't carry out your Great Purge.")
 
         except Exception as e:
-            print(f"{self.RED_B}!purge failed{self.CYAN} in " +
-                f"{self.CYAN_B}#{ctx.channel.name}{self.YELLOW_B} @ {self.CYAN_B}{ctx.guild.name}" +
-                f"{self.RED_B}\n({e}){self.RESET}")
+            print(f"{colors.RED_B}!purge failed{colors.CYAN} in " +
+                f"{colors.CYAN_B}#{ctx.channel.name}{colors.YELLOW_B} @ {colors.CYAN_B}{ctx.guild.name}" +
+                f"{colors.RED_B}\n({e}){colors.RESET}")
 
             await ctx.send(
                 f"{ctx.author.mention} Something went wrong with your Great Purge and I don't really know what.")

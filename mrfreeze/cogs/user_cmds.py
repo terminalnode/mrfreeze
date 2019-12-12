@@ -2,9 +2,11 @@ import discord  # Required for basic discord functionality
 import re       # Required for !vote to find custom emoji
 import random   # Required for !cointoss and !mrfreeze
 from mrfreeze.cogs.cogbase import CogBase
+from mrfreeze import colors
 
 
 def setup(bot):
+    """Add the cog to the bot."""
     bot.add_cog(UserCommands(bot))
 
 
@@ -16,7 +18,6 @@ class UserCommands(CogBase):
     """
     def __init__(self, bot):
         self.bot = bot
-        self.initialize_colors()
         self.region_ids = dict()
 
     @CogBase.listener()
@@ -44,18 +45,14 @@ class UserCommands(CogBase):
 
     @discord.ext.commands.command(name="praise")
     async def _praise(self, ctx, *args):
-        """
-        Praise me!!
-        """
+        """Praise me."""
         author = ctx.author.mention
         await ctx.send(f"{author} Your praises have been heard, and " +
                        "in return I bestow upon you... nothing!")
 
     @discord.ext.commands.command(name="icon", aliases=["logo"])
     async def _logo(self, ctx, *args):
-        """
-        Post the logo of the current server.
-        """
+        """Post the logo of the current server."""
         author = ctx.author.mention
         server = ctx.guild.name
         word = ctx.invoked_with
@@ -70,9 +67,7 @@ class UserCommands(CogBase):
 
     @discord.ext.commands.command(name="mrfreeze", aliases=["freeze"])
     async def _mrfreeze(self, ctx, *args):
-        """
-        Get a quote from my timeless classic "Batman & Robin"!
-        """
+        """Get a quote from my timeless classic "Batman & Robin"."""
         author = ctx.author.mention
         server = ctx.guild.name
 
@@ -86,9 +81,7 @@ class UserCommands(CogBase):
     @discord.ext.commands.command(name="cointoss",
                                   aliases=["coin", "coinflip"])
     async def _cointoss(self, ctx, *args):
-        """
-        Toss a coin, results are 50/50.
-        """
+        """Toss a coin, results are 50/50."""
         if random.randint(0, 1):
             await ctx.send(f"{ctx.author.mention} Heads")
         else:
@@ -97,9 +90,7 @@ class UserCommands(CogBase):
     @discord.ext.commands.command(name="vote",
                                   aliases=["election", "choice", "choose"])
     async def _vote(self, ctx, *args):
-        """
-        Create a handy little vote using reacts.
-        """
+        """Create a handy little vote using reacts."""
         def find_custom_emoji(line):
             emoji = re.match(r"<a?:\w+:(\d+)>", line)
 
@@ -137,8 +128,8 @@ class UserCommands(CogBase):
                             pass
 
             if react_error:
-                print(f"{self.RED_B}!vote{self.CYAN} Not allowed to " +
-                      f"add react in {ctx.guild.name}{self.RESET}")
+                print(f"{colors.RED_B}!vote{colors.CYAN} Not allowed to " +
+                      f"add react in {ctx.guild.name}{colors.RESET}")
                 await ctx.send(f"{ctx.author.mention} The moderators dun " +
                                "goofed I think. I encountered some sort of " +
                                "anomaly when trying to vote.")
@@ -158,9 +149,7 @@ class UserCommands(CogBase):
 
     @discord.ext.commands.command(name='region', aliases=['regions'])
     async def _region(self, ctx, *args):
-        """
-        Assign yourself a colourful regional role.
-        """
+        """Assign yourself a colourful regional role."""
         await ctx.send("!region is currently out of service.")
 
     @discord.ext.commands.command(name="activity",

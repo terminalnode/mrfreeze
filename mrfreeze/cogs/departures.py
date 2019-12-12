@@ -1,21 +1,19 @@
-import discord
-from discord import Embed
-from .cogbase import CogBase
-
-# Some imports used in type hints
-from discord import Member, TextChannel
-from mrfreeze.bot import MrFreeze
 from typing import List
+
+import discord
+from discord import Embed, Member, TextChannel
+
+from mrfreeze.bot import MrFreeze
+from mrfreeze.cogs.cogbase import CogBase
 
 
 def setup(bot):
+    """Add the cog to the bot."""
     bot.add_cog(Departures(bot))
 
 
 class Departures(CogBase):
-    """
-    How the bot acts when members leave the chat.
-    """
+    """Manages how the bot acts when a member leaves a server."""
     def __init__(self, bot: MrFreeze):
         self.bot = bot
 

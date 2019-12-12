@@ -6,6 +6,7 @@ import asyncio
 import datetime
 # Required to check who's allowed to issue these commands
 from mrfreeze import checks
+from mrfreeze import colors
 from mrfreeze.cogs.cogbase import CogBase
 
 # Importing the banish submodules
@@ -44,7 +45,6 @@ class BanishAndRegion(CogBase):
     """Good mod! Read the manual! Or if you're not mod - sod off!"""
     def __init__(self, bot, mdbname="mutes", rdbname="regions"):
         self.bot = bot
-        self.initialize_colors()
 
         # Server setting names
         # Mute interval governs how often to check for unmutes.
@@ -114,7 +114,7 @@ class BanishAndRegion(CogBase):
                 self.self_mute_time_dict[server.id] = self.default_self_mute_time
 
     async def unbanish_loop(self, server):
-        """This loop checks for people to unbanish every self.banish_interval seconds.""" 
+        """This loop checks for people to unbanish every self.banish_interval seconds."""
         while not self.bot.is_closed():
             await asyncio.sleep(self.mute_interval_dict[server.id])
 
@@ -127,7 +127,7 @@ class BanishAndRegion(CogBase):
             for mute in server_mutes:
                 if mute.until is None:
                     continue
-                
+
                 member = mute.member
                 until = mute.until
 
@@ -143,13 +143,13 @@ class BanishAndRegion(CogBase):
                             # Members are only considered unmuted if they had the antarctica role
                             unmuted.append(member)
                         except Exception as e:
-                            print(f"{self.current_time()} {self.RED_B}Mutes DB:{self.CYAN} failed to remove " +
-                                f"mute role of{self.CYAN_B} {member.name}#{member.discriminator} @ {server.name}.\n" +
-                                f"{self.RED}==> {e}")
+                            print(f"{self.current_time()} {colors.RED_B}Mutes DB:{colors.CYAN} failed to remove " +
+                                f"mute role of{colors.CYAN_B} {member.name}#{member.discriminator} @ {server.name}.\n" +
+                                f"{colors.RED}==> {e}{colors.RESET}")
 
-                    print(f"{self.current_time()} {self.GREEN_B}Mutes DB:{self.CYAN} auto-unmuted " +
-                        f"{self.CYAN_B}{member.name}#{member.discriminator} @ {server.name}." +
-                        f"{self.YELLOW} (due {diff}){self.RESET}")
+                    print(f"{self.current_time()} {colors.GREEN_B}Mutes DB:{colors.CYAN} auto-unmuted " +
+                        f"{colors.CYAN_B}{member.name}#{member.discriminator} @ {server.name}." +
+                        f"{colors.YELLOW} (due {diff}){colors.RESET}")
 
             # Time for some great regrets
             if len(unmuted) > 0:
@@ -175,7 +175,7 @@ class BanishAndRegion(CogBase):
             if arg.isdigit():
                 interval = int(arg)
                 break
-        
+
         if interval is None:
             await ctx.send(f"{author} You didn't specify a valid interval. Please try again.")
 
@@ -282,7 +282,7 @@ class BanishAndRegion(CogBase):
             except OverflowError:
                 end_date = datetime.datetime.max
                 duration = end_date - current_time
-        
+
         if len(mentions) == 0:
             template = MuteStr.NONE
 
@@ -403,7 +403,7 @@ class BanishAndRegion(CogBase):
         # USER_SELF     # User tried muting themselves
         # USER_USER     # User tried muting other user(s)
         # USER_MIXED    # User tried musing themselves and other user(s)
-        
+
         mentions = ctx.message.mentions
         author = ctx.author
         server = ctx.guild
@@ -445,7 +445,7 @@ class BanishAndRegion(CogBase):
         await ctx.send(reply)
 
 
-    ########################################################################### 
+    ###########################################################################
     # Various shenanigans that may need to be implemented into the bot proper #
     # Everything below this line is commented out ATM                         #
     ###########################################################################

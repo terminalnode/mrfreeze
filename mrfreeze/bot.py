@@ -1,14 +1,17 @@
-import discord                      # Required for basic discord functionality
-from discord.ext import commands    # Required for the bot class
-import datetime                     # Required for current_time() and db_time()
+import datetime
+import os
+import sys
 from typing import NamedTuple
 from typing import Optional
-from discord import TextChannel
+
+import discord
 from discord import Guild
+from discord import TextChannel
+from discord.ext import commands
 
 # Importing MrFreeze submodules
-from mrfreeze import time, server_settings, dbfunctions
-from mrfreeze import colors, paths, greeting
+from mrfreeze import colors, greeting, paths
+from mrfreeze import dbfunctions, server_settings, time
 
 
 # Usage note!
@@ -44,9 +47,6 @@ class MrFreeze(commands.Bot):
         self.db_create = dbfunctions.db_create
         self.db_time = dbfunctions.db_time
 
-        # Initialize bot colors
-        colors.create_colors(self)
-
         # Dict in which to save the ServerTuple for each server.
         self.servertuples = dict()
 
@@ -54,10 +54,10 @@ class MrFreeze(commands.Bot):
         # are directories, otherwise create them.
         # All paths are relative to the working directory.
         self.db_prefix = "databases"
-        paths.path_setup(self, self.db_prefix, "DB prefix")
+        paths.path_setup(self.db_prefix, "DB prefix")
 
         self.servers_prefix = "config/servers"
-        paths.path_setup(self, self.servers_prefix, "Servers prefix")
+        paths.path_setup(self.servers_prefix, "Servers prefix")
 
     async def on_ready(self):
         # Set tuples up for all servers
@@ -66,7 +66,7 @@ class MrFreeze(commands.Bot):
 
         # Greeting (printed to console)
         greeting.bot_greeting(self)
-        colors.color_test(self)
+        colors.color_test()
 
         # Set activity to "Listening to your commands"
         await self.change_presence(
@@ -78,7 +78,29 @@ class MrFreeze(commands.Bot):
         )
 
         # Signal to the terminal that the bot is ready.
-        print(f"{self.WHITE_B}READY WHEN YOU ARE CAP'N!{self.RESET}\n")
+        print(f"{colors.WHITE_B}READY WHEN YOU ARE CAP'N!{colors.RESET}\n")
+
+    def path_setup(self, path, trivial_name):
+        """Create various directories which the bot needs."""
+        if os.path.isdir(path):
+            print(f"{colors.GREEN_B}{trivial_name} {colors.GREEN}({path}) " +
+                  f"{colors.CYAN}exists and is a directory.{colors.RESET}")
+        elif os.path.exists(path):
+            print(f"{colors.RED_B}{trivial_name} {colors.RED}({path}) " +
+                  f"{colors.CYAN}exists but is not a directory. " +
+                  f"Aborting.{colors.RESET}")
+            sys.exit(0)
+        else:
+            try:
+                os.makedirs(path)
+                print(f"{colors.GREEN_B}{trivial_name} " +
+                      f"{colors.GREEN}({path}){colors.CYAN} was " +
+                      f"successfully created.{colors.RESET}")
+            except Exception as e:
+                print(f"{colors.RED_B}{trivial_name} {colors.RED}({path}) " +
+                      f"{colors.CYAN} does not exist and could not be " +
+                      f"created:\n{colors.RED}==> {e}{colors.RESET}")
+                sys.exit(0)
 
     async def server_tuple(self, server):
         self.servertuples[server.id] = ServerTuple(
@@ -150,4 +172,4 @@ class MrFreeze(commands.Bot):
                 datetime.datetime.now(),
                 "%Y-%m-%d %H:%M"
         )
-        return f"{self.CYAN_B}{formated_time}{self.RESET}"
+        return f"{colors.CYAN_B}{formated_time}{colors.RESET}"

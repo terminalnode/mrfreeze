@@ -6,6 +6,7 @@ config/*
 !config/mrfreezequotes
 databases
 .coverage
+.vim
 
 # File to test various code snippets.
 experimentation.py

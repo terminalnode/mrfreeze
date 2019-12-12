@@ -30,7 +30,6 @@ class About(CogBase):
     def __init__(self, bot: MrFreeze):
         """Initialize the About cog."""
         self.bot = bot
-        self.initialize_colors()
 
     @discord.ext.commands.command(name="readme")
     async def readme(self, ctx: Context) -> None:
