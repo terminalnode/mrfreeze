@@ -18,7 +18,7 @@ def extract_time(args, fallback_minutes=True):
     weeks = r"weeks?|w[, ]"
     months = r"months?|mnth?s?|mons?"
     years = r"years?|yrs?|y[, ]"
-    find_time = (fr"(\d+) ?(({seconds})|({minutes})|({hours})" +
+    find_time = (fr"(-?\d+) ?(({seconds})|({minutes})|({hours})" +
                  fr"|({days})|({weeks})|({months})|({years}))")
 
     regex_output = re.findall(
