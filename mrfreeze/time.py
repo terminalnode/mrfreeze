@@ -87,15 +87,24 @@ def parse_timedelta(time_delta):
     # Some simple calculations. Weeks are the last whole number we can get from
     # days/7 i.e. int(days/7), then weeks*7 are subtracted from the remanining
     # days and so on and so on for hours and minutes.
+    years = int(days / 365)
+    days %= 365
+
+    months = int(days / 30)
+    days %= 30
+
     weeks = int(days / 7)
-    days = (days - (weeks * 7))
+    days %= 7
+
     hours = int(seconds / 3600)
-    seconds = (seconds - (hours * 3600))
+    seconds %= 3600
+
     minutes = int(seconds / 60)
-    seconds = round((seconds - minutes * 60 + microseconds / 1000000))
+    seconds = round((seconds % 60 + microseconds / 1000000))
 
     time_str = ""
     size_order = (
+        ("year", years), ("month", months),
         ("week", weeks), ("day", days),
         ("hour", hours), ("minute", minutes),
         ("second", seconds)
@@ -118,7 +127,7 @@ def parse_timedelta(time_delta):
         # Adding the value to the string if it's more than zero.
         if size_order[value][1] > 0:
             if size_order[value][1] == 1:
-                time_str += f"(size_order[value][1]) {size_order[value][0]}"
+                time_str += f"{size_order[value][1]} {size_order[value][0]}"
             else:
                 time_str += f"{size_order[value][1]} {size_order[value][0]}s"
 

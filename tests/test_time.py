@@ -242,6 +242,186 @@ class TimeUnitTest(unittest.TestCase):
         self.assertEqual(first, should_be)
         self.assertTrue(isinstance(second, datetime.datetime))
 
+    def test_parse_timedelta_one_second_singular(self):
+        """
+        Test the return value for timedelta(seconds=1).
+
+        Should return "1 second".
+        """
+        timedelta = datetime.timedelta(seconds=1)
+        test_value = time.parse_timedelta(timedelta)
+        expected = "1 second"
+
+        self.assertEqual(test_value, expected)
+
+    def test_parse_timedelta_two_seconds_plural(self):
+        """
+        Test the return value for timedelta(seconds=2).
+
+        Should return "2 seconds".
+        """
+        timedelta = datetime.timedelta(seconds=2)
+        test_value = time.parse_timedelta(timedelta)
+        expected = "2 seconds"
+
+        self.assertEqual(test_value, expected)
+
+    def test_parse_timedelta_one_minute_singular(self):
+        """
+        Test the return value for timedelta(minutes=1).
+
+        Should return "1 minute".
+        """
+        timedelta = datetime.timedelta(minutes=1)
+        test_value = time.parse_timedelta(timedelta)
+        expected = "1 minute"
+
+        self.assertEqual(test_value, expected)
+
+    def test_parse_timedelta_two_minutes_plural(self):
+        """
+        Test the return value for timedelta(minutes=2).
+
+        Should return "2 minutes".
+        """
+        timedelta = datetime.timedelta(minutes=2)
+        test_value = time.parse_timedelta(timedelta)
+        expected = "2 minutes"
+
+        self.assertEqual(test_value, expected)
+
+    def test_parse_timedelta_one_hour_singular(self):
+        """
+        Test the return value for timedelta(hours=1).
+
+        Should return "1 hour".
+        """
+        timedelta = datetime.timedelta(hours=1)
+        test_value = time.parse_timedelta(timedelta)
+        expected = "1 hour"
+
+        self.assertEqual(test_value, expected)
+
+    def test_parse_timedelta_two_hours_plural(self):
+        """
+        Test the return value for timedelta(hours=2).
+
+        Should return "2 hours".
+        """
+        timedelta = datetime.timedelta(hours=2)
+        test_value = time.parse_timedelta(timedelta)
+        expected = "2 hours"
+
+        self.assertEqual(test_value, expected)
+
+    def test_parse_timedelta_one_day_singular(self):
+        """
+        Test the return value for timedelta(day=1).
+
+        Should return "1 day".
+        """
+        timedelta = datetime.timedelta(days=1)
+        test_value = time.parse_timedelta(timedelta)
+        expected = "1 day"
+
+        self.assertEqual(test_value, expected)
+
+    def test_parse_timedelta_two_days_plural(self):
+        """
+        Test the return value for timedelta(days=2).
+
+        Should return "2 days".
+        """
+        timedelta = datetime.timedelta(days=2)
+        test_value = time.parse_timedelta(timedelta)
+        expected = "2 days"
+
+        self.assertEqual(test_value, expected)
+
+    def test_parse_timedelta_one_week_singular(self):
+        """
+        Test the return value for timedelta(weeks=1).
+
+        Should return "1 week".
+        """
+        timedelta = datetime.timedelta(weeks=1)
+        test_value = time.parse_timedelta(timedelta)
+        expected = "1 week"
+
+        self.assertEqual(test_value, expected)
+
+    def test_parse_timedelta_two_weeks_plural(self):
+        """
+        Test the return value for timedelta(weeks=2).
+
+        Should return "2 weeks".
+        """
+        timedelta = datetime.timedelta(weeks=2)
+        test_value = time.parse_timedelta(timedelta)
+        expected = "2 weeks"
+
+        self.assertEqual(test_value, expected)
+
+    def test_parse_timedelta_one_month_singular(self):
+        """
+        Test the return value for timedelta(days=30).
+
+        Should return "1 month".
+        """
+        timedelta = datetime.timedelta(days=30)
+        test_value = time.parse_timedelta(timedelta)
+        expected = "1 month"
+
+        self.assertEqual(test_value, expected)
+
+    def test_parse_timedelta_two_months_plural(self):
+        """
+        Test the return value for timedelta(days=60).
+
+        Should return "2 months".
+        """
+        timedelta = datetime.timedelta(days=60)
+        test_value = time.parse_timedelta(timedelta)
+        expected = "2 months"
+
+        self.assertEqual(test_value, expected)
+
+    def test_parse_timedelta_one_year_singular(self):
+        """
+        Test the return value for timedelta(seconds=365).
+
+        Should return "1 year".
+        """
+        timedelta = datetime.timedelta(days=365)
+        test_value = time.parse_timedelta(timedelta)
+        expected = "1 year"
+
+        self.assertEqual(test_value, expected)
+
+    def test_parse_timedelta_two_years_plural(self):
+        """
+        Test the return value for timedelta(days=730).
+
+        Should return "2 years".
+        """
+        timedelta = datetime.timedelta(days=730)
+        test_value = time.parse_timedelta(timedelta)
+        expected = "2 years"
+
+        self.assertEqual(test_value, expected)
+
+    def test_parse_timedelta_none(self):
+        """
+        Test the return value for None.
+
+        Should return "an eternity".
+        """
+        timedelta = None
+        test_value = time.parse_timedelta(timedelta)
+        expected = "an eternity"
+
+        self.assertEqual(test_value, expected)
+
     # Possible future update, not implemented yet.
     #
     # def test_extract_time_return_value_for_absurdly_low_numbers(self):
