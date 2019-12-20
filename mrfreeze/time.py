@@ -54,7 +54,7 @@ def extract_time(args, fallback_minutes=True):
 
         # If nothing was found, assume all numbers are minutes.
         if (end_date == current_time) and fallback_minutes:
-            no_minutes = sum([int(arg) for arg in args if arg.isdigit()])
+            no_minutes = sum([int(arg) for arg in args if arg.isnumeric()])
             add_time = datetime.timedelta(minutes=no_minutes)
             end_date = current_time + add_time
 

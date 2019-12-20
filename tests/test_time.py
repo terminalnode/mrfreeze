@@ -9,6 +9,30 @@ from mrfreeze import time
 class TimeUnitTest(unittest.TestCase):
     """Test the time module."""
 
+    def test_extract_time_return_value_for_no_fallback_minutes(self):
+        """
+        Test the return for numerical expressions without fallback minutes.
+
+        Should return None and None.
+        """
+        test_args = ("10", "hello")
+        test_expression = time.extract_time(test_args, fallback_minutes=False)
+
+        self.assertEqual(test_expression, (None, None))
+
+    def test_extract_time_return_value_for_fallback_minutes(self):
+        """
+        Test the return for numerical expressions without fallback minutes.
+
+        Should return None and None.
+        """
+        test_args = ("10", "hello")
+        (first, second) = time.extract_time(test_args, fallback_minutes=True)
+        should_be = datetime.timedelta(minutes=10)
+
+        self.assertEqual(first, should_be)
+        self.assertTrue(isinstance(second, datetime.datetime))
+
     def test_extract_time_returns_none_none_with_invalid_time_expression(self):
         """
         Test the return value for an invalid time expression.
@@ -419,6 +443,18 @@ class TimeUnitTest(unittest.TestCase):
         timedelta = None
         test_value = time.parse_timedelta(timedelta)
         expected = "an eternity"
+
+        self.assertEqual(test_value, expected)
+
+    def test_parse_timedelta_compound_time_expression(self):
+        """
+        Test the return value for timedelta(days=425, seconds=1).
+
+        Should return "1 year, 2 months and 1 second".
+        """
+        timedelta = datetime.timedelta(days=425, seconds=1)
+        test_value = time.parse_timedelta(timedelta)
+        expected = "1 year, 2 months and 1 second"
 
         self.assertEqual(test_value, expected)
 
