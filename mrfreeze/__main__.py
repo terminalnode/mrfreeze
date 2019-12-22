@@ -1,6 +1,7 @@
 from mrfreeze import bot  # The bot class itself
 import traceback          # Debugging loading of cogs
 import sys                # Printing to stderr, exiting etc
+import os
 
 # Instantiate the bot.
 bot = bot.MrFreeze(command_prefix=["!"])
@@ -19,6 +20,7 @@ load_cogs = [
     "mrfreeze.cogs.maintenance",
     "mrfreeze.cogs.moderation",
     "mrfreeze.cogs.banish.banish",
+    "mrfreeze.cogs.move",
 
     # Functions directed towards regular users.
     "mrfreeze.cogs.user_cmds",
@@ -43,6 +45,7 @@ try:
     token = open("token", "r").read().strip()
     bot.run(token, bot=True, reconnect=True)
 except Exception:
+    print(os.getcwd())
     print("""\nERROR: BOT TOKEN MISSING!
 Please put your bot's token in a separate text file \
 called "token".\nThis file should be located in the \
