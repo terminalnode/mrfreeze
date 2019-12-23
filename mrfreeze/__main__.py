@@ -20,7 +20,7 @@ load_cogs = [
     "mrfreeze.cogs.maintenance",
     "mrfreeze.cogs.moderation",
     "mrfreeze.cogs.banish.banish",
-    "mrfreeze.cogs.move",
+    "mrfreeze.cogs.messages",
 
     # Functions directed towards regular users.
     "mrfreeze.cogs.user_cmds",
