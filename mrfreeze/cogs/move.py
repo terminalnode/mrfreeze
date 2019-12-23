@@ -5,6 +5,7 @@ from typing import List
 import discord
 from discord import Embed
 from discord import File
+from discord import TextChannel
 from discord.ext.commands import Context
 
 from mrfreeze.bot import MrFreeze
@@ -28,17 +29,32 @@ class Move(CogBase):
         # TODO add docstring
         print("Moving")
         print(f"ctx: {ctx.__dict__}")
-        print(f"msg_id: {id}")
+        print(f"msg_id: {msg_id}")
         print(f"destination_channel: {destination_channel}")
 
-        for cmd in dir(self.bot):
-            if 'message' in cmd.lower():
-                print(cmd)
+        command_channel = ctx.message.channel
+        target_message = await command_channel.fetch_message(msg_id)
+
+        print("Got targets and info")
+        print(f"command_channel: {command_channel}")
+        print(f"target_message: {target_message}")
+        print(f"author: {target_message.author}")
+        print(f"content: {target_message.content}")
+
+        print(f"guild channels: {ctx.message.guild.channels}")
+
+        target_channel = discord.utils.get(ctx.message.guild.channels, name=destination_channel)
+
+        print(f"target_channel: {target_channel}")
 
         embed = Embed(color=0x00dee9)
         embed.add_field(
-            name="Move",
-            value="Move field value"
+            name="Author",
+            value=target_message.author.name
+        )
+        embed.add_field(
+            name="Content",
+            value=target_message.content
         )
 
-        await ctx.send(embed=embed)
+        await target_channel.send(embed=embed)
