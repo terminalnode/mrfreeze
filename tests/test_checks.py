@@ -19,12 +19,37 @@ class ChecksUnitTest(unittest.TestCase):
         which can take either a context object or a member object.
         """
         self.ctx = helpers.MockContext()
+        self.ctx.bot = helpers.MockMrFreeze()
         self.member = self.ctx.author
         self.loop = asyncio.new_event_loop()
 
     def tearDown(self):
         """Close the event loop."""
         self.loop.close()
+
+    def test_is_owner_with_bot_is_owner_set_to_true(self):
+        """
+        Test is_owner() with bot.is_owner() set to True.
+
+        checks.is_owner() should always return the same result
+        as bot.is_owner(), in this case True.
+        """
+        self.ctx.bot.is_owner.return_value = True
+        result = self.loop.run_until_complete(checks.is_owner(self.ctx))
+
+        self.assertTrue(result)
+
+    def test_is_owner_with_bot_is_owner_set_to_false(self):
+        """
+        Test is_owner() with bot.is_owner() set to False.
+
+        checks.is_owner() should always return the same result
+        as bot.is_owner(), in this case False.
+        """
+        self.ctx.bot.is_owner.return_value = False
+        result = self.loop.run_until_complete(checks.is_owner(self.ctx))
+
+        self.assertFalse(result)
 
     def test_is_mod_with_ctx_object_and_authorised_caller(self):
         """
