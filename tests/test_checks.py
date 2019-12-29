@@ -7,8 +7,6 @@ from mrfreeze import checks
 
 from tests import helpers
 
-# TODO
-# is_mod() doesn't yet test the response messages of guild-less ctx calls
 
 class ChecksUnitTest(unittest.TestCase):
     """Test the command checks."""
