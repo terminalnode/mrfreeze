@@ -1,14 +1,14 @@
-"""Unittest for conversion tables in the TemperatureConverter cog."""
+"""Unittest for the TemperatureConverter cog."""
 
+import asyncio
 import unittest
 
-from mrfreeze.cogs.temp_converter import TempUnit
 from mrfreeze.cogs.temp_converter import TemperatureConverter
 
 from tests import helpers
 
 
-class TemperatureConverterCogConversionTablesUnitTest(unittest.TestCase):
+class TemperatureConverterCogUnitTest(unittest.TestCase):
     """Test the conversion tables in the TemperatureConverter cog."""
 
     def setUp(self):
@@ -16,96 +16,54 @@ class TemperatureConverterCogConversionTablesUnitTest(unittest.TestCase):
         self.bot = helpers.MockMrFreeze()
         self.cog = TemperatureConverter(self.bot)
 
-    def test_celsius_table_to_celsius(self):
-        """
-        Test celsius_table() with TempUnit.C as dest.
+        self.msg = helpers.MockMessage()
 
-        Should return the same as input.
-        """
-        result = self.cog.celsius_table(50, TempUnit.C)
-        self.assertEqual(50, result)
+        self.channel = self.msg.channel
 
-    def test_celsius_table_to_fahrenheit(self):
-        """
-        Test celsius_table() with TempUnit.F as dest.
+        self.author = helpers.MockMember()
+        self.author.bot = False
+        self.msg.author = self.author
 
-        Should return 122 F with temp = 50.
-        """
-        result = self.cog.celsius_table(50, TempUnit.F)
-        self.assertEqual(122, result)
+        self.ctx = helpers.MockContext()
+        self.ctx.message = self.msg
+        self.ctx.author = self.author
+        self.ctx.channel = self.channel
 
-    def test_celsius_table_to_kelvin(self):
-        """
-        Test celsius_table() with TempUnit.K as dest.
+        self.bot.get_context.return_value = self.ctx
 
-        Should return 323.15 with temp = 50.
-        """
-        result = self.cog.celsius_table(50, TempUnit.K)
-        self.assertEqual(323.15, result)
+    def test_on_message_no_response_when_user_is_bot(self):
+        """Test that on_message() does nothing when called by bot."""
+        self.msg.author.bot = True
+        coroutine = self.cog.on_message(self.msg)
+        self.assertIsNone(asyncio.run(coroutine))
+        self.channel.send.assert_not_called()
 
-    def test_celsius_table_to_rankine(self):
+    def test_on_message_with_temperature_10000(self):
         """
-        Test celsius_table() with TempUnit.R as dest.
+        Test on_message() with message "10000 C".
 
-        Should return 581.67 with temp = 50.
+        Should return a message saying that it's quite warm.
         """
-        result = self.cog.celsius_table(50, TempUnit.R)
-        self.assertEqual(581.67, result)
+        self.msg.content = "10000 C"
+        coroutine = self.cog.on_message(self.msg)
+        self.assertIsNone(asyncio.run(coroutine))
+        result = self.channel.send.call_args[0][0]
 
-    def test_fahrenheit_table_to_celsius(self):
-        """
-        Test fahrenheit_table() with TempUnit.C as dest.
+        expected = ("@member No matter what unit you put that in " +
+                    "the answer is still gonna be \"quite warm\".")
+        self.assertEqual(expected, result)
 
-        Should return 10 with temp = 50.
+    def test_on_message_with_temperature_negative_10000(self):
         """
-        result = self.cog.fahrenheit_table(50, TempUnit.C)
-        self.assertEqual(10, result)
+        Test on_message() with message "-10000 C".
 
-    def test_fahrenheit_table_to_fahrenheit(self):
+        Should return a message saying that it's a bit chilly.
         """
-        Test fahrenheit_table() with TempUnit.F as dest.
+        self.msg.content = "-10000 C"
+        coroutine = self.cog.on_message(self.msg)
+        self.assertIsNone(asyncio.run(coroutine))
+        result = self.channel.send.call_args[0][0]
 
-        Should return same as input.
-        """
-        result = self.cog.fahrenheit_table(50, TempUnit.F)
-        self.assertEqual(50, result)
-
-    def test_fahrenheit_table_to_kelvin(self):
-        """
-        Test fahrenheit_table() with TempUnit.K as dest.
-
-        Should return 283.15 with temp = 50.
-        """
-        result = self.cog.fahrenheit_table(50, TempUnit.K)
-        self.assertEqual(283.15, result)
-
-    def test_fahrenheit_table_to_rankine(self):
-        """
-        Test fahrenheit_table() with TempUnit.R as dest.
-
-        Should return 509.67 with temp = 50.
-        """
-        result = self.cog.fahrenheit_table(50, TempUnit.R)
-        self.assertEqual(509.67, result)
-
-    def test_kelvin_table_to_celsius(self):
-        """
-        Test kelvin_table() with TempUnit.C as dest.
-
-        Should return 50 with temp = 323.15.
-        No further testing necessary since kelvin_table just calls
-        celsius_table with temperature converted to celsius.
-        """
-        result = self.cog.kelvin_table(323.15, TempUnit.C)
-        self.assertEqual(50, result)
-
-    def test_rankine_table_to_fahrenheit(self):
-        """
-        Test rankine_table() with TempUnit.F as dest.
-
-        Should return 50 with temp = 509.67.
-        No further testing necessary since rankine_table just calls
-        fahrenheit_table with temperature converted to fahrenheit.
-        """
-        result = self.cog.rankine_table(509.67, TempUnit.F)
-        self.assertEqual(50, result)
+        expected = ("@member No matter what unit you put that in " +
+                    "the answer is still gonna be \"a bit chilly\".")
+        self.assertEqual(expected, result)

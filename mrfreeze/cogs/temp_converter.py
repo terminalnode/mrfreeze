@@ -50,14 +50,15 @@ class TemperatureConverter(CogBase):
             return
 
         # Check if input is ridiculous.
-        if abs(statement["temperature"]) > 10000:
+        if abs(statement["temperature"]) >= 10000:
             hotcold = "a bit chilly"
+
             if statement["temperature"] > 0:
                 hotcold = "quite warm"
 
             await channel.send(
                     f"{author} No matter what unit you put that " +
-                    "in the answer is still gonna be \"{hotcold}\".")
+                    f"in the answer is still gonna be \"{hotcold}\".")
             return
 
         # Calculate converted temperature,
