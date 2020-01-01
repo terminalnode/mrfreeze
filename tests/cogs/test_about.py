@@ -27,6 +27,13 @@ class AboutCogUnitTest(unittest.TestCase):
 
         self.mrfreeze_blue = discord.Color(0x00dee9)
 
+        self.file = None
+
+    def tearDown(self):
+        """Ensure that all files are closed down."""
+        if self.file is not None:
+            self.file.close()
+
     def test_readme_embed_and_file(self):
         """Test !readme in the About cog."""
         # Run and assert that it doesn't return anything
@@ -78,6 +85,7 @@ class AboutCogUnitTest(unittest.TestCase):
 
         # Assert that the file is readable
         self.assertTrue(kwargs["file"].fp.readable())
+        self.file = kwargs["file"]
 
     def test_source_embed_and_file(self):
         """Test !source in the About cog."""
@@ -132,6 +140,7 @@ class AboutCogUnitTest(unittest.TestCase):
 
         # Assert that the file is readable
         self.assertTrue(kwargs["file"].fp.readable())
+        self.file = kwargs["file"]
 
     def test_getfreeze_embed_and_file(self):
         """Test !getfreeze in the About cog."""
@@ -253,6 +262,7 @@ class AboutCogUnitTest(unittest.TestCase):
 
         # Assert that the file is readable
         self.assertTrue(kwargs["file"].fp.readable())
+        self.file = kwargs["file"]
 
     def test_todo(self):
         """Test !todo in the About cog."""
@@ -268,7 +278,7 @@ class AboutCogUnitTest(unittest.TestCase):
             kwargs["embed"].color,
             self.mrfreeze_blue,
             msg="Embed color should be MrFreeze Blue")
-        
+
         # Assert that embed has the right title
         self.assertEqual(
             kwargs["embed"].title,
@@ -286,7 +296,7 @@ class AboutCogUnitTest(unittest.TestCase):
             len(kwargs["embed"].fields),
             1,
             msg="Embed should only have one field")
-        
+
         # Assert that embed field has the right title
         self.assertEqual(
             kwargs["embed"].fields[0].name,
@@ -309,3 +319,4 @@ class AboutCogUnitTest(unittest.TestCase):
 
         # Assert that the file is readable
         self.assertTrue(kwargs["file"].fp.readable())
+        self.file = kwargs["file"]
