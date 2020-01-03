@@ -1,15 +1,16 @@
-import discord          # Basic discord functionality.
-import re               # Used extensively to parse input.
-from enum import Enum   # Used to denote temperature units.
-from mrfreeze.cogs.cogbase import CogBase
+"""Listener that detects and converts temperature statements."""
 
-# Set to true to enable some printouts on how
-# the temperature statement has been parsed.
-TEMP_DEBUG = False
+import re
+from enum import Enum
+
+import discord
+
+from mrfreeze.cogs.cogbase import CogBase
 
 
 class TempUnit(Enum):
-    # Kelvin is weird and doesn't use ° as a prefix.
+    """Enumerator for the various temperature units."""
+
     C = "°C"
     K = "K"
     F = "°F"
@@ -22,25 +23,19 @@ def setup(bot):
 
 
 class TemperatureConverter(CogBase):
-    """How the bot acts when messages are posted."""
+    """Listener that detects and converts temperature statements."""
+
     def __init__(self, bot):
+        """Initialize the cog."""
         self.bot = bot
 
-    # Certain events, namely temp, depends on checking for
-    # temperature statements in all messages sent to the chat.
     @CogBase.listener()
     async def on_message(self, message):
-        # Ignore what all the bots say...
+        """Look through all messages received for temperature statements."""
         if message.author.bot:
             return
 
-        # Look for temperature statements and autoconvert them.
         ctx = await self.bot.get_context(message)
-        await self.temperatures(ctx)
-
-    async def temperatures(self, ctx):
-        # Trailing space is required for matching
-        # temperatures at the end of the message.
         author = ctx.author.mention
         channel = ctx.channel
 
@@ -49,16 +44,19 @@ class TemperatureConverter(CogBase):
         if not statement:
             return
 
-        # Check if input is ridiculous.
-        if abs(statement["temperature"]) >= 10000:
+        # Check if input is ridiculously high/low.
+        if abs(statement["temperature"]) >= 100000:
             hotcold = "a bit chilly"
+            image_path = "images/hellacold.gif"
 
             if statement["temperature"] > 0:
                 hotcold = "quite warm"
+                image_path = "images/helldog.gif"
 
             await channel.send(
                     f"{author} No matter what unit you put that " +
-                    f"in the answer is still gonna be \"{hotcold}\".")
+                    f"in the answer is still gonna be \"{hotcold}\".",
+                    file=discord.File(image_path))
             return
 
         # Calculate converted temperature,
@@ -81,7 +79,7 @@ class TemperatureConverter(CogBase):
                 statement["destination"])
             in_c = self.kelvin_table(statement["temperature"], TempUnit.C)
 
-        elif statement["origin"] == TempUnit.R:
+        else:  # Has to be rankine
             new_temp = self.rankine_table(
                 statement["temperature"],
                 statement["destination"])
@@ -122,8 +120,8 @@ class TemperatureConverter(CogBase):
     def parse_request(self, ctx):
         """
         Extract temperature statement from text.
-        If no temperature statement is found returns false.
 
+        If no temperature statement is found returns false.
         Otherwise returns a dictionary with keys:
             temperature, origin, destination, manual
         """
@@ -156,21 +154,19 @@ class TemperatureConverter(CogBase):
             result["origin"] = TempUnit.K
         elif statement[4]:
             result["origin"] = TempUnit.R
-
-        # Origin is "degrees", turning it into a real unit.
-        elif statement[5]:
+        else:  # Has to be "degrees", needs to be converted into real unit
             if ctx.guild is not None:
                 # Not DMs
                 roles = ctx.author.roles
-                if discord.utils.get(roles, name="Celsius") is not None:
+                if discord.utils.get(roles, name="Celsius"):
                     result["origin"] = TempUnit.C
-                elif discord.utils.get(roles, name="Fahrenheit") is not None:
+                elif discord.utils.get(roles, name="Fahrenheit"):
                     result["origin"] = TempUnit.F
-                elif discord.utils.get(roles, name="Canada") is not None:
+                elif discord.utils.get(roles, name="Canada"):
                     result["origin"] = TempUnit.C
-                elif discord.utils.get(roles, name="Mexico") is not None:
+                elif discord.utils.get(roles, name="Mexico"):
                     result["origin"] = TempUnit.C
-                elif discord.utils.get(roles, name="North America") is not None:
+                elif discord.utils.get(roles, name="North America"):
                     result["origin"] = TempUnit.F
                 else:
                     # Default is celsius
@@ -197,7 +193,7 @@ class TemperatureConverter(CogBase):
                 result["destination"] = TempUnit.F
             elif conversion[2]:
                 result["destination"] = TempUnit.K
-            elif conversion[3]:
+            else:  # Has to be rankine
                 result["destination"] = TempUnit.R
         else:
             result['manual'] = False
@@ -207,40 +203,39 @@ class TemperatureConverter(CogBase):
                 result["destination"] = TempUnit.C
             elif result["origin"] == TempUnit.C:
                 result["destination"] = TempUnit.F
-            elif result["origin"] == TempUnit.R:
+            else:  # Has to be rankine
                 result["destination"] = TempUnit.F
-
-            if TEMP_DEBUG:
-                print(statement)
-                print(f"{result['temperature']} {result['origin']} to " +
-                      f"{result['destination']}. Manual: {result['manual']}")
 
         return result
 
     def celsius_table(self, temp, dest):
+        """Convert from celsius to other units."""
         if dest == TempUnit.C:
             return temp
         elif dest == TempUnit.F:
             return temp * 9.0 / 5.0 + 32
         elif dest == TempUnit.K:
             return temp + 273.15
-        elif dest == TempUnit.R:
+        else:  # Has to be rankine
             return (temp + 273.15) * 9.0 / 5.0
 
     def fahrenheit_table(self, temp, dest):
+        """Convert from fahrenheit to other units."""
         if dest == TempUnit.C:
             return (temp - 32) * 5.0 / 9.0
         elif dest == TempUnit.F:
             return temp
         elif dest == TempUnit.K:
             return (temp + 459.67) * 5.0 / 9.0
-        elif dest == TempUnit.R:
+        else:  # Has to be rankine
             return temp + 459.67
 
     def kelvin_table(self, temp, dest):
+        """Convert from kelvin to other units."""
         in_celsius = (temp - 273.15)
         return self.celsius_table(in_celsius, dest)
 
     def rankine_table(self, temp, dest):
+        """Convert from rankine to other units."""
         in_fahrenheit = (temp - 459.67)
         return self.fahrenheit_table(in_fahrenheit, dest)
