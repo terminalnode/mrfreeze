@@ -24,13 +24,14 @@ def bot_greeting(bot):
     # Calculating box width...
     # - Each escape character takes up 8 spaces.
     # - We then need two extra characters on each side.
-    longest = max(greeting, key=lambda x: len(x)-16)
+    longest = max(greeting, key=lambda x: len(x) - 16)
     linewidth = (len(longest) - 16)
     box = f"{colors.CYAN}#{colors.RESET}"
+    edges = f"{colors.CYAN}{'#' * (linewidth + 4)}{colors.RESET}"
 
-    print(f"{ box * (linewidth + 4) }")
+    print(edges)
     for line in greeting:
         width = (len(line) - 16)
         line += (" " * (linewidth - width))
         print(f"{box} {line} {box}")
-    print(f"{box * (linewidth + 4)}")
+    print(edges)
