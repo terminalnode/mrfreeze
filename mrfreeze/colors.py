@@ -1,3 +1,5 @@
+import re
+
 BLACK = "\033[00;30m"
 BLACK_B = "\033[30;01m"
 RED = "\033[00;31m"
@@ -15,6 +17,12 @@ CYAN_B = "\033[36;01m"
 WHITE = "\033[00;37m"
 WHITE_B = "\033[37;01m"
 RESET = "\033[00000m"
+regexp = re.compile(r'(\033\[\d+;?\d*m)')
+
+
+def strip(string: str):
+    """Strip a string of all escape sequences."""
+    return regexp.sub("", string)
 
 
 def color_test():

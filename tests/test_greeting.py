@@ -1,7 +1,4 @@
 """Unittest for the greeting module."""
-# TODO: strip color escape codes from output and verify
-# output without the colors. This will make the test more
-# meaningful since the colors are just cosmetic.
 
 import io
 import sys
@@ -17,7 +14,12 @@ class GreetingUnitTest(unittest.TestCase):
     """Unittest for the greeting module."""
 
     def test_greeting(self):
-        """Verify that the greeting message is printed correctly."""
+        """
+        Verify that the greeting message is printed correctly.
+
+        This only tests the information inside the box, not the coloring.
+        All ANSI escape sequences are removed before testing.
+        """
         bot = helpers.MockMrFreeze()
         bot.user.__str__ = lambda _: "BOT.USER #1234"
         bot.user.id = 1234567890
@@ -32,19 +34,16 @@ class GreetingUnitTest(unittest.TestCase):
         sys.stdout = sys.__stdout__
         output = captured_output.getvalue().splitlines()
 
-        self.maxDiff = None
-        c = colors.CYAN
-        b = colors.CYAN_B
-        r = colors.RESET
         expected = [
-            f"{c}#######################################{r}",
-            f"{c}#{r} {c}{b}We have logged in as BOT.USER #1234 {c}#{r}",
-            f"{c}#{r} {c}User name:           {b}BOT.USER.NAME  {c}#{r}",
-            f"{c}#{r} {c}User ID:             {b}1234567890     {c}#{r}",
-            f"{c}#{r} {c}Number of servers:   {b}1              {c}#{r}",
-            f"{c}#{r} {c}Number of channels:  {b}10             {c}#{r}",
-            f"{c}#{r} {c}Number of users:     {b}30             {c}#{r}",
-            f"{c}#######################################{r}"
+            f"#######################################",
+            f"# We have logged in as BOT.USER #1234 #",
+            f"# User name:           BOT.USER.NAME  #",
+            f"# User ID:             1234567890     #",
+            f"# Number of servers:   1              #",
+            f"# Number of channels:  10             #",
+            f"# Number of users:     30             #",
+            f"#######################################"
         ]
+
         for i in enumerate(expected):
-            self.assertEqual(i[1], output[i[0]])
+            self.assertEqual(i[1], colors.strip(output[i[0]]))
