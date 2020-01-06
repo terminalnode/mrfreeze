@@ -19,6 +19,9 @@ flake8-annotations = "*"
 flake8-bugbear = "*"
 flake8-tidy-imports = "*"
 flake8-import-order = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
 coverage = "*"
 
 [requires]
@@ -26,6 +29,7 @@ python_version = "3.8"
 
 [scripts]
 bot = "python -m mrfreeze"
-test = "coverage run -m unittest"
+test = "coverage run -m pytest"
+unittest = "coverage run -m unittest"
 report = "coverage report"
 report_html = "coverage html"
