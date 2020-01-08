@@ -1,189 +1,202 @@
 """Unittest for the command checks."""
 
 import asyncio
-import unittest
 
 from mrfreeze import checks
+
+import pytest
 
 from tests import helpers
 
 
-class ChecksUnitTest(unittest.TestCase):
-    """Test the command checks."""
+@pytest.fixture()
+def ctx():
+    """Create a mock context object."""
+    bot = helpers.MockMrFreeze()
+    ctx = helpers.MockContext()
+    ctx.bot = bot
+    yield ctx
 
-    def setUp(self):
-        """
-        Set up a clean environment for each test.
 
-        Each check takes a context object, except for is_mod
-        which can take either a context object or a member object.
-        """
-        self.ctx = helpers.MockContext()
-        self.ctx.bot = helpers.MockMrFreeze()
-        self.member = self.ctx.author
-        self.loop = asyncio.new_event_loop()
+@pytest.fixture()
+def loop():
+    """Create a loop."""
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
 
-    def tearDown(self):
-        """Close the event loop."""
-        self.loop.close()
 
-    def test_is_owner_with_bot_is_owner_set_to_true(self):
-        """
-        Test is_owner() with bot.is_owner() set to True.
+def test_is_owner_with_bot_is_owner_set_to_true(ctx, loop):
+    """
+    Test is_owner() with bot.is_owner() set to True.
 
-        checks.is_owner() should always return the same result
-        as bot.is_owner(), in this case True.
-        """
-        self.ctx.bot.is_owner.return_value = True
-        result = self.loop.run_until_complete(checks.is_owner(self.ctx))
+    checks.is_owner() should always return the same result
+    as bot.is_owner(), in this case True.
+    """
+    ctx.bot.is_owner.return_value = True
+    result = loop.run_until_complete(checks.is_owner(ctx))
 
-        self.assertTrue(result)
+    assert result
 
-    def test_is_owner_with_bot_is_owner_set_to_false(self):
-        """
-        Test is_owner() with bot.is_owner() set to False.
 
-        checks.is_owner() should always return the same result
-        as bot.is_owner(), in this case False.
-        """
-        self.ctx.bot.is_owner.return_value = False
-        result = self.loop.run_until_complete(checks.is_owner(self.ctx))
+def test_is_owner_with_bot_is_owner_set_to_false(ctx, loop):
+    """
+    Test is_owner() with bot.is_owner() set to False.
 
-        self.assertFalse(result)
+    checks.is_owner() should always return the same result
+    as bot.is_owner(), in this case False.
+    """
+    ctx.bot.is_owner.return_value = False
+    result = loop.run_until_complete(checks.is_owner(ctx))
 
-    def test_is_mod_with_ctx_object_and_authorised_caller(self):
-        """
-        Test is_mod() with context object when caller is admin.
+    assert not result
 
-        Should return guild_permissions.administrator (== True).
-        """
-        self.member.guild_permissions.administrator = True
-        result = self.loop.run_until_complete(checks.is_mod(self.ctx))
 
-        self.assertTrue(result)
+def test_is_mod_with_ctx_object_and_authorised_caller(ctx, loop):
+    """
+    Test is_mod() with context object when caller is admin.
 
-    def test_is_mod_with_ctx_object_and_unauthorised_caller(self):
-        """
-        Test is_mod() with context object when caller is NOT admin.
+    Should return guild_permissions.administrator (== True).
+    """
+    ctx.author.guild_permissions.administrator = True
+    result = loop.run_until_complete(checks.is_mod(ctx))
 
-        Should return guild_permissions.administrator (== False).
-        """
-        self.member.guild_permissions.administrator = False
-        result = self.loop.run_until_complete(checks.is_mod(self.ctx))
+    assert result
 
-        self.ctx.send.assert_called_with(
-            "@member Only mods are allowed to use that command.")
-        self.assertFalse(result)
 
-    def test_is_mod_with_ctx_object_and_unauthorised_caller_in_dm(self):
-        """
-        Test is_mod() with context object when caller is NOT admin.
+def test_is_mod_with_ctx_object_and_unauthorised_caller(ctx, loop):
+    """
+    Test is_mod() with context object when caller is NOT admin.
 
-        Should return guild_permissions.administrator (== False).
-        """
-        self.ctx.guild = None
-        result = self.loop.run_until_complete(checks.is_mod(self.ctx))
+    Should return guild_permissions.administrator (== False).
+    """
+    ctx.author.guild_permissions.administrator = False
+    result = loop.run_until_complete(checks.is_mod(ctx))
 
-        self.ctx.send.assert_called_with(
-            "Don't you try to sneak into my DMs and mod me!")
-        self.assertFalse(result)
+    ctx.send.assert_called_with(
+        "@member Only mods are allowed to use that command.")
 
-    def test_is_mod_with_member_object_and_authorised_caller(self):
-        """
-        Test is_mod() with member object when caller is admin.
+    assert not result
 
-        Should return guild_permissions.administrator (== True).
-        """
-        self.member.guild_permissions.administrator = True
-        result = self.loop.run_until_complete(checks.is_mod(self.member))
 
-        self.assertTrue(result)
+def test_is_mod_with_ctx_object_and_unauthorised_caller_in_dm(ctx, loop):
+    """
+    Test is_mod() with context object when caller is NOT admin.
 
-    def test_is_mod_with_member_object_and_unauthorised_caller(self):
-        """
-        Test is_mod() with member object when caller is NOT admin.
+    Should return guild_permissions.administrator (== False).
+    """
+    ctx.guild = None
+    result = loop.run_until_complete(checks.is_mod(ctx))
 
-        Should return guild_permissions.administrator (== False).
-        """
-        self.member.guild_permissions.administrator = False
-        result = self.loop.run_until_complete(checks.is_mod(self.member))
+    ctx.send.assert_called_with(
+        "Don't you try to sneak into my DMs and mod me!")
 
-        self.assertFalse(result)
+    assert not result
 
-    def test_always_allow_with_regular_user(self):
-        """
-        Test always_allow() with non-owner non-admin member.
 
-        Should return True.
-        """
-        self.ctx.bot.is_owner.return_value = False
-        self.member.guild_permissions.administrator = False
+def test_is_mod_with_member_object_and_authorised_caller(ctx, loop):
+    """
+    Test is_mod() with member object when caller is admin.
 
-        result = self.loop.run_until_complete(checks.always_allow(self.member))
+    Should return guild_permissions.administrator (== True).
+    """
+    ctx.author.guild_permissions.administrator = True
+    result = loop.run_until_complete(checks.is_mod(ctx.author))
 
-        self.assertTrue(result)
+    assert result
 
-    def test_always_allow_with_non_owner_admin(self):
-        """
-        Test always_allow() with non-owner admin member.
 
-        Should return True.
-        """
-        self.ctx.bot.is_owner.return_value = False
-        self.member.guild_permissions.administrator = True
+def test_is_mod_with_member_object_and_unauthorised_caller(ctx, loop):
+    """
+    Test is_mod() with member object when caller is NOT admin.
 
-        result = self.loop.run_until_complete(checks.always_allow(self.member))
+    Should return guild_permissions.administrator (== False).
+    """
+    ctx.author.guild_permissions.administrator = False
+    result = loop.run_until_complete(checks.is_mod(ctx.author))
 
-        self.assertTrue(result)
+    assert not result
 
-    def test_always_allow_with_owner(self):
-        """
-        Test always_allow() with owner non-admin member.
 
-        Should return True.
-        """
-        self.ctx.bot.is_owner.return_value = True
-        self.member.guild_permissions.administrator = False
+def test_always_allow_with_regular_user(ctx, loop):
+    """
+    Test always_allow() with non-owner non-admin member.
 
-        result = self.loop.run_until_complete(checks.always_allow(self.member))
+    Should return True.
+    """
+    ctx.bot.is_owner.return_value = False
+    ctx.author.guild_permissions.administrator = False
 
-        self.assertTrue(result)
+    result = loop.run_until_complete(checks.always_allow(ctx.author))
 
-    def test_always_deny_with_regular_user(self):
-        """
-        Test always_deny() with non-owner non-admin member.
+    assert result
 
-        Should return False.
-        """
-        self.ctx.bot.is_owner.return_value = False
-        self.member.guild_permissions.administrator = False
 
-        result = self.loop.run_until_complete(checks.always_deny(self.member))
+def test_always_allow_with_non_owner_admin(ctx, loop):
+    """
+    Test always_allow() with non-owner admin member.
 
-        self.assertFalse(result)
+    Should return True.
+    """
+    ctx.bot.is_owner.return_value = False
+    ctx.author.guild_permissions.administrator = True
 
-    def test_always_deny_with_non_owner_admin(self):
-        """
-        Test always_deny() with non-owner admin member.
+    result = loop.run_until_complete(checks.always_allow(ctx.author))
 
-        Should return False.
-        """
-        self.ctx.bot.is_owner.return_value = False
-        self.member.guild_permissions.administrator = True
+    assert result
 
-        result = self.loop.run_until_complete(checks.always_deny(self.member))
 
-        self.assertFalse(result)
+def test_always_allow_with_owner(ctx, loop):
+    """
+    Test always_allow() with owner non-admin member.
 
-    def test_always_deny_with_owner(self):
-        """
-        Test always_deny() with owner non-admin member.
+    Should return True.
+    """
+    ctx.bot.is_owner.return_value = True
+    ctx.author.guild_permissions.administrator = False
 
-        Should return False.
-        """
-        self.ctx.bot.is_owner.return_value = True
-        self.member.guild_permissions.administrator = False
+    result = loop.run_until_complete(checks.always_allow(ctx.author))
 
-        result = self.loop.run_until_complete(checks.always_deny(self.member))
+    assert result
 
-        self.assertFalse(result)
+
+def test_always_deny_with_regular_user(ctx, loop):
+    """
+    Test always_deny() with non-owner non-admin member.
+
+    Should return False.
+    """
+    ctx.bot.is_owner.return_value = False
+    ctx.author.guild_permissions.administrator = False
+
+    result = loop.run_until_complete(checks.always_deny(ctx.author))
+
+    assert not result
+
+
+def test_always_deny_with_non_owner_admin(ctx, loop):
+    """
+    Test always_deny() with non-owner admin member.
+
+    Should return False.
+    """
+    ctx.bot.is_owner.return_value = False
+    ctx.author.guild_permissions.administrator = True
+
+    result = loop.run_until_complete(checks.always_deny(ctx.author))
+
+    assert not result
+
+
+def test_always_deny_with_owner(ctx, loop):
+    """
+    Test always_deny() with owner non-admin member.
+
+    Should return False.
+    """
+    ctx.bot.is_owner.return_value = True
+    ctx.author.guild_permissions.administrator = False
+
+    result = loop.run_until_complete(checks.always_deny(ctx.author))
+
+    assert not result
