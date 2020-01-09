@@ -44,4 +44,5 @@ def test_greeting():
     for i in enumerate(expected):
         actual = colors.strip(output[i[0]])
         expected = i[1]
-        assert expected, actual
+        test = actual == expected
+        assert test
