@@ -14,7 +14,8 @@ def test_extract_time_return_value_for_no_fallback_minutes():
     test_args = ("10", "hello")
     test_expression = time.extract_time(test_args, fallback_minutes=False)
 
-    assert test_expression, (None, None)
+    test = test_expression, (None, None)
+    assert test
 
 
 def test_extract_time_return_value_for_fallback_minutes():
@@ -27,8 +28,11 @@ def test_extract_time_return_value_for_fallback_minutes():
     (first, second) = time.extract_time(test_args, fallback_minutes=True)
     should_be = datetime.timedelta(minutes=10)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_extract_time_returns_none_none_with_invalid_time_expression():
@@ -40,7 +44,8 @@ def test_extract_time_returns_none_none_with_invalid_time_expression():
     test_args = ("hello", "minutes")
     test_expression = time.extract_time(test_args)
 
-    assert test_expression, (None, None)
+    test = test_expression == (None, None)
+    assert test
 
 
 def test_extract_time_return_value_for_1_second_singular():
@@ -53,8 +58,11 @@ def test_extract_time_return_value_for_1_second_singular():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.timedelta(seconds=1)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_extract_time_return_value_for_2_seconds_plural():
@@ -67,8 +75,11 @@ def test_extract_time_return_value_for_2_seconds_plural():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.timedelta(seconds=2)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_extract_time_return_value_for_1_minute_singular():
@@ -81,8 +92,11 @@ def test_extract_time_return_value_for_1_minute_singular():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.timedelta(minutes=1)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_extract_time_return_value_for_2_minutes_plural():
@@ -95,8 +109,11 @@ def test_extract_time_return_value_for_2_minutes_plural():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.timedelta(minutes=2)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_extract_time_return_value_for_1_hour_singular():
@@ -109,8 +126,11 @@ def test_extract_time_return_value_for_1_hour_singular():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.timedelta(hours=1)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_extract_time_return_value_for_2_hours_plural():
@@ -123,8 +143,11 @@ def test_extract_time_return_value_for_2_hours_plural():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.timedelta(hours=2)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_extract_time_return_value_for_1_day_singular():
@@ -137,8 +160,11 @@ def test_extract_time_return_value_for_1_day_singular():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.timedelta(days=1)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_extract_time_return_value_for_2_days_plural():
@@ -151,8 +177,11 @@ def test_extract_time_return_value_for_2_days_plural():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.timedelta(days=2)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_extract_time_return_value_for_1_week_singular():
@@ -165,8 +194,11 @@ def test_extract_time_return_value_for_1_week_singular():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.timedelta(weeks=1)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_extract_time_return_value_for_2_weeks_plural():
@@ -179,8 +211,11 @@ def test_extract_time_return_value_for_2_weeks_plural():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.timedelta(weeks=2)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_extract_time_return_value_for_1_month_singular():
@@ -193,8 +228,11 @@ def test_extract_time_return_value_for_1_month_singular():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.timedelta(days=30)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_extract_time_return_value_for_2_months_plural():
@@ -207,8 +245,11 @@ def test_extract_time_return_value_for_2_months_plural():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.timedelta(days=60)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_extract_time_return_value_for_1_year_singular():
@@ -221,8 +262,11 @@ def test_extract_time_return_value_for_1_year_singular():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.timedelta(days=365)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_extract_time_return_value_for_2_years_plural():
@@ -235,8 +279,11 @@ def test_extract_time_return_value_for_2_years_plural():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.timedelta(days=730)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_extract_time_return_value_for_multiple_units():
@@ -250,8 +297,11 @@ def test_extract_time_return_value_for_multiple_units():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.timedelta(days=368, seconds=2)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_extract_time_return_value_for_absurdly_high_numbers():
@@ -264,8 +314,11 @@ def test_extract_time_return_value_for_absurdly_high_numbers():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.datetime.max
 
-    assert isinstance(first, datetime.timedelta)
-    assert second, should_be
+    test = second == should_be
+    assert test
+
+    test = isinstance(first, datetime.timedelta)
+    assert test
 
 
 def test_extract_time_return_value_for_negative_numbers():
@@ -278,8 +331,11 @@ def test_extract_time_return_value_for_negative_numbers():
     (first, second) = time.extract_time(test_args)
     should_be = datetime.timedelta(days=-730)
 
-    assert first, should_be
-    assert isinstance(second, datetime.datetime)
+    test = first == should_be
+    assert test
+
+    test = isinstance(second, datetime.datetime)
+    assert test
 
 
 def test_parse_timedelta_one_second_singular():
@@ -292,7 +348,8 @@ def test_parse_timedelta_one_second_singular():
     test_value = time.parse_timedelta(timedelta)
     expected = "1 second"
 
-    assert test_value, expected
+    test = test_value == expected
+    assert test
 
 
 def test_parse_timedelta_two_seconds_plural():
@@ -305,7 +362,8 @@ def test_parse_timedelta_two_seconds_plural():
     test_value = time.parse_timedelta(timedelta)
     expected = "2 seconds"
 
-    assert test_value, expected
+    test = test_value == expected
+    assert test
 
 
 def test_parse_timedelta_one_minute_singular():
@@ -318,7 +376,8 @@ def test_parse_timedelta_one_minute_singular():
     test_value = time.parse_timedelta(timedelta)
     expected = "1 minute"
 
-    assert test_value, expected
+    test = test_value == expected
+    assert test
 
 
 def test_parse_timedelta_two_minutes_plural():
@@ -331,7 +390,8 @@ def test_parse_timedelta_two_minutes_plural():
     test_value = time.parse_timedelta(timedelta)
     expected = "2 minutes"
 
-    assert test_value, expected
+    test = test_value == expected
+    assert test
 
 
 def test_parse_timedelta_one_hour_singular():
@@ -344,7 +404,8 @@ def test_parse_timedelta_one_hour_singular():
     test_value = time.parse_timedelta(timedelta)
     expected = "1 hour"
 
-    assert test_value, expected
+    test = test_value == expected
+    assert test
 
 
 def test_parse_timedelta_two_hours_plural():
@@ -357,7 +418,8 @@ def test_parse_timedelta_two_hours_plural():
     test_value = time.parse_timedelta(timedelta)
     expected = "2 hours"
 
-    assert test_value, expected
+    test = test_value == expected
+    assert test
 
 
 def test_parse_timedelta_one_day_singular():
@@ -370,7 +432,8 @@ def test_parse_timedelta_one_day_singular():
     test_value = time.parse_timedelta(timedelta)
     expected = "1 day"
 
-    assert test_value, expected
+    test = test_value == expected
+    assert test
 
 
 def test_parse_timedelta_two_days_plural():
@@ -383,7 +446,8 @@ def test_parse_timedelta_two_days_plural():
     test_value = time.parse_timedelta(timedelta)
     expected = "2 days"
 
-    assert test_value, expected
+    test = test_value == expected
+    assert test
 
 
 def test_parse_timedelta_one_week_singular():
@@ -396,7 +460,8 @@ def test_parse_timedelta_one_week_singular():
     test_value = time.parse_timedelta(timedelta)
     expected = "1 week"
 
-    assert test_value, expected
+    test = test_value == expected
+    assert test
 
 
 def test_parse_timedelta_two_weeks_plural():
@@ -409,7 +474,8 @@ def test_parse_timedelta_two_weeks_plural():
     test_value = time.parse_timedelta(timedelta)
     expected = "2 weeks"
 
-    assert test_value, expected
+    test = test_value == expected
+    assert test
 
 
 def test_parse_timedelta_one_month_singular():
@@ -422,7 +488,8 @@ def test_parse_timedelta_one_month_singular():
     test_value = time.parse_timedelta(timedelta)
     expected = "1 month"
 
-    assert test_value, expected
+    test = test_value == expected
+    assert test
 
 
 def test_parse_timedelta_two_months_plural():
@@ -435,7 +502,8 @@ def test_parse_timedelta_two_months_plural():
     test_value = time.parse_timedelta(timedelta)
     expected = "2 months"
 
-    assert test_value, expected
+    test = test_value == expected
+    assert test
 
 
 def test_parse_timedelta_one_year_singular():
@@ -448,7 +516,8 @@ def test_parse_timedelta_one_year_singular():
     test_value = time.parse_timedelta(timedelta)
     expected = "1 year"
 
-    assert test_value, expected
+    test = test_value == expected
+    assert test
 
 
 def test_parse_timedelta_two_years_plural():
@@ -461,7 +530,8 @@ def test_parse_timedelta_two_years_plural():
     test_value = time.parse_timedelta(timedelta)
     expected = "2 years"
 
-    assert test_value, expected
+    test = test_value == expected
+    assert test
 
 
 def test_parse_timedelta_none():
@@ -474,7 +544,8 @@ def test_parse_timedelta_none():
     test_value = time.parse_timedelta(timedelta)
     expected = "an eternity"
 
-    assert test_value, expected
+    test = test_value == expected
+    assert test
 
 
 def test_parse_timedelta_compound_time_expression():
@@ -487,7 +558,8 @@ def test_parse_timedelta_compound_time_expression():
     test_value = time.parse_timedelta(timedelta)
     expected = "1 year, 2 months and 1 second"
 
-    assert test_value, expected
+    test = test_value == expected
+    assert test
 
 # Possible future update, not implemented yet.
 #
