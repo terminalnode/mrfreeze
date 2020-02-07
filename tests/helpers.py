@@ -1,6 +1,10 @@
-# This code derives a lot from the Python discord's bot:
-# https://github.com/python-discord/bot/blob/master/tests/helpers.py
-# And by derives I mean that it's basically copy-paste with small changes.
+"""
+Various useful mock objects and helper objects for testing the bot.
+
+Most of this code derives from the Python discord server's bot,
+the original code can be found here:
+https://github.com/python-discord/bot/blob/master/tests/helpers.py
+"""
 
 import collections
 import inspect
@@ -49,10 +53,8 @@ role_instance = discord.Role(
     state=MagicMock(),
     data=role_data)
 
-# Create a Context instance to get a realistic MagicMock of `discord.ext.commands.Context`
 context_instance = Context(message=MagicMock(), prefix=MagicMock())
 
-# Create a Message instance to get a realistic MagicMock of `discord.Message`
 message_data = {
     "id": 1,
     "webhook_id": 431341013479718912,
@@ -82,48 +84,39 @@ channel_data = {
 
 state = MagicMock()
 channel = MagicMock()
+guild = MagicMock()
+
 message_instance = discord.Message(
     state=state,
     channel=channel,
     data=message_data)
-guild = MagicMock()
-channel_instance = discord.TextChannel(state=state, guild=guild, data=channel_data)
 
+channel_instance = discord.TextChannel(
+    state=state,
+    guild=guild,
+    data=channel_data)
+
+# TODO: Add some option to MrFreeze for skipping
+#       the directory configuration thing.
 bot_instance = MrFreeze(command_prefix=MagicMock())
 bot_instance.http_session = None
 bot_instance.api_client = None
 
-# Create a Message instance to get a realistic MagicMock of `discord.Message`
-message_data = {
-    "id": 1,
-    "webhook_id": 431341013479718912,
-    "attachments": [],
-    "embeds": [],
-    "application": "Python Discord",
-    "activity": "mocking",
-    "channel": MagicMock(),
-    "edited_timestamp": "2019-10-14T15:33:48+00:00",
-    "type": "message",
-    "pinned": False,
-    "mention_everyone": False,
-    "tts": None,
-    "content": "content",
-    "nonce": None}
 
 class CustomMockMixin(MagicMock):
     child_mock_type = MagicMock
     discord_id = itertools.count(0)
 
-    def __init__(self, spec_set: Any = None, **kwargs):
-        name = kwargs.pop("name", None)
+    def __init__(self, spec_set: Any = None, **kw):
+        name = kw.pop("name", None)
         super().__init__(
                 spec_set=spec_set,
-                **kwargs)
+                **kw)
 
         if name:
             self.name = name
         if spec_set:
-            self._extract_coroutine_methods_from_spec_instance(spec_set)
+            self._get_coroutines_from_spec_instance(spec_set)
 
     def _get_child_mock(self, **kw):
         klass = self.child_mock_type
@@ -135,7 +128,7 @@ class CustomMockMixin(MagicMock):
 
         return klass(**kw)
 
-    def _extract_coroutine_methods_from_spec_instance(self, source: Any) -> None:
+    def _get_coroutines_from_spec_instance(self, source: Any) -> None:
         for name, _method in inspect.getmembers(
                 source,
                 inspect.iscoroutinefunction):
@@ -158,6 +151,8 @@ class ColourMixin():
 
 
 class MockRole(CustomMockMixin, AsyncMock, HashableMixin):
+    """Mock of discord.Role."""
+
     def __init__(self, **kwargs) -> None:
         default_kwargs = {
             "id": next(self.discord_id),
@@ -177,7 +172,11 @@ class MockRole(CustomMockMixin, AsyncMock, HashableMixin):
 
 
 class MockGuild(CustomMockMixin, AsyncMock, HashableMixin):
-    def __init__(self, roles: Optional[Iterable[MockRole]] = None, **kwargs) -> None:
+    """Mock of discord.Guild."""
+
+    def __init__(self,
+                 roles: Optional[Iterable[MockRole]] = None,
+                 **kwargs) -> None:
         default_kwargs = {
             "id": next(self.discord_id),
             "members": []}
@@ -194,7 +193,11 @@ class MockGuild(CustomMockMixin, AsyncMock, HashableMixin):
 
 
 class MockMember(CustomMockMixin, AsyncMock, ColourMixin, HashableMixin):
-    def __init__(self, roles: Optional[Iterable[MockRole]] = None, **kwargs) -> None:
+    """Mock of discord.Member."""
+
+    def __init__(self,
+                 roles: Optional[Iterable[MockRole]] = None,
+                 **kwargs) -> None:
         default_kwargs = {
             "name": "member",
             "id": next(self.discord_id)}
@@ -212,6 +215,8 @@ class MockMember(CustomMockMixin, AsyncMock, ColourMixin, HashableMixin):
 
 
 class MockMrFreeze(CustomMockMixin, AsyncMock):
+    """Mock of mrfreeze.MrFreeze."""
+
     def __init__(self, **kwargs) -> None:
         super().__init__(spec_set=bot_instance, **kwargs)
 
@@ -229,7 +234,12 @@ class MockMrFreeze(CustomMockMixin, AsyncMock):
 
 
 class MockTextChannel(CustomMockMixin, AsyncMock, HashableMixin):
-    def __init__(self, name: str = "channel", channel_id: int = 1, **kwargs) -> None:
+    """Mock of discord.TextChannel."""
+
+    def __init__(self,
+                 name: str = "channel",
+                 channel_id: int = 1,
+                 **kwargs) -> None:
         default_kwargs = {
             "id": next(self.discord_id),
             "name": "channel",
@@ -243,6 +253,8 @@ class MockTextChannel(CustomMockMixin, AsyncMock, HashableMixin):
 
 
 class MockContext(CustomMockMixin, AsyncMock):
+    """Mock of discord.ext.commands.Context."""
+
     def __init__(self, **kwargs) -> None:
         super().__init__(
             spec_set=context_instance,
@@ -254,6 +266,8 @@ class MockContext(CustomMockMixin, AsyncMock):
 
 
 class MockMessage(CustomMockMixin, AsyncMock):
+    """Mock of discord.Message."""
+
     def __init__(self, **kwargs) -> None:
         super().__init__(
             spec_set=message_instance,
