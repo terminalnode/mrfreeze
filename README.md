@@ -3,6 +3,15 @@ This is a rewrite of MrFreeze using cogs instead of mashing everything into a si
 
 This project uses pipenv. For requirements, see the Pipfile.
 
+It also has a number of "scripts" or commands built-in for running the bot using pipenv:
+* **pipenv run bot**         - Starts the bot
+* **pipenv run test**        - Runs the tests through pytest (recommended)
+* **pipenv run unittest**    - Runs the tests through unittest
+* **pipenv run report**      - Runs coverage report to show test coverage
+* **pipenv run report_html** - Generates an HTML version of the coverage report in `htmlcov`
+
+By default the pytests will run on all cores at once, using xdist. To disable this behaviour add the option `-n 0`.
+
 ## Reimplemented functions:
 ### Owner commands
 * **!restart**   - Restarts the bot. Very useful for testing new code.
