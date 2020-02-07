@@ -107,8 +107,8 @@ class CustomMockMixin(MagicMock):
     child_mock_type = MagicMock
     discord_id = itertools.count(0)
 
-    def __init__(self, spec_set: Any = None, **kw):
-        name = kw.pop("name", None)
+    def __init__(self, spec_set: Any = None, **kwargs):
+        name = kwargs.pop("name", None)
         super().__init__(
             spec_set=spec_set,
             **kwargs)
