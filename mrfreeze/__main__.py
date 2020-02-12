@@ -1,4 +1,5 @@
-from mrfreeze import bot  # The bot class itself
+import discord
+from mrfreeze import bot, colors
 import traceback          # Debugging loading of cogs
 import sys                # Printing to stderr, exiting etc
 
@@ -43,9 +44,21 @@ if __name__ == "__main__":
 try:
     token = open("token", "r").read().strip()
     bot.run(token, bot=True, reconnect=True)
-except Exception:
-    print("""\nERROR: BOT TOKEN MISSING!
-Please put your bot's token in a separate text file \
-called "token".\nThis file should be located in the \
-same directory as the bot files.""")
+
+except FileNotFoundError:
+    print(f"\n{colors.RED}Error: Bot token missing!{colors.RESET}\n" +
+          "Please put your bot's token in a separate text file " +
+          "called \"token\".\nThis file should be located in the " +
+          "same directory as the bot files.")
+
+except discord.errors.LoginFailure as e:
+    print(f"\n{colors.RED}Error: Login failure{colors.RESET}")
+    print(e)
+
+except Exception as e:
+    print(f"\n{colors.RED}Error: {e}{colors.RESET}")
+
+    if str(e) == "Event loop stopped before Future completed.":
+        print("This is normal if you've been mashing ^C to")
+        print("shut it down, otherwise it's not normal.")
     sys.exit(0)
