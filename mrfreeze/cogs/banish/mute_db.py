@@ -4,6 +4,7 @@ from typing import NamedTuple
 from discord import Member
 from datetime import datetime
 
+from mrfreeze.colors import CYAN, CYAN_B, GREEN, GREEN_B, RED, RED_B, YELLOW, RESET
 
 class BanishTuple(NamedTuple):
     member: Member
@@ -99,11 +100,11 @@ def mdb_add(bot, mdbname, user, voluntary=False, end_date=None, prolong=True):
         if end_date is not None:
             # Collect time info in string format for the log
             until = bot.db_time(end_date)
-            until = f"\n{bot.GREEN}==> Until: {until} {bot.RESET}"
+            until = f"\n{GREEN}==> Until: {until} {RESET}"
 
             duration = end_date - datetime.now()
             duration = bot.parse_timedelta(duration)
-            duration = f"{bot.YELLOW}(in {duration}){bot.RESET}"
+            duration = f"{YELLOW}(in {duration}){RESET}"
 
             # Turn datetime object into string
             end_date = bot.db_time(end_date)
@@ -125,14 +126,14 @@ def mdb_add(bot, mdbname, user, voluntary=False, end_date=None, prolong=True):
                 error = e
 
     if error == None:
-        print(f"{bot.current_time()} {bot.GREEN_B}Mutes DB:{bot.CYAN} added user to DB: " +
-                f"{bot.CYAN_B}{name} @ {servername}{bot.CYAN}.{bot.RESET}{until}{duration}")
+        print(f"{bot.current_time()} {GREEN_B}Mutes DB:{CYAN} added user to DB: " +
+                f"{CYAN_B}{name} @ {servername}{CYAN}.{RESET}{until}{duration}")
         return True
 
     else:
-        print(f"{bot.current_time()} {bot.RED_B}Mutes DB:{bot.CYAN} failed adding to DB: " +
-                f"{bot.CYAN_B}{name} @ {servername}{bot.CYAN}:" +
-                f"\n{bot.RED}==> {error}{bot.RESET}")
+        print(f"{bot.current_time()} {RED_B}Mutes DB:{CYAN} failed adding to DB: " +
+                f"{CYAN_B}{name} @ {servername}{CYAN}:" +
+                f"\n{RED}==> {error}{RESET}")
         return False
 
 def mdb_del(bot, mdbname, user):
@@ -149,8 +150,8 @@ def mdb_del(bot, mdbname, user):
 
     is_muted = len(mdb_fetch(bot, mdbname, user)) != 0
     if not is_muted:
-        print(f"{bot.current_time()} {bot.GREEN_B}Mutes DB:{bot.CYAN} user already not in DB: " +
-            f"{bot.CYAN_B}{name} @ {servername}{bot.CYAN}.{bot.RESET}")
+        print(f"{bot.current_time()} {GREEN_B}Mutes DB:{CYAN} user already not in DB: " +
+            f"{CYAN_B}{name} @ {servername}{CYAN}.{RESET}")
         return True
 
     with bot.db_connect(bot, mdbname) as conn:
@@ -159,14 +160,14 @@ def mdb_del(bot, mdbname, user):
 
         try:
             c.execute(sql, (uid, server))
-            print(f"{bot.current_time()} {bot.GREEN_B}Mutes DB:{bot.CYAN} removed user from DB: " +
-                f"{bot.CYAN_B}{name} @ {servername}{bot.CYAN}.{bot.RESET}")
+            print(f"{bot.current_time()} {GREEN_B}Mutes DB:{CYAN} removed user from DB: " +
+                f"{CYAN_B}{name} @ {servername}{CYAN}.{RESET}")
             return True
 
         except Exception as error:
-            print(f"{bot.current_time()} {bot.RED_B}Mutes DB:{bot.CYAN} failed to remove from DB: " +
-                f"{bot.CYAN_B}{name} @ {servername}{bot.CYAN}:" +
-                f"\n{bot.RED}==> {error}{bot.RESET}")
+            print(f"{bot.current_time()} {RED_B}Mutes DB:{CYAN} failed to remove from DB: " +
+                f"{CYAN_B}{name} @ {servername}{CYAN}:" +
+                f"\n{RED}==> {error}{RESET}")
             return False
 
 def mdb_fetch(bot, mdbname, in_data):
@@ -191,7 +192,7 @@ def mdb_fetch(bot, mdbname, in_data):
             server = in_data
             sql = f' SELECT * FROM {mdbname} WHERE server = ? '
             c.execute(sql, (fetch_id,))
-        
+
         output = [
             BanishTuple(
                 member = discord.utils.get(server.members, id=int(entry[0])),
