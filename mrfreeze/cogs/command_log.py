@@ -29,5 +29,5 @@ class CommandLogger(CogBase):
             guild_name = f"{colors.MAGENTA}{message.guild.name}"
             channel_name = f"{colors.GREEN}#{message.channel.name}"
             print(f"{self.bot.current_time()} {name} {colors.CYAN}used " +
-                  f"{command}{colors.CYAN}in {channel_name}{colors.CYAN} " +
+                  f"{command}{colors.CYAN} in {channel_name}{colors.CYAN} " +
                   f"@ {guild_name}{colors.RESET}")
