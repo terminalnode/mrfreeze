@@ -1,23 +1,26 @@
-# Basic discord functionality
+"""
+Banish cog.
+
+This cog is for the banish/mute command and the region command.
+banish/mute is closely connected to the region command since
+they both use the antarctica mechanics.
+
+Therefor they're both in a cog separate from everything else.
+"""
+
 import discord
-# Required for the unbanish loop
 import asyncio
-# Required for outputing the time until / duration of banishes to the log
 import datetime
-# Required to check who's allowed to issue these commands
+import random
+
 from mrfreeze import checks
 from mrfreeze import colors
 from mrfreeze.cogs.cogbase import CogBase
 
-# Importing the banish submodules
 from mrfreeze.cogs.banish.enums import MuteType, MuteStr
 from mrfreeze.cogs.banish.templates import templates
 from mrfreeze.cogs.banish import mute_db
 
-# This cog is for the banish/mute command and the region command.
-# banish/mute is closely connected to the region command since
-# they both use the antarctica mechanics.
-# Therefor they're both in a cog separate from everything else.
 
 banish_aliases = ["unbanish", "microbanish",
                   "superbanish", "SUPERBANISH",
@@ -390,19 +393,29 @@ class BanishAndRegion(CogBase):
         )
         await ctx.send(reply)
 
+    # This decorator makes it discord.py automatically
+    # trigger it when _banish throws an error.
     @_banish.error
-    async def _banish_error(self, ctx, error):
-        """Try (and fail) to mute one or more users (can only be invoked by non-mods)"""
+    async def unauthorized_banish(self, ctx, error):
+        """
+        Trigger on unauthorized banish, i.e. when a non-administrator try to banish one or more people.
+
+        When _banish() encounters an error this method is automatically triggered. If the error
+        is an instance of discord.ext.commands.CheckFailure the user will be punished accordingly,
+        if not the error is raised again.
+
+        There are four relevant templates that can be used when sending the response.
+        USER_NONE     User invoked mute with no arguments
+        USER_SELF     User tried muting themselves
+        USER_USER     User tried muting other user(s)
+        USER_MIXED    User tried musing themselves and other user(s)
+        """
 
         if not isinstance(error, discord.ext.commands.CheckFailure):
             # Only run this on Check Failure.
             return
-
-        # Only three cases to check for in this function:
-        # USER_NONE     # User invoked mute with no arguments
-        # USER_SELF     # User tried muting themselves
-        # USER_USER     # User tried muting other user(s)
-        # USER_MIXED    # User tried musing themselves and other user(s)
+        else:
+            raise error
 
         mentions = ctx.message.mentions
         author = ctx.author
@@ -443,6 +456,74 @@ class BanishAndRegion(CogBase):
         )
 
         await ctx.send(reply)
+
+    @discord.ext.commands.command(name="roulette")
+    async def roulette(self, ctx, *args):
+        member = ctx.author
+        mention = member.mention
+        http_exception = False
+        forbidden_exception = False
+        other_exception = False
+
+        # Skip if server is Penposium and channel isn't #bot-trash or #bots
+        if ctx.guild.id == 444289793141112864 and ctx.channel.id not in (471909336377982976, 445708393789915146):
+            await ctx.send("Please only use that command in the bot-trash channel... smud.")
+            return
+
+        if random.randint(1, 6) == 1:
+            # Tough luck, yer goin' down
+
+            banish_time = random.randint(1, 5)
+            duration = datetime.timedelta(minutes = banish_time)
+            end_date = datetime.datetime.now() + duration
+            reply = "I should probably say something now... but I don't know what."
+
+            if banish_time == 1:
+                reply = f"{mention} rolls the dice, the gun doesn't fire but somehow "
+                reply += "they manage to hurt themselves with it anyway. A minute in "
+                reply += "Antarctica and they'll be good as new!"
+
+            elif banish_time == 2:
+                reply = f"{mention} rolls the dice, but the gun misfires and explodes in "
+                reply += "their hand. Better put some ice on that, should be fine in 2 minutes."
+
+            elif banish_time == 3:
+                reply = f"{mention} rolls the dice, slips and shoots themselves in the leg. "
+                reply += "The nearest hospital they can afford is in Antarctica, where "
+                reply += "they will be spending the next 3 minutes."
+
+            elif banish_time == 4:
+                reply = f"{mention} rolls the dice of death, but the gun is jammed. "
+                reply += "As they're looking down the barrel something blows up and "
+                reply += "hits them in the eye. 4 minutes in Antarctica!"
+
+            else:
+                reply = f"{mention} rolls a headshot on the dice of death! 5 minutes in Antarctica!"
+
+            error = await mute_db.carry_out_banish(self.bot, self.mdbname, member, end_date)
+            if isinstance(error, Exception):
+                if isinstance(error, discord.HTTPException):    http_exception = True
+                elif isinstance(error, discord.Forbidden):      forbidden_exception = True
+                else:                                           other_exception = True
+
+            if http_exception:
+                reply = f"While {mention} did fail and hurt themselves spectacularly in the roulette "
+                reply += "there's not much I can do about it due to some stupid HTTP error."
+            elif forbidden_exception:
+                reply = f"While {mention} did fail and hurt themselves spectacularly in the roulette "
+                reply += "there's not much I can do about it because I'm not allowed to banish people."
+            elif other_exception:
+                reply = f"While {mention} did fail and hurt themselves spectacularly in the roulette "
+                reply += "there's not much I can do about it because, uh, reasons. I don't know."
+
+            await ctx.send(reply)
+
+        else:
+            # Congratulations bruh!
+            response = await ctx.send(f"Sorry chat, seems {mention} will live to see another day.")
+            await asyncio.sleep(5)
+            await ctx.message.delete()
+            await response.delete()
 
 
     ###########################################################################
