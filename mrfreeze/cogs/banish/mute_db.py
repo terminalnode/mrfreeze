@@ -15,7 +15,6 @@ class BanishTuple(NamedTuple):
 # Complete list of tables and their rows in this database.
 # (These are created via the banish cog)
 #
-# Complete list of tables and their rows in this database.
 # Primary key(s) is marked with an asterisk (*).
 # Mandatory but not primary keys are marked with a pling (!).
 # TABLE         ROWS        TYPE        FUNCTION
@@ -203,4 +202,3 @@ def mdb_fetch(bot, mdbname, in_data):
         ]
 
     return output
-
