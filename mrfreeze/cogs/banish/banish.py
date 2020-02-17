@@ -19,7 +19,7 @@ from mrfreeze.cogs.cogbase import CogBase
 
 from mrfreeze.cogs.banish.enums import MuteType, MuteStr
 from mrfreeze.cogs.banish.templates import templates
-from mrfreeze.cogs.banish import mute_db
+from mrfreeze.cogs.banish import mute_db, region_db
 
 
 banish_aliases = ["unbanish", "microbanish",
@@ -73,22 +73,24 @@ class BanishAndRegion(CogBase):
 
         # Region database creation
         self.rdbname = rdbname
+        self.region_table = "region"
+        self.blacklist_table = "blacklist"
         # Complete list of tables and their rows in this database.
         # Primary key(s) is marked with an asterisk (*).
         # Mandatory but not primary keys are marked with a pling (!).
-        # TABLE            ROWS       TYPE     FUNCTION
-        # self.rdbname     role*      integer  Role ID
-        #                  server*    integer  Server ID
-        #                  triggers!  string   String of keywords for region
-        # self.rdbname_bl  uid*       integer  User ID
-        #                  sid*       integer  Server ID
-        rdbtable = f"""CREATE TABLE IF NOT EXISTS {self.rdbname}(
+        # TABLE                 ROWS       TYPE     FUNCTION
+        # self.region_table     role*      integer  Role ID
+        #                       server*    integer  Server ID
+        #                       triggers!  string   String of keywords for region
+        # self.blacklist_table  uid*       integer  User ID
+        #                       sid*       integer  Server ID
+        rdbtable = f"""CREATE TABLE IF NOT EXISTS {self.region_table}(
             role        integer NOT NULL,
             server      integer NOT NULL,
             triggers    str NOT NULL,
             CONSTRAINT  server_user PRIMARY KEY (role, server));"""
 
-        rdbtable_bl = f"""CREATE TABLE IF NOT EXISTS {self.rdbname}_bl(
+        rdbtable_bl = f"""CREATE TABLE IF NOT EXISTS {self.blacklist_table}(
             uid         integer NOT NULL,
             sid         integer NOT NULL,
             CONSTRAINT  sid_uid PRIMARY KEY (uid, sid));"""
@@ -525,6 +527,20 @@ class BanishAndRegion(CogBase):
             await ctx.message.delete()
             await response.delete()
 
+    @discord.ext.commands.command(name="blacklist")
+    async def blacklist(self, ctx, *args):
+        # TODO add some fancy shenanigans for checking if the user already
+        #      is on the blacklist if adding them fails.
+        result = region_db.add_blacklist(self.bot, self.rdbname, self.blacklist_table, ctx.author)
+
+        if result:
+            await ctx.send("Placeholder message for saying the user WAS added.")
+        else:
+            await ctx.send("Placeholder message for saying the user WAS NOT added.")
+
+    @discord.ext.commands.command(name="unblacklist", aliases=[ "unlist" ])
+    async def unblacklist(self, ctx, *args):
+        await ctx.send("Not implemented yet")
 
     ###########################################################################
     # Various shenanigans that may need to be implemented into the bot proper #
