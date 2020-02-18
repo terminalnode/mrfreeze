@@ -1,9 +1,10 @@
-import discord
+from typing import List
 
+from discord import Guild
 from discord import Member
-from datetime import datetime
 
 from mrfreeze.bot import MrFreeze
+from mrfreeze.dbfunctions import db_connect
 from mrfreeze.colors import CYAN, CYAN_B, GREEN, GREEN_B, RED, RED_B, YELLOW, RESET
 
 # Complete list of tables and their rows in this database.
@@ -18,21 +19,20 @@ from mrfreeze.colors import CYAN, CYAN_B, GREEN, GREEN_B, RED, RED_B, YELLOW, RE
 # self.blacklist_table  uid*       integer  User ID
 #                       sid*       integer  Server ID
 
-def add_blacklist(bot: MrFreeze, dbfile: str, dbname: str, member: Member):
+def add_blacklist(bot: MrFreeze, dbfile: str, dbtable: str, member: Member) -> bool:
     """
     Add a member to the region blacklist.
 
     A member who is on the blacklist is not allowed to change their
     region via commands, but they may still use it for Antarctica.
     """
-    # TODO add some fancy error shenanigans
     server = member.guild.id
     servername = member.guild.name
     error = None
 
-    with bot.db_connect(bot, dbfile) as conn:
+    with db_connect(bot, dbfile) as conn:
         c = conn.cursor()
-        sql = (f"INSERT INTO {dbname} (uid, sid) VALUES(?,?)")
+        sql = (f"INSERT INTO {dbtable} (uid, sid) VALUES (?,?)")
 
         try:
             c.execute(sql, (member.id, server))
@@ -44,4 +44,30 @@ def add_blacklist(bot: MrFreeze, dbfile: str, dbname: str, member: Member):
               f"{CYAN_B}{member} @ {servername}{CYAN}.{RESET}")
         return True
     else:
+        print(error)
         return False
+
+def fetch_blacklist(bot: MrFreeze, dbfile: str, dbtable: str, server: Guild) -> List[int]:
+    """
+    Get a list of all members who are blacklisted on a given server.
+
+    Fetch all the users blacklisted in a given server and return them as a list.
+    """
+    error = None
+
+    with bot.db_connect(bot, dbfile) as conn:
+        c = conn.cursor()
+        sql = (f"SELECT uid FROM {dbtable} WHERE sid = ?")
+
+        try:
+            c.execute(sql, (server.id,))
+        except Exception as e:
+            error = e
+
+        if error == None:
+            print(f"{bot.current_time()} {GREEN_B}Region DB:{CYAN} fetched blacklist for server: " +
+                  f"{CYAN_B}{server.name}{CYAN}.{RESET}")
+            return c.fetchall()
+        else:
+            print(error)
+            return list()
