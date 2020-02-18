@@ -531,7 +531,15 @@ class BanishAndRegion(CogBase):
     async def blacklist(self, ctx, *args):
         # TODO add some fancy shenanigans for checking if the user already
         #      is on the blacklist if adding them fails.
-        result = region_db.add_blacklist(self.bot, self.rdbname, self.blacklist_table, ctx.author)
+        try:
+            result = region_db.add_blacklist(
+                self.bot,
+                self.rdbname,
+                self.blacklist_table,
+                ctx.message.mentions[0]
+            )
+        except Exception as e:
+            print(e)
 
         if result:
             await ctx.send("Placeholder message for saying the user WAS added.")
@@ -541,6 +549,19 @@ class BanishAndRegion(CogBase):
     @discord.ext.commands.command(name="unblacklist", aliases=[ "unlist" ])
     async def unblacklist(self, ctx, *args):
         await ctx.send("Not implemented yet")
+
+    @discord.ext.commands.command(name="blacklistlist")
+    async def blacklistlist(self, ctx, *args):
+        result = region_db.fetch_blacklist(
+            self.bot,
+            self.rdbname,
+            self.blacklist_table,
+            ctx.guild
+        )
+
+        blacklisted = [ str(ctx.guild.get_member(uid[0])) for uid in result ]
+        blacklisted = "\n".join(sorted(blacklisted))
+        await ctx.send(f"**{ctx.guild.name}** region blacklist:\n{blacklisted}")
 
     ###########################################################################
     # Various shenanigans that may need to be implemented into the bot proper #
