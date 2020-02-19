@@ -531,8 +531,24 @@ class BanishAndRegion(CogBase):
     async def blacklist(self, ctx, *args):
         # TODO add some fancy shenanigans for checking if the user already
         #      is on the blacklist if adding them fails.
+        result = region_db.add_blacklist(
+            self.bot,
+            self.rdbname,
+            self.blacklist_table,
+            ctx.message.mentions[0]
+        )
+
+        if result:
+            await ctx.send("Placeholder message for saying the user WAS added.")
+        else:
+            await ctx.send("Placeholder message for saying the user WAS NOT added.")
+
+    @discord.ext.commands.command(name="unblacklist", aliases=[ "unlist" ])
+    async def unblacklist(self, ctx, *args):
+        # TODO add some fancy shenanigans for checking if the user already
+        #      is on the blacklist if adding them fails.
         try:
-            result = region_db.add_blacklist(
+            result = region_db.remove_blacklist(
                 self.bot,
                 self.rdbname,
                 self.blacklist_table,
@@ -542,13 +558,9 @@ class BanishAndRegion(CogBase):
             print(e)
 
         if result:
-            await ctx.send("Placeholder message for saying the user WAS added.")
+            await ctx.send("Placeholder message for saying the user WAS removed.")
         else:
-            await ctx.send("Placeholder message for saying the user WAS NOT added.")
-
-    @discord.ext.commands.command(name="unblacklist", aliases=[ "unlist" ])
-    async def unblacklist(self, ctx, *args):
-        await ctx.send("Not implemented yet")
+            await ctx.send("Placeholder message for saying the user WAS NOT removed.")
 
     @discord.ext.commands.command(name="blacklistlist")
     async def blacklistlist(self, ctx, *args):
