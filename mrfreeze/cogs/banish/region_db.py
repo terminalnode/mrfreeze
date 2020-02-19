@@ -44,7 +44,9 @@ def add_blacklist(bot: MrFreeze, dbfile: str, dbtable: str, member: Member) -> b
               f"{CYAN_B}{member} @ {servername}{CYAN}.{RESET}")
         return True
     else:
-        print(error)
+        print(f"{bot.current_time()} {RED_B}Region DB:{CYAN} failed to add user to blacklist: " +
+              f"{CYAN_B}{member} @ {servername}{CYAN}.{RESET}" +
+              f"\n{RED}==> {error}{RESET}")
         return False
 
 def fetch_blacklist(bot: MrFreeze, dbfile: str, dbtable: str, server: Guild) -> List[int]:
@@ -69,5 +71,7 @@ def fetch_blacklist(bot: MrFreeze, dbfile: str, dbtable: str, server: Guild) -> 
                   f"{CYAN_B}{server.name}{CYAN}.{RESET}")
             return c.fetchall()
         else:
-            print(error)
+            print(f"{bot.current_time()} {RED_B}Region DB:{CYAN} failed to fetch blacklist for server: " +
+                  f"{CYAN_B}{server.name}{CYAN}:" +
+                  f"\n{RED}==> {error}{RESET}")
             return list()
