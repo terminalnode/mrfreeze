@@ -26,8 +26,7 @@ def add_blacklist(bot: MrFreeze, dbfile: str, dbtable: str, member: Member) -> b
     A member who is on the blacklist is not allowed to change their
     region via commands, but they may still use it for Antarctica.
     """
-    server = member.guild.id
-    servername = member.guild.name
+    server = member.guild
     error = None
 
     with db_connect(bot, dbfile) as conn:
@@ -35,19 +34,49 @@ def add_blacklist(bot: MrFreeze, dbfile: str, dbtable: str, member: Member) -> b
         sql = (f"INSERT INTO {dbtable} (uid, sid) VALUES (?,?)")
 
         try:
-            c.execute(sql, (member.id, server))
+            c.execute(sql, (member.id, server.id))
         except Exception as e:
             error = e
 
     if error == None:
         print(f"{bot.current_time()} {GREEN_B}Region DB:{CYAN} added user to blacklist: " +
-              f"{CYAN_B}{member} @ {servername}{CYAN}.{RESET}")
+              f"{CYAN_B}{member} @ {server.name}{CYAN}.{RESET}")
         return True
     else:
         print(f"{bot.current_time()} {RED_B}Region DB:{CYAN} failed to add user to blacklist: " +
-              f"{CYAN_B}{member} @ {servername}{CYAN}.{RESET}" +
+              f"{CYAN_B}{member} @ {server.name}{CYAN}.{RESET}" +
               f"\n{RED}==> {error}{RESET}")
         return False
+
+def remove_blacklist(bot: MrFreeze, dbfile: str, dbtable: str, member: Member) -> bool:
+    """
+    Remove a member from the region blacklist.
+
+    When a member is removed from the blacklist they are once again able
+    to change their region via commands, including Antarctica.
+    """
+    server = member.guild
+    error = None
+
+    with bot.db_connect(bot, dbfile) as conn:
+        c = conn.cursor()
+        sql = (f"DELETE FROM {dbtable} WHERE sid = ? AND uid = ?")
+
+        try:
+            c.execute(sql, (server.id, member.id))
+        except Exception as e:
+            error = e
+
+    if error == None:
+        print(f"{bot.current_time()} {GREEN_B}Region DB:{CYAN} removed user from blacklist: " +
+              f"{CYAN_B}{member} @ {server.name}{CYAN}.{RESET}")
+        return True
+    else:
+        print(f"{bot.current_time()} {RED_B}Region DB:{CYAN} failed to remove user from blacklist: " +
+              f"{CYAN_B}{member} @ {server.name}{CYAN}.{RESET}" +
+              f"\n{RED}==> {error}{RESET}")
+        return False
+
 
 def fetch_blacklist(bot: MrFreeze, dbfile: str, dbtable: str, server: Guild) -> List[int]:
     """
