@@ -531,36 +531,90 @@ class BanishAndRegion(CogBase):
     async def blacklist(self, ctx, *args):
         # TODO add some fancy shenanigans for checking if the user already
         #      is on the blacklist if adding them fails.
-        result = region_db.add_blacklist(
-            self.bot,
-            self.rdbname,
-            self.blacklist_table,
-            ctx.message.mentions[0]
-        )
+        success_list = list()
+        failures_list = list()
+        for mention in ctx.message.mentions:
+            try:
+                result = region_db.add_blacklist(
+                    self.bot,
+                    self.rdbname,
+                    self.blacklist_table,
+                    mention)
+                if result: success_list.append(mention)
+                else:      failures_list.append(mention)
+            except Exception:
+                failures_list.append(mention)
 
-        if result:
-            await ctx.send("Placeholder message for saying the user WAS added.")
+
+        successes = len(success_list)
+        failures = len(failures_list)
+        success_mentions = self.bot.mentions_list(success_list)
+        failure_mentions = self.bot.mentions_list(failures_list)
+
+        if successes == 0 and failures == 0:
+            # No mentions
+            await ctx.send(f"{ctx.author.mention} please specify the users you want to blacklist...")
+
+        elif successes > 0 and failures == 0:
+            # No failures
+            await ctx.send(
+                f"{success_mentions} successfully blacklisted! " +
+                "They may no longer change their region... unless they change it to Antarctica.")
+
+        elif successes == 0 and failures > 0:
+            # No successes
+            await ctx.send(
+                f"{failure_mentions} could not be blacklisted! Not sure why.")
+
         else:
-            await ctx.send("Placeholder message for saying the user WAS NOT added.")
+            # Mixed result
+            await ctx.send(
+                f"{success_mentions} successfully blacklisted, but {failure_mentions} could not be blacklisted. " +
+                "The ones that could not be blacklisted may already be blacklisted, in which case they can not be blacklisted again.")
 
     @discord.ext.commands.command(name="unblacklist", aliases=[ "unlist" ])
     async def unblacklist(self, ctx, *args):
-        # TODO add some fancy shenanigans for checking if the user already
-        #      is on the blacklist if adding them fails.
-        try:
-            result = region_db.remove_blacklist(
-                self.bot,
-                self.rdbname,
-                self.blacklist_table,
-                ctx.message.mentions[0]
-            )
-        except Exception as e:
-            print(e)
+        success_list = list()
+        failures_list = list()
+        for mention in ctx.message.mentions:
+            try:
+                result = region_db.remove_blacklist(
+                    self.bot,
+                    self.rdbname,
+                    self.blacklist_table,
+                    mention)
 
-        if result:
-            await ctx.send("Placeholder message for saying the user WAS removed.")
+                if result: success_list.append(mention)
+                else:      failures_list.append(mention)
+            except Exception as e:
+                failures_list.append(mention)
+
+        successes = len(success_list)
+        failures = len(failures_list)
+        success_mentions = self.bot.mentions_list(success_list)
+        failure_mentions = self.bot.mentions_list(failures_list)
+
+        if successes == 0 and failures == 0:
+            # No mentions
+            await ctx.send(f"{ctx.author.mention} please specify the users you want to unblacklist...")
+
+        elif successes > 0 and failures == 0:
+            # No failures
+            await ctx.send(
+                f"{success_mentions} successfully unblacklisted! " +
+                "They may no longer change their region... unless they change it to Antarctica.")
+
+        elif successes == 0 and failures > 0:
+            # No successes
+            await ctx.send(
+                f"{failure_mentions} could not be unblacklisted! " +
+                "This may be because they're already banished or something. Who even knows?")
+
         else:
-            await ctx.send("Placeholder message for saying the user WAS NOT removed.")
+            # Mixed result
+            await ctx.send(
+                f"{success_mentions} successfully unblacklisted, but {failure_mentions} could not be blacklisted. " +
+                "The unblacklisted ones may not be blacklisted, in which case they can not be unblacklisted again.")
 
     @discord.ext.commands.command(name="blacklistlist")
     async def blacklistlist(self, ctx, *args):
@@ -568,8 +622,7 @@ class BanishAndRegion(CogBase):
             self.bot,
             self.rdbname,
             self.blacklist_table,
-            ctx.guild
-        )
+            ctx.guild)
 
         blacklisted = [ str(ctx.guild.get_member(uid[0])) for uid in result ]
         blacklisted = "\n".join(sorted(blacklisted))
