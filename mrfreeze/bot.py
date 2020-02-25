@@ -33,7 +33,7 @@ class ServerTuple(NamedTuple):
 
 
 class MrFreeze(commands.Bot):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, settingsdb="server_settings", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bg_tasks = dict()  # Background task manager
 
@@ -58,6 +58,48 @@ class MrFreeze(commands.Bot):
 
         self.servers_prefix = "config/servers"
         paths.path_setup(self.servers_prefix, "Servers prefix")
+
+        # Server settings database creation
+        self.settingsdb = settingsdb
+        self.trash_channels = "trash_channels"
+        self.mute_channels  = "mute_channels"
+        self.mute_roles     = "mute_roles"
+        # Complete list of tables and their rows in the server settings database.
+        # Primary key(s) is marked with an asterisk (*).
+        # Mandatory but not primary keys are marked with a pling (!).
+        # TABLE                 ROWS       TYPE     FUNCTION
+        # self.trash_channels   channel*   integer  Channel ID
+        #                       server*    integer  Server ID
+        #
+        # self.mute_channels    channel*   integer  Channel ID
+        #                       server*    integer  Server ID
+        #
+        # self.mute_roles       role*      integer  Channel ID
+        #                       server*    integer  Server ID
+        trash_chan_tbl = f"""
+        CREATE TABLE IF NOT EXISTS {self.trash_channels} (
+            channel     integer NOT NULL,
+            server         integer NOT NULL,
+            CONSTRAINT server_trash_channel PRIMARY KEY (channel, server)
+        );"""
+
+        mute_chan_tbl = f"""
+        CREATE TABLE IF NOT EXISTS {self.mute_channels} (
+            channel     integer NOT NULL,
+            server      integer NOT NULL,
+            CONSTRAINT server_mute_channel PRIMARY KEY (channel, server)
+        );"""
+
+        mute_role_tbl = f"""
+        CREATE TABLE IF NOT EXISTS {self.mute_channels} (
+            role        integer NOT NULL,
+            server      integer NOT NULL,
+            CONSTRAINT server_mute_role PRIMARY KEY (role, server)
+        );"""
+
+        self.db_create(self, self.settingsdb, trash_chan_tbl, comment="trash channels table")
+        self.db_create(self, self.settingsdb, mute_chan_tbl, comment="mute channels table")
+        self.db_create(self, self.settingsdb, mute_role_tbl, comment="mute roles table")
 
     async def on_ready(self):
         # Set tuples up for all servers
@@ -140,6 +182,12 @@ class MrFreeze(commands.Bot):
             if channel.name.lower() == "antarctica":
                 return channel
         return None
+
+    def set_mute_channel(self, guild: Guild):
+        """
+        Set the mute channel for a given server.
+        """
+        pass
 
     def get_mute_role(self, guild: Guild):
         """
