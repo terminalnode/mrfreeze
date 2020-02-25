@@ -12,6 +12,7 @@ from discord.ext import commands
 # Importing MrFreeze submodules
 from mrfreeze import colors, greeting, paths
 from mrfreeze import dbfunctions, server_settings, time
+from mrfreeze.server_settings_db import ServerSettings
 
 
 # Usage note!
@@ -33,7 +34,7 @@ class ServerTuple(NamedTuple):
 
 
 class MrFreeze(commands.Bot):
-    def __init__(self, settingsdb="server_settings", *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bg_tasks = dict()  # Background task manager
 
@@ -55,51 +56,10 @@ class MrFreeze(commands.Bot):
         # All paths are relative to the working directory.
         self.db_prefix = "databases"
         paths.path_setup(self.db_prefix, "DB prefix")
-
         self.servers_prefix = "config/servers"
         paths.path_setup(self.servers_prefix, "Servers prefix")
 
-        # Server settings database creation
-        self.settingsdb = settingsdb
-        self.trash_channels = "trash_channels"
-        self.mute_channels  = "mute_channels"
-        self.mute_roles     = "mute_roles"
-        # Complete list of tables and their rows in the server settings database.
-        # Primary key(s) is marked with an asterisk (*).
-        # Mandatory but not primary keys are marked with a pling (!).
-        # TABLE                 ROWS       TYPE     FUNCTION
-        # self.trash_channels   channel*   integer  Channel ID
-        #                       server*    integer  Server ID
-        #
-        # self.mute_channels    channel*   integer  Channel ID
-        #                       server*    integer  Server ID
-        #
-        # self.mute_roles       role*      integer  Channel ID
-        #                       server*    integer  Server ID
-        trash_chan_tbl = f"""
-        CREATE TABLE IF NOT EXISTS {self.trash_channels} (
-            channel     integer NOT NULL,
-            server         integer NOT NULL,
-            CONSTRAINT server_trash_channel PRIMARY KEY (channel, server)
-        );"""
-
-        mute_chan_tbl = f"""
-        CREATE TABLE IF NOT EXISTS {self.mute_channels} (
-            channel     integer NOT NULL,
-            server      integer NOT NULL,
-            CONSTRAINT server_mute_channel PRIMARY KEY (channel, server)
-        );"""
-
-        mute_role_tbl = f"""
-        CREATE TABLE IF NOT EXISTS {self.mute_channels} (
-            role        integer NOT NULL,
-            server      integer NOT NULL,
-            CONSTRAINT server_mute_role PRIMARY KEY (role, server)
-        );"""
-
-        self.db_create(self, self.settingsdb, trash_chan_tbl, comment="trash channels table")
-        self.db_create(self, self.settingsdb, mute_chan_tbl, comment="mute channels table")
-        self.db_create(self, self.settingsdb, mute_role_tbl, comment="mute roles table")
+        self.server_settings = ServerSettings(self)
 
     async def on_ready(self):
         # Set tuples up for all servers
