@@ -12,7 +12,7 @@ from discord.ext import commands
 # Importing MrFreeze submodules
 from mrfreeze import colors, greeting, paths
 from mrfreeze import dbfunctions, server_settings, time
-from mrfreeze.server_settings_db import ServerSettings
+from mrfreeze.database.settings import Settings
 
 
 # Usage note!
@@ -59,7 +59,7 @@ class MrFreeze(commands.Bot):
         self.servers_prefix = "config/servers"
         paths.path_setup(self.servers_prefix, "Servers prefix")
 
-        self.server_settings = ServerSettings(self)
+        self.settings = Settings()
 
     async def on_ready(self):
         # Set tuples up for all servers
