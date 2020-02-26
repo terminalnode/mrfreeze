@@ -98,6 +98,30 @@ class BanishAndRegion(CogBase):
         bot.db_create(self.bot, self.rdbname, rdbtable, comment="region table")
         bot.db_create(self.bot, self.rdbname, rdbtable_bl, comment="blacklist table")
 
+    #return as an int the difference between 2 words
+    def word_distance(a, b):
+        arr = [[0 for x in range(len(b))] for y in range(len(a))] 
+        for x in range(0, len(a)):
+            arr[x][0] = x
+        for x in range(0, len(b)):
+            arr[0][x] = x
+        for row in range(1,len(a)):
+            for col in range(1,len(b)):
+                if a[row] == b[col]:
+                    cost = 0;
+                else:
+                    cost = 1;
+        arr[row][col] = min(1+arr[row-1][col], 1+arr[row][col-1], cost + arr[row-1][col-1])
+        #debug statement, displays the array after computation
+        #print('\n'.join([''.join(['{:4}'.format(item) for item in row]) for row in arr]))
+        return arr[len(a)-1][len(b)-1]
+
+    #wrapper method for word_distance
+    #matches the closest string in possible_matches
+    #returns the matching string
+    def get_closest_match(possible_matches, input_str):
+        return min(possible_matches, key=lambda k:word_distance(k, input_str))
+
     @CogBase.listener()
     async def on_ready(self):
         for server in self.bot.guilds:
