@@ -4,8 +4,11 @@ from typing import Union
 
 import discord
 from discord import Member
-from discord.ext.commands import Context
+from discord.ext.commands import Context, CheckFailure
 
+
+class MuteCheckFailure(CheckFailure):
+    pass
 
 async def is_owner(ctx: Context) -> bool:
     """

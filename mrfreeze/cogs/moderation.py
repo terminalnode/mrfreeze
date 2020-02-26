@@ -49,6 +49,27 @@ class Moderation(CogBase):
         else:
             return output.strip()
 
+
+    @discord.ext.commands.command(name="freezemute", aliases=["shutup", "mutefreeze"])
+    @discord.ext.commands.check(checks.is_mod)
+    async def freezemute(self, ctx, *args):
+        if self.bot.user not in ctx.message.mentions:
+            return
+
+        # Toggle mute
+        self.bot.settings.toggle_freeze_mute(ctx.guild)
+
+        # Check if freeze is now muted and respond accordingly
+        is_muted = self.bot.settings.is_freeze_muted(ctx.guild)
+        mention = ctx.author.mention
+        if is_muted:
+            await ctx.send(
+                f"{mention} Ok... I'll ignore all commands in this server until further notice. :(")
+        else:
+            await ctx.send(
+                f"{mention} Yay I'm back!!")
+
+
     @discord.ext.commands.command(name='say', aliases=['speak', 'chat'])
     @discord.ext.commands.check(checks.is_mod)
     async def _say(self, ctx, channel: discord.TextChannel, *args):

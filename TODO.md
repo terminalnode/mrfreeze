@@ -12,10 +12,10 @@ Status: work not started
 The !region command was deleted because it was terribly written and needs to be redone.
 
 ### Inkcyclopedia
-Status: work in progress
+Status: done, needs to be ported to new database thing
 
 Semi-automatic ink lookup based on klundtasaur's inkcyclopedia:
-https://www.reddit.com/r/fountainpens/comments/5egjsa/klundtasaurs_inkcyclopedia_for_rfountainpens/
+https://www.reddit.com/r/fountainpens/comments/5egjsa/klundtasaurs\_inkcyclopedia\_for\_rfountainpens/
 
 ### !move <ID> #channel
 Status: work not started
@@ -23,12 +23,6 @@ Status: work not started
 Move one or more posts to a specified channel
 * Use post IDs to specify which posts.
 * Use a quote-like embed for reposting.
-
-### !disable <ID>
-Status: work not started
-
-Owner-only command. Disable a certain MrFreeze in one server (enabling multiple concurrent versions to be present).
-This is useful because MrFreeze can pull info from multiple servers, enabling *some* support for certain nitro emojis and the like.
 
 ## Bug testing
 All these features and improvements will need to be tested once implemented.
@@ -84,11 +78,6 @@ This is the post-release plans for MrFreeze that will likely not make it in for 
 
 ## New features
 Features that will (probably) not be present in MF 2.0.
-
-### !settings
-Status: work not started.
-
-A database saving a certain number of settings keys that can be modified without going into the bot source code. The disable feature planned for 2.0 should be one of those, and thus the database may be delivered earlier.
 
 ### !quotes
 Status: somewhat completed, but going to need a lot of reworking.

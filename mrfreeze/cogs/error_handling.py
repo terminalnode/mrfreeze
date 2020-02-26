@@ -4,6 +4,7 @@ import traceback
 import inflect
 
 from mrfreeze.bot import MrFreeze
+from mrfreeze.checks import MuteCheckFailure
 from mrfreeze import colors
 
 from .cogbase import CogBase
@@ -32,7 +33,11 @@ class ErrorHandler(CogBase):
         mention: str = ctx.author.mention
         invocation: str = f"{colors.WHITE_B}{ctx.prefix}{ctx.invoked_with}"
 
-        if isinstance(error, CheckFailure):
+        if isinstance(error, MuteCheckFailure):
+            print(f"{time} {colors.RED_B}MrFreeze is muted: {colors.CYAN}" +
+                  f"{error}{colors.RESET}")
+
+        elif isinstance(error, CheckFailure):
             print(f"{time} {colors.RED_B}Check failure: {colors.CYAN}" +
                   f"{username} tried to illegaly invoke {invocation}" +
                   f"{colors.RESET}")

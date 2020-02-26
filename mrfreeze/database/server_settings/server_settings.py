@@ -34,8 +34,8 @@ class ServerSettings():
         self.freeze_mutes   = FreezeMutes(self)
 
         # Link methods from subclasses
-        self.toggle_freeze_mute     = self.freeze_mutes.toggle_freeze_mute
-        self.freeze_mutes_from_db   = self.freeze_mutes.freeze_mutes_from_db
+        self.toggle_freeze_mute = self.freeze_mutes.toggle_freeze_mute
+        self.is_freeze_muted    = self.freeze_mutes.is_freeze_muted
 
     def setup_tables(self):
         """Creates the database and tables necessary for the server settings module."""

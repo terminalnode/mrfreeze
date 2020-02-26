@@ -8,10 +8,12 @@ import discord
 from discord import Guild
 from discord import TextChannel
 from discord.ext import commands
+from discord.ext.commands import Context
 
 # Importing MrFreeze submodules
 from mrfreeze import colors, greeting, paths
 from mrfreeze import dbfunctions, server_settings, time
+from mrfreeze.checks import MuteCheckFailure
 from mrfreeze.database.settings import Settings
 
 
@@ -60,6 +62,19 @@ class MrFreeze(commands.Bot):
         paths.path_setup(self.servers_prefix, "Servers prefix")
 
         self.settings = Settings()
+
+        # Add the mute check
+        self.check(self.block_self_if_muted)
+
+    async def block_self_if_muted(self, ctx: Context):
+        command = ctx.command.name
+
+        if self.settings.is_freeze_muted(ctx.guild) and command != "freezemute":
+            server = ctx.guild.name
+            author = ctx.author
+            raise MuteCheckFailure(message=f"{author} @ {server}: {command}")
+
+        return True
 
     async def on_ready(self):
         # Set tuples up for all servers
