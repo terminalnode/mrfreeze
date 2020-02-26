@@ -12,6 +12,22 @@ It also has a number of "scripts" or commands built-in for running the bot using
 
 By default the pytests will run on all cores at once, using xdist. To disable this behaviour add the option `-n 0`.
 
+## Why is there one folder called `database` and one called `databases`?
+Valid question. Basically the way the bot stores information in permanent storage
+(i.e. in one or more sqlite3 databases) is being reworked into a more centralised
+and maintainable system. Right now some shit's stored in text files, due to a sudden
+impulse to linux things up and make everything a file, some stuff is stored in a
+number of separate database files (with like one or two tables each).
+
+This is kind of stupid and stems from me not knowing anything about databases
+when the system was first designed, and as such keeping things in separate containers
+was hugely beneficial.
+
+The new system stores all information in a single file, `settings.db` which is created
+when the bot runs for the first time. The settings are then divided logically into
+modules which in turn are then further divided up into modules responsible for a
+single table.
+
 ## Reimplemented functions:
 ### Owner commands
 * **!restart**   - Restarts the bot. Very useful for testing new code.
