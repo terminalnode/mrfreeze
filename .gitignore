@@ -8,6 +8,7 @@ databases
 .coverage
 .vim
 htmlcov
+settings.db
 
 # File to test various code snippets.
 experimentation.py
