@@ -122,7 +122,7 @@ class MrFreeze(commands.Bot):
     async def server_tuple(self, server):
         self.servertuples[server.id] = ServerTuple(
             self.get_trash_channel(server),
-            self.get_mute_channel(server),
+            await self.get_mute_channel(server),
             self.get_mute_role(server)
         )
 
@@ -147,16 +147,18 @@ class MrFreeze(commands.Bot):
                 return channel
         return None
 
-    def get_mute_channel(self, guild: Guild):
+    async def get_mute_channel(self, server: Guild):
         """
         Currently just gives the channel with the name antarctica.
         In the future this may be expanded so servers can designate whatever
         channel they want as Antarctica.
         """
-        for channel in guild.text_channels:
-            if channel.name.lower() == "antarctica":
-                return channel
-        return None
+        channel_id = self.settings.get_mute_channel(server)
+        if channel_id:
+            channel = await self.fetch_channel(channel_id)
+            return channel
+        else:
+            return server.system_channel
 
     def set_mute_channel(self, guild: Guild):
         """

@@ -3,6 +3,11 @@ import sqlite3
 
 from mrfreeze.colors import CYAN, CYAN_B, GREEN_B, RED_B, RESET
 
+class ExecutionResult:
+    """Handy class for returning the result of db_execute."""
+    def __init__(self, output, error):
+        self.output = output
+        self.error = error
 
 def db_connect(dbpath):
     """Create a connection to a database."""
@@ -26,6 +31,21 @@ def db_time(in_data):
         return datetime.datetime.strptime(in_data, timeformat)
     else:
         return None
+
+def db_execute(dbpath, sql, values):
+    """Execute a database query."""
+    error = None
+    output = None
+
+    with db_connect(dbpath) as conn:
+        c = conn.cursor()
+        try:
+            c.execute(sql, values)
+            output = c.fetchall()
+        except Exception as e:
+            error = e
+
+    return ExecutionResult(output, error)
 
 
 def db_create(dbpath, dbname, table, comment=None):

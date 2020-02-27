@@ -14,6 +14,7 @@ mute_channels       channel*   INTEGER      Channel ID
 
 mute_roles          role*      INTEGER      Channel ID
                     server*    INTEGER      Server ID
+
 freeze_mutes        server*    INTEGER      Server ID
                     muted      BOOLEAN      Is muted?
 """
@@ -33,7 +34,12 @@ class ServerSettings():
         self.mute_roles     = MuteRoles(self)
         self.freeze_mutes   = FreezeMutes(self)
 
-        # Link methods from subclasses
+        # Link methods from MuteChannels
+        self.get_mute_channel       = self.mute_channels.get_mute_channel
+        self.set_mute_channel       = self.mute_channels.set_mute_channel
+        self.set_mute_channel_by_id = self.mute_channels.set_mute_channel_by_id
+
+        # Link methods from FreezeMutes
         self.toggle_freeze_mute = self.freeze_mutes.toggle_freeze_mute
         self.is_freeze_muted    = self.freeze_mutes.is_freeze_muted
 
