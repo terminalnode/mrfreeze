@@ -20,12 +20,11 @@ class MuteChannels:
             CONSTRAINT server_mute_channel PRIMARY KEY (channel, server)
         );"""
 
-        self.mute_channels_from_db()
 
-
-    def setup_table(self):
+    def initialize(self):
         """Setup the mute channels table."""
         db_create(self.parent.dbpath, self.module_name, self.table)
+        self.mute_channels_from_db()
 
 
     def set_mute_channel(self, channel):

@@ -43,9 +43,9 @@ class ServerSettings():
         self.toggle_freeze_mute = self.freeze_mutes.toggle_freeze_mute
         self.is_freeze_muted    = self.freeze_mutes.is_freeze_muted
 
-    def setup_tables(self):
+    def initialize(self):
         """Creates the database and tables necessary for the server settings module."""
-        self.freeze_mutes.setup_table()
-        self.trash_channels.setup_table()
-        self.mute_channels.setup_table()
-        self.mute_roles.setup_table()
+        self.freeze_mutes.initialize()
+        self.trash_channels.initialize()
+        self.mute_channels.initialize()
+        self.mute_roles.initialize()

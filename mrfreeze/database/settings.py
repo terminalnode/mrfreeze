@@ -14,8 +14,8 @@ class Settings:
         # Initialize the sub modules
         self.server_settings = ServerSettings(self.dbpath)
 
-        # Setup tables in the sub modules
-        self.server_settings.setup_tables()
+        # Initialize the sub modules
+        self.server_settings.initialize()
 
         # Expose submodule methods from ServerSettings
         self.toggle_freeze_mute = self.server_settings.toggle_freeze_mute

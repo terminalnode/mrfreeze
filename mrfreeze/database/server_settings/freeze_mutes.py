@@ -18,11 +18,11 @@ class FreezeMutes:
                             muted       BOOLEAN NOT NULL);"""
 
         self.current_mutes = None
-        self.freeze_mutes_from_db()
 
-    def setup_table(self):
-        """Setup the freeze mutes table."""
+    def initialize(self):
+        """Setup the freeze mutes table, then fetch mutes."""
         db_create(self.parent.dbpath, self.module_name, self.table)
+        self.freeze_mutes_from_db()
 
     def is_freeze_muted(self, server):
         """Check freeze mute value for a given server."""
@@ -118,5 +118,5 @@ class FreezeMutes:
             success_print(self.module_name, "successfully fetched mutes")
             self.current_mutes = output
         else:
-            failure_print(self.module_name, "failed to fetch mutes")
+            failure_print(self.module_name, f"failed to fetch mutes: {error}")
             self.current_mutes = None

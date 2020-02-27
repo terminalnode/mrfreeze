@@ -20,6 +20,6 @@ class MuteRoles:
             CONSTRAINT server_mute_role PRIMARY KEY (role, server)
         );"""
 
-    def setup_table(self):
+    def initialize(self):
         """Setup the mute_roles table."""
         db_create(self.parent.dbpath, self.module_name, self.table)

@@ -20,6 +20,6 @@ class TrashChannels:
             CONSTRAINT server_trash_channel PRIMARY KEY (channel, server)
         );"""
 
-    def setup_table(self):
+    def initialize(self):
         """Setup the trash channels table."""
         db_create(self.parent.dbpath, self.module_name, self.table)
