@@ -20,12 +20,15 @@ freeze_mutes        server*    INTEGER      Server ID
 """
 
 from .freeze_mutes import FreezeMutes
-from .trash_channels import TrashChannels
 from .mute_channels import MuteChannels
 from .mute_roles import MuteRoles
+from .trash_channels import TrashChannels
+
 
 class ServerSettings():
-    def __init__(self, dbpath):
+    """Class for handling all tables relating to server settings."""
+
+    def __init__(self, dbpath: str) -> None:
         self.dbpath = dbpath
 
         # Initiate all the submodules
@@ -43,8 +46,8 @@ class ServerSettings():
         self.toggle_freeze_mute = self.freeze_mutes.toggle_freeze_mute
         self.is_freeze_muted    = self.freeze_mutes.is_freeze_muted
 
-    def initialize(self):
-        """Creates the database and tables necessary for the server settings module."""
+    def initialize(self) -> None:
+        """Create the database and tables necessary for the server settings module."""
         self.freeze_mutes.initialize()
         self.trash_channels.initialize()
         self.mute_channels.initialize()
