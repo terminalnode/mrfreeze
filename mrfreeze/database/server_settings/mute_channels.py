@@ -6,13 +6,27 @@ mute_channels       channel*   INTEGER      Channel ID
                     server*    INTEGER      Server ID
 """
 
-from ..helpers import db_create, db_connect, db_execute, db_time, failure_print, success_print
+from typing import Dict
+from typing import Optional
+
+from discord import Guild
+from discord import TextChannel
+
+from mrfreeze.database.helpers import db_create
+from mrfreeze.database.helpers import db_execute
+from mrfreeze.database.helpers import failure_print
+from mrfreeze.database.helpers import success_print
+
 
 class MuteChannels:
-    def __init__(self, parent):
+    """Class for handling the mute_channels table."""
+
+    def __init__(self, parent) -> None:
         self.parent = parent
         self.module_name = "Mute channels table"
         self.table_name = "mute_channels"
+        self.mute_channels: Optional[Dict[int, int]] = None
+
         self.table = f"""
         CREATE TABLE IF NOT EXISTS {self.table_name} (
             channel     INTEGER NOT NULL,
@@ -20,26 +34,21 @@ class MuteChannels:
             CONSTRAINT server_mute_channel PRIMARY KEY (channel, server)
         );"""
 
-
-    def initialize(self):
-        """Setup the mute channels table."""
+    def initialize(self) -> None:
+        """Set up the mute channels table."""
         db_create(self.parent.dbpath, self.module_name, self.table)
         self.mute_channels_from_db()
 
-
-    def set_mute_channel(self, channel):
+    def set_mute_channel(self, channel: TextChannel) -> bool:
         """Set the mute channel for a given server using the channel object."""
-        self.upsert(channel.guild, channel.id)
+        return self.upsert(channel.guild, channel.id)
 
-
-    def set_mute_channel_by_id(self, server, channel_id):
+    def set_mute_channel_by_id(self, server: Guild, channel_id: int) -> bool:
         """Set the mute channel for a given server using the channel id."""
-        self.upsert(server, channel_id)
+        return self.upsert(server, channel_id)
 
-
-    def upsert(self, server, value):
+    def upsert(self, server: Guild, value: int) -> bool:
         """Insert or update the value for `server.id` with `value`."""
-
         sql = f"""INSERT INTO {self.table_name} (server, channel) VALUES (?, ?)
               ON CONFLICT(server) DO UPDATE SET channel = ?;"""
         query = db_execute(self.parent.dbpath, sql, (server.id, value, value))
@@ -62,8 +71,7 @@ class MuteChannels:
                 f"successfully set {server.name} to {value}")
             return True
 
-
-    def get_mute_channel(self, server):
+    def get_mute_channel(self, server: Guild) -> Optional[int]:
         """Retrieve the mute channel for a given server."""
         # Check that current mutes has been fetched.
         # If not refetch it.
@@ -83,8 +91,7 @@ class MuteChannels:
         # Finally, return the actual value from the dictionary.
         return self.mute_channels[server.id]
 
-
-    def update_dictionary(self, key, value):
+    def update_dictionary(self, key: int, value: int) -> bool:
         """Try to update the dictionary with the mute channels."""
         if self.mute_channels is None:
             self.mute_channels_from_db()
@@ -95,8 +102,7 @@ class MuteChannels:
             self.mute_channels[key] = value
             return True
 
-
-    def mute_channels_from_db(self):
+    def mute_channels_from_db(self) -> None:
         """
         Load current mute channel values from database.
 
