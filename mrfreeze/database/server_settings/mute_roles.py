@@ -6,11 +6,17 @@ mute_roles          role*      INTEGER      Channel ID
                     server*    INTEGER      Server ID
 """
 
-from ..helpers import db_create, db_connect, db_time, failure_print, success_print
+from ..helpers import db_create
+# from ..helpers import db_execute
+# from ..helpers import failure_print
+# from ..helpers import success_print
+
 
 class MuteRoles:
-    def __init__(self, parent):
-        self.parent = parent
+    """Class for handling the mute_roles table."""
+
+    def __init__(self, dbpath: str) -> None:
+        self.dbpath = dbpath
         self.module_name = "Mute roles table"
         self.table_name = "mute_roles"
         self.table = f"""
@@ -20,6 +26,6 @@ class MuteRoles:
             CONSTRAINT server_mute_role PRIMARY KEY (role, server)
         );"""
 
-    def initialize(self):
-        """Setup the mute_roles table."""
-        db_create(self.parent.dbpath, self.module_name, self.table)
+    def initialize(self) -> None:
+        """Set up the mute_roles table."""
+        db_create(self.dbpath, self.module_name, self.table)
