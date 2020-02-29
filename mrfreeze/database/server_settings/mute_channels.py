@@ -12,17 +12,17 @@ from typing import Optional
 from discord import Guild
 from discord import TextChannel
 
-from mrfreeze.database.helpers import db_create
-from mrfreeze.database.helpers import db_execute
-from mrfreeze.database.helpers import failure_print
-from mrfreeze.database.helpers import success_print
+from ..helpers import db_create
+from ..helpers import db_execute
+from ..helpers import failure_print
+from ..helpers import success_print
 
 
 class MuteChannels:
     """Class for handling the mute_channels table."""
 
-    def __init__(self, parent) -> None:
-        self.parent = parent
+    def __init__(self, dbpath: str) -> None:
+        self.dbpath = dbpath
         self.module_name = "Mute channels table"
         self.table_name = "mute_channels"
         self.mute_channels: Optional[Dict[int, int]] = None
@@ -36,7 +36,7 @@ class MuteChannels:
 
     def initialize(self) -> None:
         """Set up the mute channels table."""
-        db_create(self.parent.dbpath, self.module_name, self.table)
+        db_create(self.dbpath, self.module_name, self.table)
         self.mute_channels_from_db()
 
     def set_mute_channel(self, channel: TextChannel) -> bool:
@@ -51,9 +51,9 @@ class MuteChannels:
         """Insert or update the value for `server.id` with `value`."""
         sql = f"""INSERT INTO {self.table_name} (server, channel) VALUES (?, ?)
               ON CONFLICT(server) DO UPDATE SET channel = ?;"""
-        query = db_execute(self.parent.dbpath, sql, (server.id, value, value))
+        query = db_execute(self.dbpath, sql, (server.id, value, value))
 
-        if not query.error:
+        if query.error is not None:
             failure_print(
                 self.module_name,
                 f"failed to set {server.name} to {value}\n{query.error}")
@@ -111,7 +111,7 @@ class MuteChannels:
         the database are updated simultaneously through the upsert method.
         """
         query = db_execute(
-            self.parent.dbpath,
+            self.dbpath,
             f"SELECT server, channel FROM {self.table_name}",
             tuple())
 
