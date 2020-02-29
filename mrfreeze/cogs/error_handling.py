@@ -14,9 +14,12 @@ from discord.ext.commands.cooldowns import BucketType
 
 import inflect
 
-from mrfreeze import colors
 from mrfreeze.bot import MrFreeze
 from mrfreeze.checks import MuteCheckFailure
+from mrfreeze.colors import CYAN
+from mrfreeze.colors import RED_B
+from mrfreeze.colors import RESET
+from mrfreeze.colors import WHITE_B
 
 from .cogbase import CogBase
 
@@ -38,22 +41,22 @@ class ErrorHandler(CogBase):
         time: str = self.current_time()
         username: str = f"{ctx.author.name}#{ctx.author.discriminator}"
         mention: str = ctx.author.mention
-        invocation: str = f"{colors.WHITE_B}{ctx.prefix}{ctx.invoked_with}"
+        invocation: str = f"{WHITE_B}{ctx.prefix}{ctx.invoked_with}"
 
         if isinstance(error, MuteCheckFailure):
-            status = f"{time} {colors.RED_B}MrFreeze is muted: {colors.CYAN}{error}{colors.RESET}"
+            status = f"{time} {RED_B}MrFreeze is muted: {CYAN}{error}{RESET}"
             print(status)
 
         elif isinstance(error, CheckFailure):
-            status  = f"{time} {colors.RED_B}Check failure: {colors.CYAN}"
-            status += f"{username} tried to illegaly invoke {invocation}{colors.RESET}"
+            status  = f"{time} {RED_B}Check failure: {CYAN}"
+            status += f"{username} tried to illegaly invoke {invocation}{RESET}"
             print(status)
 
         elif isinstance(error, MissingRequiredArgument):
             print(error)
-            status  = f"{time} {colors.RED_B}Check failure: {colors.CYAN}"
+            status  = f"{time} {RED_B}Check failure: {CYAN}"
             status += f"{username} tried executing {invocation} with too "
-            status += f"few arguments{colors.RESET}"
+            status += f"few arguments{RESET}"
             print(status)
 
             reply  = f"{ctx.author.mention} You need to specify some arguments to invoke "
@@ -61,24 +64,24 @@ class ErrorHandler(CogBase):
             await ctx.send(reply)
 
         elif isinstance(error, BadArgument):
-            status  = f"{time} {colors.RED_B}Bad arguments: {colors.CYAN}{username} "
-            status += f"while using command {invocation}{colors.RESET}"
+            status  = f"{time} {RED_B}Bad arguments: {CYAN}{username} "
+            status += f"while using command {invocation}{RESET}"
             print(status)
 
             reply = f"{mention} That's not quite the information I need to execute that command."
             await ctx.send(reply)
 
         elif isinstance(error, CommandNotFound):
-            status  = f"{time} {colors.RED_B}Command not found: {colors.CYAN}"
-            status += f"{username} tried to use {invocation}{colors.RESET}"
+            status  = f"{time} {RED_B}Command not found: {CYAN}"
+            status += f"{username} tried to use {invocation}{RESET}"
             print(status)
 
         elif isinstance(error, CommandInvokeError):
             # On Timeout Error, a CommandInvokeError containing the original
             # error is returned. Not the original TimeoutError itself.
             error_name: str = type(error.original).__name__
-            status  = f"{time} {colors.RED_B}{error_name}: {colors.CYAN}"
-            status += f"{username} tried to use {invocation}{colors.RESET}"
+            status  = f"{time} {RED_B}{error_name}: {CYAN}"
+            status += f"{username} tried to use {invocation}{RESET}"
             print(status)
 
         elif isinstance(error, CommandOnCooldown):
@@ -130,8 +133,8 @@ class ErrorHandler(CogBase):
 
         else:
             # Who knows what happened? The stack trace, that's who.
-            status  = f"{time} {colors.RED_B}Unclassified error: "
-            status += f"{colors.WHITE_B}{error}{colors.RESET}"
+            status  = f"{time} {RED_B}Unclassified error: "
+            status += f"{WHITE_B}{error}{RESET}"
             print(status)
             traceback.print_exception(
                 type(error),
