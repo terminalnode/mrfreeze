@@ -7,8 +7,11 @@ and provides a single interface for working with them all.
 
 from .server_settings.server_settings import ServerSettings
 
+
 class Settings:
-    def __init__(self):
+    """Settings is a class for coordinating all the various settings modules."""
+
+    def __init__(self) -> None:
         self.dbpath = "settings.db"
 
         # Initialize the sub modules
