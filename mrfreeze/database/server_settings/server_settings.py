@@ -31,23 +31,28 @@ class ServerSettings():
     def __init__(self, dbpath: str) -> None:
         self.dbpath = dbpath
 
-        # Initiate all the submodules
-        self.trash_channels = TrashChannels(self)
-        self.mute_channels  = MuteChannels(self)
-        self.mute_roles     = MuteRoles(self)
-        self.freeze_mutes   = FreezeMutes(self)
-
         # Link methods from MuteChannels
+        self.mute_channels  = MuteChannels(self.dbpath)
         self.get_mute_channel       = self.mute_channels.get_mute_channel
         self.set_mute_channel       = self.mute_channels.set_mute_channel
         self.set_mute_channel_by_id = self.mute_channels.set_mute_channel_by_id
 
+        # Link methods from MuteRoles
+        self.mute_roles     = MuteRoles(self.dbpath)
+
+        # Link methods from TrashChannels
+        self.trash_channels = TrashChannels(self.dbpath)
+        self.get_trash_channel      = self.trash_channels.get_trash_channel
+        self.set_trash_channel      = self.trash_channels.set_trash_channel
+        self.set_mute_channel_by_id = self.trash_channels.set_trash_channel_by_id
+
         # Link methods from FreezeMutes
+        self.freeze_mutes   = FreezeMutes(self.dbpath)
         self.toggle_freeze_mute = self.freeze_mutes.toggle_freeze_mute
         self.is_freeze_muted    = self.freeze_mutes.is_freeze_muted
 
     def initialize(self) -> None:
-        """Create the database and tables necessary for the server settings module."""
+        """Set up the database and tables necessary for the server settings module."""
         self.freeze_mutes.initialize()
         self.trash_channels.initialize()
         self.mute_channels.initialize()
