@@ -127,8 +127,6 @@ class Moderation(CogBase):
         result = self.bot.settings.set_mute_channel(channel)
         new_cid = self.bot.settings.get_mute_channel(ctx.guild)
         new_channel = await self.bot.fetch_channel(new_cid)
-        print(old_channel)
-        print(new_channel)
 
         if not result:
             reply  = f"{mention} Something went wrong, the mute channel has not been changed."
