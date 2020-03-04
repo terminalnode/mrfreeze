@@ -1,11 +1,26 @@
+"""
+This module contains the MrFreeze class, i.e. the actual bot.
+
+MrFreeze is a modified version of discord.ext.commands.Bot.
+It has a few features that are not included in the basic bot
+and also servers as a hub for various common functions that
+are used in many of the cogs.
+"""
+
 import datetime
 import os
 import sys
+from typing import Any
+from typing import Awaitable
+from typing import Dict
+from typing import List
 from typing import NamedTuple
 from typing import Optional
 
 import discord
 from discord import Guild
+from discord import Member
+from discord import Role
 from discord import TextChannel
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -30,15 +45,23 @@ from mrfreeze.database.settings import Settings
 #         await asyncio.sleep(NUMBER)
 #         pass # Do stuff on loop
 class ServerTuple(NamedTuple):
-    trash:        str
-    mute_channel: str
-    mute_role:    str
+    """Class for holding various information about a given server."""
+
+    trash:        TextChannel
+    mute_channel: TextChannel
+    mute_role:    Optional[Role]
 
 
 class MrFreeze(commands.Bot):
-    def __init__(self, *args, **kwargs):
+    """The man, the bot, the legend. This is where the magic happens."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.bg_tasks = dict()  # Background task manager
+        # Dict in which to save all the background tasks.
+        self.bg_tasks: Dict[str, Awaitable] = dict()
+
+        # Dict in which to save the ServerTuple for each server.
+        self.servertuples: Dict[int, ServerTuple] = dict()
 
         # Setting up imported functions so they can be accessed by all cogs
         self.extract_time = time.extract_time
@@ -49,9 +72,6 @@ class MrFreeze(commands.Bot):
         self.db_connect = dbfunctions.db_connect
         self.db_create = dbfunctions.db_create
         self.db_time = dbfunctions.db_time
-
-        # Dict in which to save the ServerTuple for each server.
-        self.servertuples = dict()
 
         # Check that the necessary directories exist and
         # are directories, otherwise create them.
@@ -66,7 +86,8 @@ class MrFreeze(commands.Bot):
         # Add the mute check
         self.check(self.block_self_if_muted)
 
-    async def block_self_if_muted(self, ctx: Context):
+    async def block_self_if_muted(self, ctx: Context) -> bool:
+        """Block commands form executing if MrFreeze is muted in a certain server."""
         command = ctx.command.name
 
         if self.settings.is_freeze_muted(ctx.guild) and command != "freezemute":
@@ -76,7 +97,8 @@ class MrFreeze(commands.Bot):
 
         return True
 
-    async def on_ready(self):
+    async def on_ready(self) -> None:
+        """Set the bot up, print some greeting messages and stuff."""
         # Set tuples up for all servers
         for server in self.guilds:
             await self.server_tuple(server)
@@ -91,96 +113,109 @@ class MrFreeze(commands.Bot):
             activity=discord.Activity(
                 name='your commands...',
                 type=discord.ActivityType.listening
-                )
+            )
         )
 
         # Signal to the terminal that the bot is ready.
         print(f"{colors.WHITE_B}READY WHEN YOU ARE CAP'N!{colors.RESET}\n")
 
-    def path_setup(self, path, trivial_name):
+    def path_setup(self, path: str, trivial_name: str) -> None:
         """Create various directories which the bot needs."""
         if os.path.isdir(path):
-            print(f"{colors.GREEN_B}{trivial_name} {colors.GREEN}({path}) " +
-                  f"{colors.CYAN}exists and is a directory.{colors.RESET}")
+            status =  f"{colors.GREEN_B}{trivial_name} {colors.GREEN}({path}) "
+            status += f"{colors.CYAN}exists and is a directory.{colors.RESET}"
+            print(status)
         elif os.path.exists(path):
-            print(f"{colors.RED_B}{trivial_name} {colors.RED}({path}) " +
-                  f"{colors.CYAN}exists but is not a directory. " +
-                  f"Aborting.{colors.RESET}")
+            status =  f"{colors.RED_B}{trivial_name} {colors.RED}({path}) "
+            status += f"{colors.CYAN}exists but is not a directory. "
+            status += f"Aborting.{colors.RESET}"
+            print(status)
             sys.exit(0)
         else:
             try:
                 os.makedirs(path)
-                print(f"{colors.GREEN_B}{trivial_name} " +
-                      f"{colors.GREEN}({path}){colors.CYAN} was " +
-                      f"successfully created.{colors.RESET}")
+                status =  f"{colors.GREEN_B}{trivial_name} "
+                status += f"{colors.GREEN}({path}){colors.CYAN} was "
+                status += f"successfully created.{colors.RESET}"
+                print(status)
             except Exception as e:
-                print(f"{colors.RED_B}{trivial_name} {colors.RED}({path}) " +
-                      f"{colors.CYAN} does not exist and could not be " +
-                      f"created:\n{colors.RED}==> {e}{colors.RESET}")
+                status =  f"{colors.RED_B}{trivial_name} {colors.RED}({path}) "
+                status += f"{colors.CYAN} does not exist and could not be "
+                status += f"created:\n{colors.RED}==> {e}{colors.RESET}"
+                print(status)
                 sys.exit(0)
 
-    async def server_tuple(self, server):
+    async def server_tuple(self, server: Guild) -> None:
+        """
+        Create the server tuple for a given server.
+
+        The purpose of the server tuple is to keep various information so
+        that we won't have to make as many api calls to get channels from
+        ids and so on.
+
+        Avoid using this for now as it's not really in active use and doesn't
+        get updated when the values are updated.
+        """
         self.servertuples[server.id] = ServerTuple(
-            self.get_trash_channel(server),
+            await self.get_trash_channel(server),
             await self.get_mute_channel(server),
-            self.get_mute_role(server)
+            await self.get_mute_role(server)
         )
 
-    # Various utility functions universal to the bot.
-    # Most of these are copied from internals/*.py so
-    # cogs won't have to import so much stuff.
-    def add_bg_task(self, task, name):
+    def add_bg_task(self, task, name: str) -> None:
         """
         Add a task to run in the background in the bot.
+
         Useful for periodic checks/updates.
         """
         self.bg_tasks[name] = self.loop.create_task(task)
 
-    def get_trash_channel(self, guild: Guild) -> Optional[TextChannel]:
+    async def get_trash_channel(self, server: Guild) -> TextChannel:
         """
-        Currently just gives the channel with the name bot-trash.
-        In the future this may be expanded so servers can designate whatever
-        channel they want as Trash.
-        """
-        for channel in guild.text_channels:
-            if channel.name.lower() == "bot-trash":
-                return channel
-        return None
+        Get the server's trash channel.
 
-    async def get_mute_channel(self, server: Guild):
+        If a server has specified a trash channel that channel is returned,
+        if the server hasn't specified one the default system channel is
+        returned instead.
         """
-        Currently just gives the channel with the name antarctica.
-        In the future this may be expanded so servers can designate whatever
-        channel they want as Antarctica.
-        """
-        channel_id = self.settings.get_mute_channel(server)
+        channel_id = self.settings.get_trash_channel(server)
+
         if channel_id:
             channel = await self.fetch_channel(channel_id)
             return channel
         else:
             return server.system_channel
 
-    def set_mute_channel(self, guild: Guild):
+    async def get_mute_channel(self, server: Guild) -> TextChannel:
         """
-        Set the mute channel for a given server.
-        """
-        pass
+        Get the server's mute channel.
 
-    def get_mute_role(self, guild: Guild):
+        If a server has specified a mute channel that channel is returned,
+        if the server hasn't specified one the default system channel is
+        returned instead.
         """
-        Currently just gives the role with the name Antarctica.
-        In the future this may be expanded so servers can designate whatever
-        role they want as Antarctica.
+        channel_id = self.settings.get_mute_channel(server)
+
+        if channel_id:
+            channel = await self.fetch_channel(channel_id)
+            return channel
+        else:
+            return server.system_channel
+
+    async def get_mute_role(self, guild: Guild) -> Optional[TextChannel]:
+        """
+        Get the server's mute role.
+
+        If none is specified, try to find one called antarctica.
+        If still none is found, return None.
         """
         for role in guild.roles:
             if role.name.lower() == "antarctica":
                 return role
         return None
 
-    def mentions_list(self, mentions):
-        """
-        Create a string of mentions from a list of user objects.
-        """
+    def mentions_list(self, mentions: List[Member]) -> str:
+        """Create a string of mentions from a list of user objects."""
         mentions = [user.mention for user in mentions]
         if len(mentions) == 0:
             return "No one"
@@ -189,12 +224,10 @@ class MrFreeze(commands.Bot):
         else:
             return ", ".join(mentions[:-1]) + f" and {mentions[-1]}"
 
-    def current_time(self):
-        """
-        Good time stamps for consistent console messages throughout the bot.
-        """
+    def current_time(self) -> str:
+        """Get good time stamps for consistent console messages throughout the bot."""
         formated_time = datetime.datetime.strftime(
-                datetime.datetime.now(),
-                "%Y-%m-%d %H:%M"
+            datetime.datetime.now(),
+            "%Y-%m-%d %H:%M"
         )
         return f"{colors.CYAN_B}{formated_time}{colors.RESET}"

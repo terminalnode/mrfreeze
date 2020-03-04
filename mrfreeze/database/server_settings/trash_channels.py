@@ -49,10 +49,10 @@ class TrashChannels:
     def upsert(self, server: Guild, value: int) -> bool:
         """Insert or update the value for `server.id` with `value`."""
         sql = f"""INSERT INTO {self.table_name} (server, channel) VALUES (?, ?)
-              ON CONFLICT(server) DO UPDATE SET channel = ?;"""
+              ON CONFLICT(server, channel) DO UPDATE SET channel = ?;"""
         query = db_execute(self.dbpath, sql, (server.id, value, value))
 
-        if not query.error:
+        if query.error is not None:
             failure_print(
                 self.module_name,
                 f"failed to set {server.name} to {value}\n{query.error}")

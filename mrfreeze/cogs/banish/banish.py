@@ -8,13 +8,17 @@ they both use the antarctica mechanics.
 Therefor they're both in a cog separate from everything else.
 """
 
-import discord
 import asyncio
 import datetime
 import random
+from typing import Iterable
+
+import discord
+from discord import Guild
 
 from mrfreeze import checks
 from mrfreeze import colors
+from mrfreeze.bot import MrFreeze
 from mrfreeze.cogs.cogbase import CogBase
 
 from mrfreeze.cogs.banish.enums import MuteType, MuteStr
@@ -40,13 +44,15 @@ mute_aliases = ["mute", "unmute", "micromute",
 all_aliases = banish_aliases + hogtie_aliases + mute_aliases
 
 
-def setup(bot):
+def setup(bot: MrFreeze) -> None:
+    """Load the cog into the bot."""
     bot.add_cog(BanishAndRegion(bot))
 
 
 class BanishAndRegion(CogBase):
     """Good mod! Read the manual! Or if you're not mod - sod off!"""
-    def __init__(self, bot, mdbname="mutes", rdbname="regions"):
+
+    def __init__(self, bot: MrFreeze, mdbname: str = "mutes", rdbname: str = "regions") -> None:
         self.bot = bot
 
         # Server setting names
@@ -98,29 +104,33 @@ class BanishAndRegion(CogBase):
         bot.db_create(self.bot, self.rdbname, rdbtable, comment="region table")
         bot.db_create(self.bot, self.rdbname, rdbtable_bl, comment="blacklist table")
 
-    #return as an int the difference between 2 words
-    def word_distance(a, b):
-        arr = [[0 for x in range(len(b))] for y in range(len(a))] 
+    def word_distance(self, a: str, b: str) -> int:
+        """Get the word distance between two words."""
+        arr = [ [ 0 for x in range(len(b)) ] for y in range(len(a)) ]
         for x in range(0, len(a)):
             arr[x][0] = x
         for x in range(0, len(b)):
             arr[0][x] = x
-        for row in range(1,len(a)):
-            for col in range(1,len(b)):
+        for row in range(1, len(a)):
+            for col in range(1, len(b)):
                 if a[row] == b[col]:
-                    cost = 0;
+                    cost = 0
                 else:
-                    cost = 1;
-        arr[row][col] = min(1+arr[row-1][col], 1+arr[row][col-1], cost + arr[row-1][col-1])
-        #debug statement, displays the array after computation
-        #print('\n'.join([''.join(['{:4}'.format(item) for item in row]) for row in arr]))
-        return arr[len(a)-1][len(b)-1]
+                    cost = 1
+        arr[row][col] = min(
+            1 + arr[row - 1][col],
+            1 + arr[row][col - 1],
+            cost + arr[row - 1][col - 1])
 
-    #wrapper method for word_distance
-    #matches the closest string in possible_matches
-    #returns the matching string
-    def get_closest_match(possible_matches, input_str):
-        return min(possible_matches, key=lambda k:word_distance(k, input_str))
+        return arr[len(a) - 1][len(b) - 1]
+
+    def get_closest_match(self, candidates: Iterable[str], input: str) -> str:
+        """
+        Get the closest matching string from a list of candidates.
+
+        This method acts as a wrapper for word distance.
+        """
+        return min(candidates, key=lambda k: self.word_distance(k, input))
 
     @CogBase.listener()
     async def on_ready(self):
@@ -142,15 +152,15 @@ class BanishAndRegion(CogBase):
             else:
                 self.self_mute_time_dict[server.id] = self.default_self_mute_time
 
-    async def unbanish_loop(self, server):
-        """This loop checks for people to unbanish every self.banish_interval seconds."""
+    async def unbanish_loop(self, server: Guild) -> None:
+        """Check for people to unbanish every self.banish_interval seconds."""
         while not self.bot.is_closed():
             await asyncio.sleep(self.mute_interval_dict[server.id])
 
             current_time = datetime.datetime.now()
             server_mutes = mute_db.mdb_fetch(self.bot, self.mdbname, server)
-            mute_role = self.bot.servertuples[server.id].mute_role
-            mute_channel = self.bot.servertuples[server.id].mute_channel
+            mute_role = await self.bot.get_mute_role(server)
+            mute_channel = await self.bot.get_mute_channel(server)
             unmuted = list()
 
             for mute in server_mutes:
@@ -162,8 +172,10 @@ class BanishAndRegion(CogBase):
 
                 if until < current_time:
                     diff = self.bot.parse_timedelta(current_time - until)
-                    if diff == "":  diff = "now"
-                    else:           diff = f"{diff} ago"
+                    if diff == "":
+                        diff = "now"
+                    else:
+                        diff = f"{diff} ago"
 
                     mute_db.mdb_del(self.bot, self.mdbname, member) # Remove from database
                     if mute_role in member.roles:

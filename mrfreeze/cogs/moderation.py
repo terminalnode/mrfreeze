@@ -2,7 +2,6 @@
 
 import asyncio
 import re
-from typing import Any
 from typing import Dict
 from typing import Optional
 from typing import Tuple
@@ -16,6 +15,7 @@ from discord.ext.commands import check
 from discord.ext.commands import command
 
 from mrfreeze import checks
+from mrfreeze.bot import MrFreeze
 from mrfreeze.colors import CYAN
 from mrfreeze.colors import CYAN_B
 from mrfreeze.colors import GREEN_B
@@ -28,7 +28,7 @@ from mrfreeze.colors import YELLOW_B
 from .cogbase import CogBase
 
 
-def setup(bot: Any) -> None:
+def setup(bot: MrFreeze) -> None:
     """Add the cog to the bot."""
     bot.add_cog(Moderation(bot))
 
@@ -40,7 +40,7 @@ class Moderation(CogBase):
     It features command such as !ban, !kick and so on.
     """
 
-    def __init__(self, bot: Any) -> None:
+    def __init__(self, bot: MrFreeze) -> None:
         self.bot = bot
 
     def extract_reason(self, reason: str) -> Optional[str]:
@@ -97,13 +97,49 @@ class Moderation(CogBase):
     @check(checks.is_mod)
     async def set_trash_channel(self, ctx: Context, channel: TextChannel, *args: str) -> None:
         """Set the trash channel for the given server."""
-        pass
+        mention = ctx.author.mention
+
+        old_cid = self.bot.settings.get_trash_channel(ctx.guild)
+        old_channel = await self.bot.fetch_channel(old_cid)
+        result = self.bot.settings.set_trash_channel(channel)
+        new_cid = self.bot.settings.get_trash_channel(ctx.guild)
+        new_channel = await self.bot.fetch_channel(new_cid)
+
+        if not result:
+            reply  = f"{mention} Something went wrong, the trash channel has not been changed."
+        elif old_cid == new_cid:
+            reply  = f"{mention} The trash channel was already set to "
+            reply += f"{new_channel.mention}, but good on you for making sure!"
+        else:
+            reply  = f"{mention} The dedicated trash channel has been changed from "
+            reply += f"{old_channel.mention} to {new_channel.mention}."
+
+        await ctx.send(reply)
 
     @command(name="mutechannel", aliases=["setmutechannel"])
     @check(checks.is_mod)
     async def set_mute_channel(self, ctx: Context, channel: TextChannel, *args: str) -> None:
         """Set the mute channel for the given server."""
-        pass
+        mention = ctx.author.mention
+
+        old_cid = self.bot.settings.get_mute_channel(ctx.guild)
+        old_channel = await self.bot.fetch_channel(old_cid)
+        result = self.bot.settings.set_mute_channel(channel)
+        new_cid = self.bot.settings.get_mute_channel(ctx.guild)
+        new_channel = await self.bot.fetch_channel(new_cid)
+        print(old_channel)
+        print(new_channel)
+
+        if not result:
+            reply  = f"{mention} Something went wrong, the mute channel has not been changed."
+        elif old_cid == new_cid:
+            reply  = f"{mention} The mute channel was already set to "
+            reply += f"{new_channel.mention}, but good on you for making sure!"
+        else:
+            reply  = f"{mention} The dedicated mute channel has been changed from "
+            reply += f"{old_channel.mention} to {new_channel.mention}."
+
+        await ctx.send(reply)
 
     @command(name="muterole", aliases=["setmuterole"])
     @check(checks.is_mod)

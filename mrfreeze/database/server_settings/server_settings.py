@@ -42,9 +42,9 @@ class ServerSettings():
 
         # Link methods from TrashChannels
         self.trash_channels = TrashChannels(self.dbpath)
-        self.get_trash_channel      = self.trash_channels.get_trash_channel
-        self.set_trash_channel      = self.trash_channels.set_trash_channel
-        self.set_mute_channel_by_id = self.trash_channels.set_trash_channel_by_id
+        self.get_trash_channel       = self.trash_channels.get_trash_channel
+        self.set_trash_channel       = self.trash_channels.set_trash_channel
+        self.set_trash_channel_by_id = self.trash_channels.set_trash_channel_by_id
 
         # Link methods from FreezeMutes
         self.freeze_mutes   = FreezeMutes(self.dbpath)

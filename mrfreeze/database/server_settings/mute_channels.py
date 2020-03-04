@@ -50,7 +50,7 @@ class MuteChannels:
     def upsert(self, server: Guild, value: int) -> bool:
         """Insert or update the value for `server.id` with `value`."""
         sql = f"""INSERT INTO {self.table_name} (server, channel) VALUES (?, ?)
-              ON CONFLICT(server) DO UPDATE SET channel = ?;"""
+              ON CONFLICT(server, channel) DO UPDATE SET channel = ?;"""
         query = db_execute(self.dbpath, sql, (server.id, value, value))
 
         if query.error is not None:

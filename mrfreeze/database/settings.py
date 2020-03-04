@@ -27,3 +27,7 @@ class Settings:
         self.get_mute_channel       = self.server_settings.get_mute_channel
         self.set_mute_channel       = self.server_settings.set_mute_channel
         self.set_mute_channel_by_id = self.server_settings.set_mute_channel_by_id
+
+        self.get_trash_channel       = self.server_settings.get_trash_channel
+        self.set_trash_channel       = self.server_settings.set_trash_channel
+        self.set_trash_channel_by_id = self.server_settings.set_trash_channel_by_id
