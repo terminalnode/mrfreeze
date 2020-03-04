@@ -33,23 +33,23 @@ class ServerSettings():
 
         # Link methods from MuteChannels
         self.mute_channels  = MuteChannels(self.dbpath)
-        self.get_mute_channel       = self.mute_channels.get_mute_channel
-        self.set_mute_channel       = self.mute_channels.set_mute_channel
-        self.set_mute_channel_by_id = self.mute_channels.set_mute_channel_by_id
+        self.get_mute_channel       = self.mute_channels.get
+        self.set_mute_channel       = self.mute_channels.set
+        self.set_mute_channel_by_id = self.mute_channels.set_by_id
 
         # Link methods from MuteRoles
         self.mute_roles     = MuteRoles(self.dbpath)
 
         # Link methods from TrashChannels
         self.trash_channels = TrashChannels(self.dbpath)
-        self.get_trash_channel       = self.trash_channels.get_trash_channel
-        self.set_trash_channel       = self.trash_channels.set_trash_channel
-        self.set_trash_channel_by_id = self.trash_channels.set_trash_channel_by_id
+        self.get_trash_channel       = self.trash_channels.get
+        self.set_trash_channel       = self.trash_channels.set
+        self.set_trash_channel_by_id = self.trash_channels.set_by_id
 
         # Link methods from FreezeMutes
         self.freeze_mutes   = FreezeMutes(self.dbpath)
-        self.toggle_freeze_mute = self.freeze_mutes.toggle_freeze_mute
-        self.is_freeze_muted    = self.freeze_mutes.is_freeze_muted
+        self.is_freeze_muted    = self.freeze_mutes.get
+        self.toggle_freeze_mute = self.freeze_mutes.toggle
 
     def initialize(self) -> None:
         """Set up the database and tables necessary for the server settings module."""

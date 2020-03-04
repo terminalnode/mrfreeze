@@ -2,8 +2,8 @@
 Freeze mutes stores information about which servers have inactivated Mr Freeze.
 
 Table structure:
-freeze_mutes        server*    INTEGER      Server ID
-                    muted      BOOLEAN      Is muted?
+freeze_mutes        server*     INTEGER     Server ID
+                    muted       BOOLEAN     Is muted?
 """
 
 from typing import Dict
@@ -22,40 +22,50 @@ class FreezeMutes:
 
     def __init__(self, dbpath: str) -> None:
         self.dbpath = dbpath
-        self.module_name = "Freeze Mutes table"
+        self.name = "Freeze Mutes table"
         self.table_name = "freeze_mutes"
-        self.freeze_mutes: Optional[Dict[int, bool]] = None
+        self.dict: Optional[Dict[int, bool]] = None
 
-        self.table = f"""CREATE TABLE IF NOT EXISTS {self.table_name} (
-                            server      INTEGER PRIMARY KEY NOT NULL,
-                            muted       BOOLEAN NOT NULL);"""
+        # SQL commands
+        self.select_all = f"SELECT server, muted FROM {self.table_name}"
+
+        self.insert = f"""
+        INSERT INTO {self.table_name} (server, muted) VALUES (?, ?)
+            ON CONFLICT(server) DO UPDATE SET muted = ?
+        ;"""
+
+        self.table = f"""
+        CREATE TABLE IF NOT EXISTS {self.table_name} (
+            server      INTEGER PRIMARY KEY NOT NULL,
+            muted       BOOLEAN NOT NULL
+        );"""
 
     def initialize(self) -> None:
         """Set up the freeze mutes table, then fetch mutes."""
-        db_create(self.dbpath, self.module_name, self.table)
-        self.freeze_mutes_from_db()
+        db_create(self.dbpath, self.name, self.table)
+        self.load_from_db()
 
-    def is_freeze_muted(self, server: Guild) -> Optional[bool]:
+    def get(self, server: Guild) -> Optional[bool]:
         """Check freeze mute value for a given server."""
         # Check that current mutes has been fetched.
         # If not refetch it.
-        if self.freeze_mutes is None:
-            self.freeze_mutes_from_db()
+        if self.dict is None:
+            self.load_from_db()
 
         # Check that it was indeed fetched, otherwise
         # return False as default.
-        if self.freeze_mutes is None:
+        if self.dict is None:
             return None
 
         # Check if the requested server has an entry,
         # otherwise return False as default.
-        if server.id not in self.freeze_mutes:
+        if server.id not in self.dict:
             return None
 
         # Finally, return the actual value from the dictionary.
-        return self.freeze_mutes[server.id]
+        return self.dict[server.id]
 
-    def toggle_freeze_mute(self, server: Guild) -> bool:
+    def toggle(self, server: Guild) -> bool:
         """
         Toggle the freeze mute value for the specified server.
 
@@ -65,45 +75,43 @@ class FreezeMutes:
 
         Return the new value.
         """
-        new_value = not self.is_freeze_muted(server)
+        new_value = not self.get(server)
         return self.upsert(server, new_value)
 
     def upsert(self, server: Guild, value: bool) -> bool:
         """Insert or replace the value for `server` with `value`."""
-        sql = f"""INSERT INTO {self.table_name} (server, muted) VALUES (?, ?)
-              ON CONFLICT(server) DO UPDATE SET muted = ?;"""
-        query = db_execute(self.dbpath, sql, (server.id, value, value))
+        query = db_execute(self.dbpath, self.insert, (server.id, value, value))
 
         if query.error is not None:
             failure_print(
-                self.module_name,
+                self.name,
                 f"failed to set {server.name} to {value}\n{query.error}")
             return False
 
         elif not self.update_dictionary(server.id, value):
             failure_print(
-                self.module_name,
+                self.name,
                 f"failed to update dictionary for {server.name} to {value}\n{query.error}")
             return False
 
         else:
             success_print(
-                self.module_name,
+                self.name,
                 f"successfully set {server.name} to {value}")
             return True
 
     def update_dictionary(self, key: int, value: bool) -> bool:
         """Try to update the dictionary with the mute channels."""
-        if self.freeze_mutes is None:
-            self.freeze_mutes_from_db()
+        if self.dict is None:
+            self.load_from_db()
 
-        if self.freeze_mutes is None:
+        if self.dict is None:
             return False
         else:
-            self.freeze_mutes[key] = value
+            self.dict[key] = value
             return True
 
-    def freeze_mutes_from_db(self) -> None:
+    def load_from_db(self) -> None:
         """
         Load current freeze mute values from database.
 
@@ -112,16 +120,15 @@ class FreezeMutes:
         the database are updated simultaneously through the
         toggle_freeze_mute method.
         """
-        sql = f"SELECT server, muted FROM {self.table_name}"
-        query = db_execute(self.dbpath, sql, tuple())
+        query = db_execute(self.dbpath, self.select_all, tuple())
 
         if query.error is None:
             new_mutes = dict()
             for entry in query.output:
                 new_mutes[entry[0]] = bool(entry[1])
 
-            self.freeze_mutes = new_mutes
-            success_print(self.module_name, "successfully fetched mutes")
+            self.dict = new_mutes
+            success_print(self.name, "successfully fetched mutes")
         else:
-            self.freeze_mutes = None
-            failure_print(self.module_name, f"failed to fetch mutes: {query.error}")
+            self.dict = None
+            failure_print(self.name, f"failed to fetch mutes: {query.error}")
