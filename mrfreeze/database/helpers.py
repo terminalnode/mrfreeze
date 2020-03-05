@@ -1,21 +1,31 @@
+"""Various helper methods for reading and writing to the database."""
+
 import datetime
 import sqlite3
+from sqlite3 import Connection
+from typing import Any
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
-from mrfreeze.colors import CYAN, CYAN_B, GREEN_B, RED_B, RESET
+from mrfreeze.colors import CYAN, CYAN_B, GREEN_B, RED, RED_B, RESET
+
 
 class ExecutionResult:
     """Handy class for returning the result of db_execute."""
-    def __init__(self, output, error):
+
+    def __init__(self, output: List[Any], error: Optional[Exception]) -> None:
         self.output = output
         self.error = error
 
-def db_connect(dbpath):
+
+def db_connect(dbpath: str) -> Connection:
     """Create a connection to a database."""
-    conn = sqlite3.connect(dbpath)
-    return conn
+    return sqlite3.connect(dbpath)
 
 
-def db_time(in_data):
+def db_time(in_data: Union[str, datetime.datetime]) -> Optional[Union[str, datetime.datetime]]:
     """
     Parse to and from datetime objects consistently for database use.
 
@@ -32,10 +42,11 @@ def db_time(in_data):
     else:
         return None
 
-def db_execute(dbpath, sql, values):
+
+def db_execute(dbpath: str, sql: str, values: Tuple[str, ...]) -> ExecutionResult:
     """Execute a database query."""
     error = None
-    output = None
+    output = list()
 
     with db_connect(dbpath) as conn:
         c = conn.cursor()
@@ -48,40 +59,35 @@ def db_execute(dbpath, sql, values):
     return ExecutionResult(output, error)
 
 
-def db_create(dbpath, dbname, table, comment=None):
+def db_create(dbpath: str, dbname: str, table: str) -> None:
     """Create a database file from the provided tables."""
     conn = db_connect(dbpath)
-
-    log_message = dbname
-    if comment is not None:
-        log_message = f"{dbname} ({comment})"
 
     with conn:
         try:
             c = conn.cursor()
             c.execute(table)
-            print(f"{CYAN}DB/table created: " +
-                  f"{GREEN_B}{log_message}{RESET}")
+            status =  f"{current_time()}{GREEN_B} Created {dbname}{RESET}"
+            print(status)
 
         except sqlite3.Error as e:
-            print(e)
-            print(f"{CYAN}DB/table failure: " +
-                  f"{RED_B}{log_message}\n{e}{RESET}")
+            status =  f"{current_time()}{RED_B} Failed to create {dbname}\n{RED}{e}{RESET}"
+            print(status)
 
 
-def current_time():
+def current_time() -> str:
     """Time stamps for database logging."""
-    formated_time = datetime.datetime.strftime(
-            datetime.datetime.now(),
-            "%Y-%m-%d %H:%M"
-    )
+    formated_time = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M:%S")
     return f"{CYAN_B}{formated_time}{RESET}"
 
-def success_print(module, message):
-    """Standardised way of logging a successful database operation"""
+
+def success_print(module: str, message: str) -> None:
+    """Log a successful database operation in a standardised fashion."""
+    module = module.capitalize()
     print(f"{current_time()} {GREEN_B}{module}:{CYAN} {message}{RESET}")
 
 
-def failure_print(module, message):
-    """Standardised way of logging a failed database operation"""
+def failure_print(module: str, message: str) -> None:
+    """Log a failed database operation in a standardised fashion."""
+    module = module.capitalize()
     print(f"{current_time()} {RED_B}{module}:{CYAN} {message}{RESET}")
