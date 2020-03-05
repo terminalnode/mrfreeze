@@ -6,25 +6,24 @@ freeze_mutes        server*     INTEGER     Server ID
                     muted       BOOLEAN     Is muted?
 """
 
-from typing import Dict
 from typing import Optional
 
 from discord import Guild
 
-from ..helpers import db_create
+from ..abc_server_settings import ABCServerSetting
 from ..helpers import db_execute
 from ..helpers import failure_print
 from ..helpers import success_print
 
 
-class FreezeMutes:
+class FreezeMutes(ABCServerSetting):
     """Class for handling the freeze_mutes table."""
 
     def __init__(self, dbpath: str) -> None:
         self.dbpath = dbpath
         self.name = "Freeze Mutes table"
         self.table_name = "freeze_mutes"
-        self.dict: Optional[Dict[int, bool]] = None
+        self.dict = None
 
         # SQL commands
         self.select_all = f"SELECT server, muted FROM {self.table_name}"
@@ -39,11 +38,6 @@ class FreezeMutes:
             server      INTEGER PRIMARY KEY NOT NULL,
             muted       BOOLEAN NOT NULL
         );"""
-
-    def initialize(self) -> None:
-        """Set up the freeze mutes table, then fetch mutes."""
-        db_create(self.dbpath, self.name, self.table)
-        self.load_from_db()
 
     def get(self, server: Guild) -> Optional[bool]:
         """Check freeze mute value for a given server."""
