@@ -1,20 +1,14 @@
-"""
-Mute channels stores information about which channels servers use for mutes.
+"""Mute channels stores information about which channels servers use for mutes."""
 
-Table structure:
-mute_channels       server*     INTEGER     Server ID
-                    channel     INTEGER     Channel ID
-"""
-
-from ..abc_server_settings import ABCServerSetting
+from ..abc_settings import ABCSetting
 
 
-class MuteChannels(ABCServerSetting):
+class MuteChannels(ABCSetting):
     """Class for handling the mute_channels table."""
 
     def __init__(self, dbpath: str) -> None:
         self.dbpath = dbpath
-        self.name = "Mute channels table"
+        self.name = "mute channels"
         self.table_name = "mute_channels"
         self.dict = None
 

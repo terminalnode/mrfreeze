@@ -1,20 +1,14 @@
-"""
-Store information about which roles servers use for mute.
+"""Store information about which roles servers use for mute."""
 
-Table structure:
-mute_roles          server*     INTEGER     Server ID
-                    role        INTEGER     Role ID
-"""
-
-from ..abc_server_settings import ABCServerSetting
+from ..abc_settings import ABCSetting
 
 
-class MuteRoles(ABCServerSetting):
+class MuteRoles(ABCSetting):
     """Class for handling the mute_roles table."""
 
     def __init__(self, dbpath: str) -> None:
         self.dbpath = dbpath
-        self.name = "Mute roles table"
+        self.name = "mute roles"
         self.table_name = "mute_roles"
         self.dict = None
 
