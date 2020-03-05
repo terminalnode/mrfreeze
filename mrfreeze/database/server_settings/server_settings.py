@@ -39,6 +39,9 @@ class ServerSettings():
 
         # Link methods from MuteRoles
         self.mute_roles     = MuteRoles(self.dbpath)
+        self.get_mute_role       = self.mute_roles.get
+        self.set_mute_role       = self.mute_roles.set
+        self.set_mute_role_by_id = self.mute_roles.set_by_id
 
         # Link methods from TrashChannels
         self.trash_channels = TrashChannels(self.dbpath)
