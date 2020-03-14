@@ -9,13 +9,13 @@ from discord import Guild
 from discord import Role
 from discord import TextChannel
 
-from .helpers import db_create
-from .helpers import db_execute
-from .helpers import failure_print
-from .helpers import success_print
+from ..helpers import db_create
+from ..helpers import db_execute
+from ..helpers import failure_print
+from ..helpers import success_print
 
 
-class ABCSetting(metaclass=ABCMeta):
+class ABCTable(metaclass=ABCMeta):
     """
     Abstract base class for Settings.
 

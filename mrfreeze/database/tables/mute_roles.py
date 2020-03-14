@@ -1,9 +1,9 @@
 """Store information about which roles servers use for mute."""
 
-from ..abc_settings import ABCSetting
+from .abc_table import ABCTable
 
 
-class MuteRoles(ABCSetting):
+class MuteRoles(ABCTable):
     """Class for handling the mute_roles table."""
 
     def __init__(self, dbpath: str) -> None:

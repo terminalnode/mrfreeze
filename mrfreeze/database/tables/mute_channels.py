@@ -1,15 +1,15 @@
-"""Trash channels stores information about which channels servers use for trash."""
+"""Mute channels stores information about which channels servers use for mutes."""
 
-from ..abc_settings import ABCSetting
+from .abc_table import ABCTable
 
 
-class TrashChannels(ABCSetting):
-    """Class for handling the trash_channels table."""
+class MuteChannels(ABCTable):
+    """Class for handling the mute_channels table."""
 
     def __init__(self, dbpath: str) -> None:
         self.dbpath = dbpath
-        self.name = "trash channels"
-        self.table_name = "trash_channels"
+        self.name = "mute channels"
+        self.table_name = "mute_channels"
         self.dict = None
 
         # SQL commands

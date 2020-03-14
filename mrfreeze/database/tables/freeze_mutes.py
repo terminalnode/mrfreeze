@@ -2,10 +2,10 @@
 
 from discord import Guild
 
-from ..abc_settings import ABCSetting
+from .abc_table import ABCTable
 
 
-class FreezeMutes(ABCSetting):
+class FreezeMutes(ABCTable):
     """Class for handling the freeze_mutes table."""
 
     def __init__(self, dbpath: str) -> None:
