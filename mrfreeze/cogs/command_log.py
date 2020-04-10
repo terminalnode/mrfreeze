@@ -1,4 +1,6 @@
 """Cog for logging all issued commands."""
+import logging
+
 from mrfreeze import colors
 from mrfreeze.cogs.cogbase import CogBase
 
@@ -14,6 +16,7 @@ class CommandLogger(CogBase):
     def __init__(self, bot):
         """Initialize the cog."""
         self.bot = bot
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     @CogBase.listener()
     async def on_message(self, message):
@@ -28,6 +31,7 @@ class CommandLogger(CogBase):
             command = f"{colors.CYAN_B}{ctx.prefix}{ctx.invoked_with}"
             guild_name = f"{colors.MAGENTA}{message.guild.name}"
             channel_name = f"{colors.GREEN}#{message.channel.name}"
-            print(f"{self.bot.current_time()} {name} {colors.CYAN}used " +
-                  f"{command}{colors.CYAN} in {channel_name}{colors.CYAN} " +
-                  f"@ {guild_name}{colors.RESET}")
+
+            msg = f"{name} {colors.CYAN}used {command}{colors.CYAN} "
+            msg += f"in {channel_name}{colors.CYAN} = {guild_name}{colors.RESET}"
+            self.logger.info(msg)

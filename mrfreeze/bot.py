@@ -8,6 +8,7 @@ are used in many of the cogs.
 """
 
 import datetime
+import logging
 import os
 import sys
 from typing import Any
@@ -57,6 +58,10 @@ class MrFreeze(commands.Bot):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+        # Get logger
+        self.logger = logging.getLogger("MrFreeze")
+        self.logger.info("Setting up MrFreeze")
+
         # Dict in which to save all the background tasks.
         self.bg_tasks: Dict[str, Awaitable] = dict()
 
