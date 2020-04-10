@@ -29,9 +29,10 @@ def bot_greeting(bot):
     box = f"{colors.CYAN}#{colors.RESET}"
     edges = f"{colors.CYAN}{'#' * (linewidth + 4)}{colors.RESET}"
 
-    print(edges)
+    result = [ edges ]
     for line in greeting:
         width = (len(line) - 16)
         line += (" " * (linewidth - width))
-        print(f"{box} {line} {box}")
-    print(edges)
+        result.append(f"{box} {line} {box}")
+    result.append(edges)
+    return result

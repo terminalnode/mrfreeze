@@ -27,7 +27,7 @@ from discord.ext import commands
 from discord.ext.commands import Context
 
 # Importing MrFreeze submodules
-from mrfreeze import colors, greeting, paths
+from mrfreeze import colors, greeting
 from mrfreeze import dbfunctions, server_settings, time
 from mrfreeze.checks import MuteCheckFailure
 from mrfreeze.database.settings import Settings
@@ -60,7 +60,7 @@ class MrFreeze(commands.Bot):
         super().__init__(*args, **kwargs)
         # Get logger
         self.logger = logging.getLogger("MrFreeze")
-        self.logger.info("Setting up MrFreeze")
+        self.logger.debug("Setting up MrFreeze")
 
         # Dict in which to save all the background tasks.
         self.bg_tasks: Dict[str, Awaitable] = dict()
@@ -69,6 +69,7 @@ class MrFreeze(commands.Bot):
         self.servertuples: Dict[int, ServerTuple] = dict()
 
         # Setting up imported functions so they can be accessed by all cogs
+        self.logger.debug("Linking imported functions as own methods")
         self.extract_time = time.extract_time
         self.parse_timedelta = time.parse_timedelta
         self.read_server_setting = server_settings.read_server_setting
@@ -81,14 +82,17 @@ class MrFreeze(commands.Bot):
         # Check that the necessary directories exist and
         # are directories, otherwise create them.
         # All paths are relative to the working directory.
+        self.logger.debug("Setting up required directories")
         self.db_prefix = "databases"
-        paths.path_setup(self.db_prefix, "DB prefix")
+        self.path_setup(self.db_prefix, "DB prefix")
         self.servers_prefix = "config/servers"
-        paths.path_setup(self.servers_prefix, "Servers prefix")
+        self.path_setup(self.servers_prefix, "Servers prefix")
 
+        self.logger.debug("Instantiating Settings module")
         self.settings = Settings()
 
         # Add the mute check
+        self.logger.debug("Adding self mute check")
         self.check(self.block_self_if_muted)
 
     async def block_self_if_muted(self, ctx: Context) -> bool:
@@ -109,8 +113,10 @@ class MrFreeze(commands.Bot):
             await self.server_tuple(server)
 
         # Greeting (printed to console)
-        greeting.bot_greeting(self)
-        colors.color_test()
+        greetmsg = greeting.bot_greeting(self)
+        for line in greetmsg:
+            self.logger.info(line)
+        self.logger.info(colors.color_test())
 
         # Set activity to "Listening to your commands"
         await self.change_presence(
@@ -122,19 +128,19 @@ class MrFreeze(commands.Bot):
         )
 
         # Signal to the terminal that the bot is ready.
-        print(f"{colors.WHITE_B}READY WHEN YOU ARE CAP'N!{colors.RESET}\n")
+        self.logger.info(f"{colors.WHITE_B}READY WHEN YOU ARE CAP'N!{colors.RESET}")
 
     def path_setup(self, path: str, trivial_name: str) -> None:
         """Create various directories which the bot needs."""
         if os.path.isdir(path):
             status =  f"{colors.GREEN_B}{trivial_name} {colors.GREEN}({path}) "
             status += f"{colors.CYAN}exists and is a directory.{colors.RESET}"
-            print(status)
+            self.logger.info(status)
         elif os.path.exists(path):
             status =  f"{colors.RED_B}{trivial_name} {colors.RED}({path}) "
             status += f"{colors.CYAN}exists but is not a directory. "
             status += f"Aborting.{colors.RESET}"
-            print(status)
+            self.logger.error(status)
             sys.exit(0)
         else:
             try:
@@ -142,12 +148,12 @@ class MrFreeze(commands.Bot):
                 status =  f"{colors.GREEN_B}{trivial_name} "
                 status += f"{colors.GREEN}({path}){colors.CYAN} was "
                 status += f"successfully created.{colors.RESET}"
-                print(status)
+                self.logger.info(status)
             except Exception as e:
                 status =  f"{colors.RED_B}{trivial_name} {colors.RED}({path}) "
                 status += f"{colors.CYAN} does not exist and could not be "
                 status += f"created:\n{colors.RED}==> {e}{colors.RESET}"
-                print(status)
+                self.logger.error(status)
                 sys.exit(0)
 
     async def server_tuple(self, server: Guild) -> None:

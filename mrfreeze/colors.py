@@ -20,29 +20,30 @@ RESET = "\033[00000m"
 regexp = re.compile(r'(\033\[\d+;?\d*m)')
 
 
-def strip(string: str):
+def strip(string: str) -> str:
     """Strip a string of all escape sequences."""
     return regexp.sub("", string)
 
 
-def color_test():
+def color_test() -> str:
     """Print all the colors for visual inspection."""
-    print(f"{CYAN_B}Color test: " +
-          f"{BLACK}#" +
-          f"{BLACK_B}#" +
-          f"{RED}#" +
-          f"{RED_B}#" +
-          f"{GREEN}#" +
-          f"{GREEN_B}#" +
-          f"{YELLOW}#" +
-          f"{YELLOW_B}#" +
-          f"{BLUE}#" +
-          f"{BLUE_B}#" +
-          f"{MAGENTA}#" +
-          f"{MAGENTA_B}#" +
-          f"{CYAN}#" +
-          f"{CYAN_B}#" +
-          f"{WHITE}#" +
-          f"{WHITE_B}#" +
-          f"{RESET} " +
-          " RESET")
+    msg  = f"{CYAN_B}Color test: "
+    msg += f"{BLACK}#"
+    msg += f"{BLACK_B}#"
+    msg += f"{RED}#"
+    msg += f"{RED_B}#"
+    msg += f"{GREEN}#"
+    msg += f"{GREEN_B}#"
+    msg += f"{YELLOW}#"
+    msg += f"{YELLOW_B}#"
+    msg += f"{BLUE}#"
+    msg += f"{BLUE_B}#"
+    msg += f"{MAGENTA}#"
+    msg += f"{MAGENTA_B}#"
+    msg += f"{CYAN}#"
+    msg += f"{CYAN_B}#"
+    msg += f"{WHITE}#"
+    msg += f"{WHITE_B}#"
+    msg += f"{RESET} "
+    msg += " RESET"
+    return msg
