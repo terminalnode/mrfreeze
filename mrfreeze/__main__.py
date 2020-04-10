@@ -25,6 +25,7 @@ logging.getLogger("mrfreeze").setLevel(logging.INFO)
 logging.getLogger("CommandLogger").setLevel(logging.INFO)
 logging.getLogger("Inkcyclopedia").setLevel(logging.INFO)
 logging.getLogger("MrFreeze").setLevel(logging.INFO)
+logging.getLogger("PinHandler").setLevel(logging.INFO)
 
 # Get logger for this module
 logger = logging.getLogger("BotInit")
