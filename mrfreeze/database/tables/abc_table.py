@@ -1,5 +1,7 @@
 """Abstract base class for settings."""
 
+import logging
+import sqlite3
 from abc import ABCMeta
 from typing import Dict
 from typing import Optional
@@ -9,10 +11,10 @@ from discord import Guild
 from discord import Role
 from discord import TextChannel
 
-from ..helpers import db_create
+from mrfreeze.colors import GREEN, MAGENTA, RED, RESET, YELLOW_B
+
+from ..helpers import db_connect
 from ..helpers import db_execute
-from ..helpers import failure_print
-from ..helpers import success_print
 
 
 class ABCTable(metaclass=ABCMeta):
@@ -28,6 +30,7 @@ class ABCTable(metaclass=ABCMeta):
     table_name: str
     dict: Optional[Dict[int, Union[bool, int]]]
     dbpath: str
+    logger: logging.Logger
 
     # SQL commands
     select_all: str
@@ -36,7 +39,16 @@ class ABCTable(metaclass=ABCMeta):
 
     def create_table(self) -> None:
         """Create the table for a given module."""
-        db_create(self.dbpath, self.name, self.table)
+        conn = db_connect(self.dbpath)
+
+        with conn:
+            try:
+                c = conn.cursor()
+                c.execute(self.table)
+                self.infolog("created database table")
+
+            except sqlite3.Error as e:
+                self.errorlog(f"failed to create database table: {e}")
 
     def load_from_db(self) -> None:
         """
@@ -54,9 +66,9 @@ class ABCTable(metaclass=ABCMeta):
                 new_dict[entry[0]] = entry[1]
 
             self.dict = new_dict
-            success_print(self.name, f"successfully fetched {self.name}")
+            self.infolog(f"successfully fetched data")
         else:
-            failure_print(self.name, f"failed to fetch {self.name}: {query.error}")
+            self.errorlog(f"failed to fetch data: {query.error}")
             self.dict = None
 
     def get(self, server: Guild) -> Optional[int]:
@@ -100,17 +112,28 @@ class ABCTable(metaclass=ABCMeta):
         query = db_execute(self.dbpath, self.insert, (server.id, value, value))
 
         if query.error is not None:
-            failure_print(
-                self.name,
+            self.errorlog(
                 f"failed to set {server.name} to {value}\n{query.error}")
             return False
+
         elif not self.update_dictionary(server.id, value):
-            failure_print(
-                self.name,
+            self.errorlog(
                 f"failed to update dictionary for {server.name} to {value}\n{query.error}")
             return False
+
         else:
-            success_print(
-                self.name,
-                f"successfully set {server.name} to {value}")
+            self.infolog(
+                f"set {server.name} to {value}")
             return True
+
+    def infolog(self, msg: str) -> None:
+        """Write a message to the log, prefixing it with the module name."""
+        self.logger.info(f"{YELLOW_B}{self.name} {GREEN}{msg}{RESET}")
+
+    def warnlog(self, msg: str) -> None:
+        """Write a message to the log, prefixing it with the module name."""
+        self.logger.info(f"{YELLOW_B}{self.name} {RED}{msg}{RESET}")
+
+    def errorlog(self, msg: str) -> None:
+        """Write a message to the log, prefixing it with the module name."""
+        self.logger.info(f"{YELLOW_B}{self.name} {MAGENTA}{msg}{RESET}")

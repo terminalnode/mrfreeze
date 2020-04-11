@@ -1,16 +1,19 @@
 """Mute channels stores information about which channels servers use for mutes."""
 
+import logging
+
 from .abc_table import ABCTable
 
 
 class MuteChannels(ABCTable):
     """Class for handling the mute_channels table."""
 
-    def __init__(self, dbpath: str) -> None:
+    def __init__(self, dbpath: str, logger: logging.Logger) -> None:
         self.dbpath = dbpath
         self.name = "mute channels"
         self.table_name = "mute_channels"
         self.dict = None
+        self.logger = logger
 
         # SQL commands
         self.select_all = f"SELECT server, channel FROM {self.table_name}"

@@ -1,5 +1,7 @@
 """Freeze mutes stores information about which servers have inactivated Mr Freeze."""
 
+import logging
+
 from discord import Guild
 
 from .abc_table import ABCTable
@@ -8,11 +10,12 @@ from .abc_table import ABCTable
 class FreezeMutes(ABCTable):
     """Class for handling the freeze_mutes table."""
 
-    def __init__(self, dbpath: str) -> None:
+    def __init__(self, dbpath: str, logger: logging.Logger) -> None:
         self.dbpath = dbpath
         self.name = "freeze mutes"
         self.table_name = "freeze_mutes"
         self.dict = None
+        self.logger = logger
 
         # SQL commands
         self.select_all = f"SELECT server, muted FROM {self.table_name}"

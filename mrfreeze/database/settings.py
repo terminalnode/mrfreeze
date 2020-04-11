@@ -5,6 +5,7 @@ This class loads all of the different settings sub-modules
 and provides a single interface for working with them all.
 """
 
+import logging
 from typing import List
 
 from .tables.abc_table import ABCTable
@@ -20,12 +21,14 @@ class Settings:
     def __init__(self) -> None:
         self.dbpath = "settings.db"
         self.tables: List[ABCTable] = list()
+        self.logger = logging.getLogger(self.__class__.__name__)
 
         # Initialize the tables
-        self.freeze_mutes   = FreezeMutes(self.dbpath)
-        self.mute_channels  = MuteChannels(self.dbpath)
-        self.mute_roles     = MuteRoles(self.dbpath)
-        self.trash_channels = TrashChannels(self.dbpath)
+        self.logger.info("Initializing tables")
+        self.freeze_mutes   = FreezeMutes(self.dbpath, self.logger)
+        self.mute_channels  = MuteChannels(self.dbpath, self.logger)
+        self.mute_roles     = MuteRoles(self.dbpath, self.logger)
+        self.trash_channels = TrashChannels(self.dbpath, self.logger)
 
         # Add tables to self.tables
         self.tables.append(self.freeze_mutes)

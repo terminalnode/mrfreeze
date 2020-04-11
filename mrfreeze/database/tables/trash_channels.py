@@ -1,16 +1,19 @@
 """Trash channels stores information about which channels servers use for trash."""
 
+import logging
+
 from .abc_table import ABCTable
 
 
 class TrashChannels(ABCTable):
     """Class for handling the trash_channels table."""
 
-    def __init__(self, dbpath: str) -> None:
+    def __init__(self, dbpath: str, logger: logging.Logger) -> None:
         self.dbpath = dbpath
         self.name = "trash channels"
         self.table_name = "trash_channels"
         self.dict = None
+        self.logger = logger
 
         # SQL commands
         self.select_all = f"SELECT server, channel FROM {self.table_name}"
