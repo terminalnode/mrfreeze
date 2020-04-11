@@ -54,7 +54,7 @@ class PinHandler(CogBase):
                 num_pins = len(await channel.pins())
                 pinsDict[channel.id] = num_pins
 
-                log = f"{colors.CYAN}Counted {num_pins} pins in {colors.RED_B}{guild} "
+                log = f"{colors.CYAN}{num_pins} pins in {colors.RED_B}{guild} "
                 log += f"{colors.GREEN_B}#{channel.name}{colors.RESET}"
                 self.logger.info(log)
 

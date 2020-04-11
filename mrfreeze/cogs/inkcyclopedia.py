@@ -1,4 +1,5 @@
 import csv
+import logging
 import os
 import re
 from typing import List, NamedTuple, Optional, Pattern, Set
@@ -43,6 +44,7 @@ class Inkcyclopedia(CogBase):
         self.inkdb_enc:  str = "utf-8-sig"
         self.airtable:   Optional[Airtable] = None
         self.bracketmatch = re.compile(r"[{]([\w\-\s]+)[}]")
+        self.logger = logging.getLogger(self.__class__.__name__)
 
         # File config/airtable should have format:
         # base = <your base id here>
@@ -59,8 +61,9 @@ class Inkcyclopedia(CogBase):
                     api_key = keys["apikey"]
                 )
         except Exception:
-            print("Failed to open or parse ./config/airtable.")
-            print("The Inkcyclopedia will not be able to update.")
+            logmsg = "Failed to open or parse ./config/airtable."
+            logmsg += "The Inkcyclopedia will not be able to update."
+            self.logger.error(logmsg)
 
     @CogBase.listener()
     async def on_ready(self) -> None:
@@ -79,7 +82,7 @@ class Inkcyclopedia(CogBase):
         # Print that the ink database has been loaded and with how many inks.
         status =  f"{CYAN}The ink database has been loaded with "
         status += f"{MAGENTA_B}{len(self.inkydb)} inks{CYAN}!{RESET}"
-        print(status)
+        self.logger.info(status)
 
     async def fetch_inks(self) -> None:
         """Fetch the latest version of the Inkcyclopedia from Airtable."""
@@ -104,7 +107,7 @@ class Inkcyclopedia(CogBase):
                         writer.writerow(to_file)
                 except Exception:
                     # One of the fields is missing, we can't use this row
-                    print(f"Failed to add {inkname}")
+                    self.logger.warn(f"Failed to add {inkname}")
                     pass
 
     async def update_db(self) -> None:
