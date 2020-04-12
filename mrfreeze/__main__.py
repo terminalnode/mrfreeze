@@ -27,6 +27,7 @@ logging.getLogger("Inkcyclopedia").setLevel(logging.INFO)
 logging.getLogger("MrFreeze").setLevel(logging.INFO)
 logging.getLogger("PinHandler").setLevel(logging.INFO)
 logging.getLogger("Settings").setLevel(logging.INFO)
+logging.getLogger("Moderation").setLevel(logging.INFO)
 
 # Get logger for this module
 logger = logging.getLogger("BotInit")
@@ -50,7 +51,6 @@ load_cogs = [
     "mrfreeze.cogs.maintenance",
     "mrfreeze.cogs.moderation",
     "mrfreeze.cogs.banish.banish",
-    "mrfreeze.cogs.messages",
 
     # Functions directed towards regular users.
     "mrfreeze.cogs.user_cmds",

@@ -1,12 +1,15 @@
 """Module for the Moderation cog, used to for commands pertaining to moderation."""
 
 import asyncio
+import logging
 import re
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Tuple
 
 import discord
+from discord import Embed
 from discord import Message
 from discord import Role
 from discord import TextChannel
@@ -42,6 +45,7 @@ class Moderation(CogBase):
 
     def __init__(self, bot: MrFreeze) -> None:
         self.bot = bot
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     def extract_reason(self, reason: str) -> Optional[str]:
         """Return anything mentioned after the list of mentions."""
@@ -776,3 +780,61 @@ class Moderation(CogBase):
                 print(e)
         else:
             await ctx.send(f"{ctx.author.mention} PAPERS PLEASE! :rage:")
+
+    @discord.ext.commands.command(name="copy")
+    @check(checks.is_mod)
+    async def copy(self, ctx: Context, destination: TextChannel, *msg_ids: int) -> None:
+        """Copy specified message(s) to specified channel."""
+        for msg_id in msg_ids:
+            await self.copy_helper(ctx, destination, msg_id)
+
+    @discord.ext.commands.command(name="move")
+    @check(checks.is_mod)
+    async def move(self, ctx: Context, destination: TextChannel, *msg_ids: int) -> None:
+        """Copy specified message(s) to specified channel, then delete them."""
+        for msg_id in msg_ids:
+            await self.copy_helper(ctx, destination, msg_id, delete=True)
+
+    # Helper method for copying a single message.
+    async def copy_helper(
+        self,
+        ctx: Context,
+        destination: TextChannel,
+        msg_id: int,
+        delete: bool = False
+    ) -> None:
+        """Copy specified message to specified channel."""
+        self.logger.debug(f"ctx: {ctx.__dict__}")
+
+        logmsg  = f"Copying post {msg_id} to "
+        logmsg += f"{GREEN_B}{destination} {CYAN}in "
+        logmsg += f"{RED_B}{destination.guild}{RESET}"
+        self.logger.info(logmsg)
+
+        # Fetch target message
+        origin: TextChannel = ctx.message.channel
+        try:
+            message: Message = await origin.fetch_message(msg_id)
+
+        except discord.NotFound:
+            logmsg = f"Message {msg_id} could not be found in {origin} @ origin.guild."
+            self.logger.error(logmsg)
+            return
+
+        except discord.Forbidden:
+            logmsg = f"Message {msg_id} could not be found in {origin} @ origin.guild."
+            self.logger.error(logmsg)
+            return
+
+        self.logger.debug(f"target_message: {message}")
+
+        # Build embed based on the target message
+        embed = Embed(color=0x00dee9, description=message.content)
+        embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+        # embed.set_thumbnail(url=origin.avatar_url)
+
+        # Send the copied message
+        await destination.send(embed=embed)
+
+        if (delete):
+            await message.delete()
