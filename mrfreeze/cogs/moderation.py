@@ -785,56 +785,56 @@ class Moderation(CogBase):
     @check(checks.is_mod)
     async def copy(self, ctx: Context, destination: TextChannel, *msg_ids: int) -> None:
         """Copy specified message(s) to specified channel."""
-        for msg_id in msg_ids:
-            await self.copy_helper(ctx, destination, msg_id)
+        messages: List[Optional[Message]]
+        messages = [ await self.find_message(ctx, id) for id in msg_ids ]
+
+        for message in messages:
+            if message is None:
+                continue  # Skip if the original message was not found.
+
+            await self.repost_message(message, destination)
 
     @discord.ext.commands.command(name="move")
     @check(checks.is_mod)
     async def move(self, ctx: Context, destination: TextChannel, *msg_ids: int) -> None:
         """Copy specified message(s) to specified channel, then delete them."""
-        for msg_id in msg_ids:
-            await self.copy_helper(ctx, destination, msg_id, delete=True)
+        messages: List[Optional[Message]]
+        messages = [ await self.find_message(ctx, id) for id in msg_ids ]
 
-    # Helper method for copying a single message.
-    async def copy_helper(
-        self,
-        ctx: Context,
-        destination: TextChannel,
-        msg_id: int,
-        delete: bool = False
-    ) -> None:
-        """Copy specified message to specified channel."""
-        self.logger.debug(f"ctx: {ctx.__dict__}")
+        for message in messages:
+            if message is None:
+                continue  # Skip if the original message was not found.
 
-        logmsg  = f"Copying post {msg_id} to "
-        logmsg += f"{GREEN_B}{destination} {CYAN}in "
-        logmsg += f"{RED_B}{destination.guild}{RESET}"
-        self.logger.info(logmsg)
+            repost = await self.repost_message(message, destination)
+            if repost is None:
+                continue  # Don't delete original if message couldn't be reposted.
 
-        # Fetch target message
-        origin: TextChannel = ctx.message.channel
-        try:
-            message: Message = await origin.fetch_message(msg_id)
-
-        except discord.NotFound:
-            logmsg = f"Message {msg_id} could not be found in {origin} @ origin.guild."
-            self.logger.error(logmsg)
-            return
-
-        except discord.Forbidden:
-            logmsg = f"Message {msg_id} could not be found in {origin} @ origin.guild."
-            self.logger.error(logmsg)
-            return
-
-        self.logger.debug(f"target_message: {message}")
-
-        # Build embed based on the target message
-        embed = Embed(color=0x00dee9, description=message.content)
-        embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
-        # embed.set_thumbnail(url=origin.avatar_url)
-
-        # Send the copied message
-        await destination.send(embed=embed)
-
-        if (delete):
             await message.delete()
+
+    async def find_message(self, ctx: Context, id: int) -> Optional[Message]:
+        """Find the specified message in the channel defined by the context."""
+        channel: TextChannel
+        message: Optional[Message]
+
+        channel = ctx.channel
+        try:
+            message = await channel.fetch_message(id)
+        except Exception:
+            message = None
+
+        return message
+
+    async def repost_message(self, msg: Message, channel: TextChannel) -> Optional[Message]:
+        """Repost the message in the designated channel."""
+        embed: Embed
+        content: str = msg.content
+        name: str = msg.author.name
+        avatar: str = msg.author.avatar_url
+
+        embed = Embed(color=0x00dee9, description = content)
+        embed.set_author(name = name, icon_url = avatar)
+
+        try:
+            return await channel.send(embed=embed)
+        except Exception:
+            return None
