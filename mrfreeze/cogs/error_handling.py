@@ -1,5 +1,6 @@
 """Cog for handling various errors that might arise when executing commands."""
 
+import logging
 import sys
 import traceback
 
@@ -34,55 +35,62 @@ class ErrorHandler(CogBase):
 
     def __init__(self, bot: MrFreeze) -> None:
         self.bot = bot
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     @CogBase.listener()
     async def on_command_error(self, ctx: Context, error: Exception) -> None:
         """Determine what should happen when we encounter a command error."""
-        time: str = self.current_time()
         username: str = f"{ctx.author.name}#{ctx.author.discriminator}"
         mention: str = ctx.author.mention
         invocation: str = f"{WHITE_B}{ctx.prefix}{ctx.invoked_with}"
+        status: str
 
         if isinstance(error, MuteCheckFailure):
-            status = f"{time} {RED_B}MrFreeze is muted: {CYAN}{error}{RESET}"
-            print(status)
+            status = f"{RED_B}MrFreeze is muted: {CYAN}{error}{RESET}"
+            self.logger.error(status)
+            return
 
         elif isinstance(error, CheckFailure):
-            status  = f"{time} {RED_B}Check failure: {CYAN}"
+            status  = f"{RED_B}Check failure: {CYAN}"
             status += f"{username} tried to illegaly invoke {invocation}{RESET}"
-            print(status)
+            self.logger.error(status)
+            return
 
         elif isinstance(error, MissingRequiredArgument):
-            print(error)
-            status  = f"{time} {RED_B}Check failure: {CYAN}"
+            status  = f"{RED_B}Check failure: {CYAN}"
             status += f"{username} tried executing {invocation} with too "
             status += f"few arguments{RESET}"
-            print(status)
+            self.logger.error(status)
 
             reply  = f"{ctx.author.mention} You need to specify some arguments to invoke "
             reply += f"{ctx.prefix}{ctx.invoked_with}, or I won't know what to do."
             await ctx.send(reply)
+            return
 
         elif isinstance(error, BadArgument):
-            status  = f"{time} {RED_B}Bad arguments: {CYAN}{username} "
+            status  = f"{RED_B}Bad arguments: {CYAN}{username} "
             status += f"while using command {invocation}{RESET}"
-            print(status)
+            self.logger.error(status)
+            self.logger.error(error)
 
             reply = f"{mention} That's not quite the information I need to execute that command."
             await ctx.send(reply)
+            return
 
         elif isinstance(error, CommandNotFound):
-            status  = f"{time} {RED_B}Command not found: {CYAN}"
+            status  = f"{RED_B}Command not found: {CYAN}"
             status += f"{username} tried to use {invocation}{RESET}"
-            print(status)
+            self.logger.error(status)
+            return
 
         elif isinstance(error, CommandInvokeError):
             # On Timeout Error, a CommandInvokeError containing the original
             # error is returned. Not the original TimeoutError itself.
             error_name: str = type(error.original).__name__
-            status  = f"{time} {RED_B}{error_name}: {CYAN}"
+            status  = f"{RED_B}{error_name}: {CYAN}"
             status += f"{username} tried to use {invocation}{RESET}"
-            print(status)
+            self.logger.error(status)
+            return
 
         elif isinstance(error, CommandOnCooldown):
             if error.cooldown.rate == 1:
@@ -133,9 +141,9 @@ class ErrorHandler(CogBase):
 
         else:
             # Who knows what happened? The stack trace, that's who.
-            status  = f"{time} {RED_B}Unclassified error: "
+            status  = f"{RED_B}Unclassified error: "
             status += f"{WHITE_B}{error}{RESET}"
-            print(status)
+            self.logger.error(status)
             traceback.print_exception(
                 type(error),
                 error,
