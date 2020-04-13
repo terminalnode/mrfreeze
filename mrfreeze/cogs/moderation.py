@@ -788,10 +788,18 @@ class Moderation(CogBase):
         messages: List[Optional[Message]]
         messages = [ await self.find_message(ctx, id) for id in msg_ids ]
 
-        for message in messages:
-            if message is None:
-                continue  # Skip if the original message was not found.
+        if None in messages:
+            msg = f"{ctx.author.mention} failed to find one or more "
+            msg += "of the specified posts. Operation has been cancelled."
+            await ctx.send(msg)
 
+            log = f"Message copy by {ctx.author.name} in #{ctx.channel.name} "
+            log += f"@ {ctx.guild.name} failed. Could not find all the messages."
+            self.logger.info(log)
+
+            return
+
+        for message in messages:
             await self.repost_message(message, destination)
 
     @discord.ext.commands.command(name="move")
@@ -801,15 +809,23 @@ class Moderation(CogBase):
         messages: List[Optional[Message]]
         messages = [ await self.find_message(ctx, id) for id in msg_ids ]
 
+        if None in messages:
+            msg = f"{ctx.author.mention} failed to find one or more "
+            msg += "of the specified posts. Operation has been cancelled."
+            await ctx.send(msg)
+
+            log = f"Message move by {ctx.author.name} in #{ctx.channel.name} "
+            log += f"@ {ctx.guild.name} failed. Could not find all the messages."
+            self.logger.info(log)
+
+            return
+
         for message in messages:
-            if message is None:
-                continue  # Skip if the original message was not found.
-
             repost = await self.repost_message(message, destination)
-            if repost is None:
-                continue  # Don't delete original if message couldn't be reposted.
 
-            await message.delete()
+            # We know message is not None, but mypy doesn't.
+            if repost is not None and message is not None:
+                await message.delete()
 
     async def find_message(self, ctx: Context, id: int) -> Optional[Message]:
         """Find the specified message in the channel defined by the context."""
