@@ -2,10 +2,10 @@
 
 import logging
 
-from .abc_table import ABCTable
+from .abc_table_dict import ABCTableDict
 
 
-class MuteRoles(ABCTable):
+class MuteRoles(ABCTableDict):
     """Class for handling the mute_roles table."""
 
     def __init__(self, dbpath: str, logger: logging.Logger) -> None:

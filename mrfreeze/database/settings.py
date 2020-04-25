@@ -8,8 +8,9 @@ and provides a single interface for working with them all.
 import logging
 from typing import List
 
-from .tables.abc_table import ABCTable
+from .tables.abc_table_base import ABCTableBase
 from .tables.freeze_mutes import FreezeMutes
+from .tables.inkcyclopedia import InkcyclopediaInks
 from .tables.mute_channels import MuteChannels
 from .tables.mute_roles import MuteRoles
 from .tables.trash_channels import TrashChannels
@@ -20,24 +21,29 @@ class Settings:
 
     def __init__(self) -> None:
         self.dbpath = "settings.db"
-        self.tables: List[ABCTable] = list()
+        self.tables: List[ABCTableBase] = list()
         self.logger = logging.getLogger(self.__class__.__name__)
 
         # Initialize the tables
-        self.logger.info("Initializing tables")
+        self.logger.info("Instantiating tables")
         self.freeze_mutes   = FreezeMutes(self.dbpath, self.logger)
+        self.inkcyclopedia  = InkcyclopediaInks(self.dbpath, self.logger)
         self.mute_channels  = MuteChannels(self.dbpath, self.logger)
         self.mute_roles     = MuteRoles(self.dbpath, self.logger)
         self.trash_channels = TrashChannels(self.dbpath, self.logger)
+        self.logger.info("All tables instantiated")
 
         # Add tables to self.tables
         self.tables.append(self.freeze_mutes)
+        self.tables.append(self.inkcyclopedia)
         self.tables.append(self.mute_channels)
         self.tables.append(self.mute_roles)
         self.tables.append(self.trash_channels)
 
         # Initialize all the tables
+        self.logger.info("Initializing tables")
         self.initialize()
+        self.logger.info("All tables initialized")
 
         # Link all the methods
         # Freeze Mutes

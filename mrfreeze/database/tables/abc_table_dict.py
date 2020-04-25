@@ -2,7 +2,7 @@
 
 import logging
 import sqlite3
-from abc import ABCMeta
+from typing import Any
 from typing import Dict
 from typing import Optional
 from typing import Union
@@ -13,11 +13,12 @@ from discord import TextChannel
 
 from mrfreeze.colors import GREEN, MAGENTA, RED, RESET, YELLOW_B
 
+from .abc_table_base import ABCTableBase
 from ..helpers import db_connect
 from ..helpers import db_execute
 
 
-class ABCTable(metaclass=ABCMeta):
+class ABCTableDict(ABCTableBase):
     """
     Abstract base class for Settings.
 
@@ -28,9 +29,9 @@ class ABCTable(metaclass=ABCMeta):
     # General properties
     name: str
     table_name: str
-    dict: Optional[Dict[int, Union[bool, int]]]
     dbpath: str
     logger: logging.Logger
+    dict: Optional[Dict[Any, Any]]
 
     # SQL commands
     select_all: str

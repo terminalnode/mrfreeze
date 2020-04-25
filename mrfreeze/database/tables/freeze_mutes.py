@@ -4,10 +4,10 @@ import logging
 
 from discord import Guild
 
-from .abc_table import ABCTable
+from .abc_table_dict import ABCTableDict
 
 
-class FreezeMutes(ABCTable):
+class FreezeMutes(ABCTableDict):
     """Class for handling the freeze_mutes table."""
 
     def __init__(self, dbpath: str, logger: logging.Logger) -> None:
