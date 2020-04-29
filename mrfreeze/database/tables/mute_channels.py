@@ -14,6 +14,8 @@ class MuteChannels(ABCTableDict):
         self.table_name = "mute_channels"
         self.dict = None
         self.logger = logger
+        self.primary_keys = ("server",)
+        self.secondary_keys = ("channel",)
 
         # SQL commands
         self.select_all = f"SELECT server, channel FROM {self.table_name}"
