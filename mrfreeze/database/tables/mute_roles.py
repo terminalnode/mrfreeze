@@ -14,14 +14,17 @@ class MuteRoles(ABCTableDict):
         self.table_name = "mute_roles"
         self.dict = None
         self.logger = logger
+        self.primary_keys = ("server",)
+        self.secondary_keys = ("role",)
 
         # SQL commands
         self.select_all = f"SELECT server, role FROM {self.table_name}"
 
         self.insert = f"""
-        INSERT INTO {self.table_name} (server, role) VALUES (?, ?)
-            ON CONFLICT(server) DO UPDATE SET role = ?
-        ;"""
+        INSERT INTO {self.table_name}
+            (server, role) VALUES (?, ?)
+        ON CONFLICT(server) DO UPDATE SET role = ?;
+        """
 
         self.table = f"""
         CREATE TABLE IF NOT EXISTS {self.table_name} (

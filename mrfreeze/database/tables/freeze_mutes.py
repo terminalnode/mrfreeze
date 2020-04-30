@@ -16,14 +16,17 @@ class FreezeMutes(ABCTableDict):
         self.table_name = "freeze_mutes"
         self.dict = None
         self.logger = logger
+        self.primary_keys = ("server",)
+        self.secondary_keys = ("muted",)
 
         # SQL commands
         self.select_all = f"SELECT server, muted FROM {self.table_name}"
 
         self.insert = f"""
-        INSERT INTO {self.table_name} (server, muted) VALUES (?, ?)
-            ON CONFLICT(server) DO UPDATE SET muted = ?
-        ;"""
+        INSERT INTO {self.table_name}
+            (server, muted) VALUES (?, ?)
+        ON CONFLICT(server) DO UPDATE SET muted = ?;
+        """
 
         self.table = f"""
         CREATE TABLE IF NOT EXISTS {self.table_name} (

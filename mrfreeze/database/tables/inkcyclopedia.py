@@ -14,14 +14,17 @@ class InkcyclopediaInks(ABCTableDict):
         self.table_name = "inkcyclopedia_inks"
         self.dict = None
         self.logger = logger
+        self.primary_keys = ("name",)
+        self.secondary_keys = ("url", "regex")
 
         # SQL commands
         self.select_all = f"SELECT name, url, regex FROM {self.table_name}"
 
         self.insert = f"""
-        INSERT INTO {self.table_name} (name, url, regex) VALUES (?, ?, ?)
-            ON CONFLICT(name) DO UPDATE SET url = ?, regex = ?
-        ;"""
+        INSERT INTO {self.table_name}
+            (name, url, regex) VALUES (?, ?, ?)
+        ON CONFLICT(name) DO UPDATE SET url = ?, regex = ?;
+        """
 
         self.table = f"""
         CREATE TABLE IF NOT EXISTS {self.table_name} (

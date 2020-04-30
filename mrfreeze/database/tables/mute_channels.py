@@ -21,9 +21,10 @@ class MuteChannels(ABCTableDict):
         self.select_all = f"SELECT server, channel FROM {self.table_name}"
 
         self.insert = f"""
-        INSERT INTO {self.table_name} (server, channel) VALUES (?, ?)
-            ON CONFLICT(server) DO UPDATE SET channel = ?
-        ;"""
+        INSERT INTO {self.table_name}
+            (server, channel) VALUES (?, ?)
+        ON CONFLICT(server) DO UPDATE SET channel = ?;
+        """
 
         self.table = f"""
         CREATE TABLE IF NOT EXISTS {self.table_name} (

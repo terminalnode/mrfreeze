@@ -34,7 +34,6 @@ class ABCTableBase(metaclass=ABCMeta):
     select_all: str
     insert: str
     table: str
-    upsert_query: str
 
     # Functions
     @abstractmethod
@@ -51,7 +50,7 @@ class ABCTableBase(metaclass=ABCMeta):
         """Load all data from the database into memory."""
         pass
 
-    def update(self, pairs: Dict[Any, Any]) -> bool:
+    def update(self, pairs: Dict[Any, Any], accept_none: bool = False) -> bool:
         """
         Update (or insert) something into the database.
 
@@ -59,23 +58,32 @@ class ABCTableBase(metaclass=ABCMeta):
         how the operation is carried out. Each table will have a set of primary
         and a set of secondary keys. The primary keys are basically the primary
         keys of the table, used for the ON CONFLICT part of the insert.
+
+        The function never accepts None in the primary keys, and also doesn't
+        accept None is secondary keys unless accept_none is set to True.
         """
         primary_values = tuple([ pairs[v] for v in self.primary_keys ])
         secondary_values = tuple([ pairs[v] for v in self.secondary_keys ])
         value_fill = primary_values + secondary_values + secondary_values
 
-        query = db_execute(self.dbpath, self.upsert_query, value_fill)
-
-        if query.error is not None:
+        # Check that all required values are filled in
+        if None in primary_values or (not accept_none and None in secondary_values):
             self.errorlog(
-                "failed to update/insert into table")
+                "missing one or more values, can't upsert")
             return False
         else:
-            self.infolog(
-                "update successful")
-            return True
+            query = db_execute(self.dbpath, self.insert, value_fill)
 
-        return False
+        # Check that query was executed successfully
+        if query.error is not None:
+            self.errorlog(
+                f"failed to upsert new data: {query.error}")
+            return False
+
+        # Life is good, all seems well
+        self.infolog(
+            "upsert successful")
+        return True
 
     def create_table(self) -> None:
         """Create the table for a given module."""
