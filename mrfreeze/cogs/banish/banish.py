@@ -201,10 +201,11 @@ class BanishAndRegion(CogBase):
                 if mute.until is None:
                     continue
 
-                member = mute.member
                 until = mute.until
 
                 if until < current_time:
+                    # Need to refresh the member to get their latest roles
+                    member = await server.fetch_member(mute.member.id)
                     diff = self.bot.parse_timedelta(current_time - until)
                     if diff == "":
                         diff = "now"
