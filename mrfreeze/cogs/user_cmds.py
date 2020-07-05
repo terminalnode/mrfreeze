@@ -18,30 +18,10 @@ class UserCommands(CogBase):
     """
     def __init__(self, bot):
         self.bot = bot
-        self.region_ids = dict()
 
     @CogBase.listener()
     async def on_ready(self):
-        # Creating dict of all the region role ids
-        for server in self.bot.guilds:
-            self.region_ids[server.id] = {
-                "Africa":
-                    discord.utils.get(server.roles, name='Africa'),
-                "North America":
-                    discord.utils.get(server.roles, name='North America'),
-                "South America":
-                    discord.utils.get(server.roles, name='South America'),
-                "Asia":
-                    discord.utils.get(server.roles, name='Asia'),
-                "Europe":
-                    discord.utils.get(server.roles, name='Europe'),
-                "Middle East":
-                    discord.utils.get(server.roles, name='Middle East'),
-                "Oceania":
-                    discord.utils.get(server.roles, name='Oceania'),
-                "Antarctica":
-                    discord.utils.get(server.roles, name='Antarctica')
-            }
+        pass
 
     @discord.ext.commands.command(name="praise")
     async def _praise(self, ctx, *args):
@@ -146,11 +126,6 @@ class UserCommands(CogBase):
         rows[0] = rows[0].replace("!vote ", "")
         reacts = [find_custom_emoji(row) for row in rows]
         await add_reacts(reacts)
-
-    @discord.ext.commands.command(name='region', aliases=['regions'])
-    async def _region(self, ctx, *args):
-        """Assign yourself a colourful regional role."""
-        await ctx.send("!region is currently out of service.")
 
     @discord.ext.commands.command(name="activity",
                                   aliases=["listen", "listening",

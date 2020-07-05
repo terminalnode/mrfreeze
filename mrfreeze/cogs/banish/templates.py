@@ -1,6 +1,9 @@
+"""Various string templates used for banish messages."""
+
 # Required to be able to leave blanks in the template responses.
 from string import Template
-from mrfreeze.cogs.banish.enums import MuteType, MuteStr
+
+from mrfreeze.cogs.banish.enums import MuteStr, MuteType
 
 # The dict in which we'll save all of these templates
 templates = dict()

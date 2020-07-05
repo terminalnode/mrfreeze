@@ -19,11 +19,10 @@ from discord import Guild
 from mrfreeze import checks
 from mrfreeze import colors
 from mrfreeze.bot import MrFreeze
-from mrfreeze.cogs.cogbase import CogBase
-
-from mrfreeze.cogs.banish.enums import MuteType, MuteStr
-from mrfreeze.cogs.banish.templates import templates
 from mrfreeze.cogs.banish import mute_db, region_db
+from mrfreeze.cogs.banish.enums import MuteStr, MuteType
+from mrfreeze.cogs.banish.templates import templates
+from mrfreeze.cogs.cogbase import CogBase
 
 
 banish_aliases = ["unbanish", "microbanish",
@@ -50,10 +49,36 @@ def setup(bot: MrFreeze) -> None:
 
 
 class BanishAndRegion(CogBase):
-    """Good mod! Read the manual! Or if you're not mod - sod off!"""
+    """Good mod! Read the manual! Or if you're not mod - sod off."""
 
     def __init__(self, bot: MrFreeze, mdbname: str = "mutes", rdbname: str = "regions") -> None:
         self.bot = bot
+        self.regions = dict()
+
+        self.antarctica_spellings = (
+            "anarctica", "antarctica", "antartica", "anartica",
+            "anctartica", "anctarctica", "antacrtica")
+
+        self.regional_aliases = {
+            "Asia": [
+                "asia", "china", "japan", "thailand", "korea"
+            ], "Europe": [
+                "europe", "united kingdom", "gb", "great britain", "scandinavia", "germany",
+                "sweden", "norway", "spain", "france", "italy", "ireland", "poland", "russia",
+                "finland", "estonia", "scotland", "scottland", "portugal"
+            ], "North America": [
+                "north america", "us", "canada", "mexico", "na", "usa", "united states"
+            ], "Africa": [
+                "africa", "kongo", "uganda"
+            ], "Oceania": [
+                "oceania", "australia", "new zealand"
+            ], "South America": [
+                "south america", "argentina", "chile", "brazil", "peru"
+            ], "Middle East": [
+                "middleeast", "middle-east", "midleeast", "midle-east", "middleast", "midleast",
+                "mesa", "saudi", "saudiarabia", "arabia", "arabian", "middle east", "midle east"
+            ]
+        }
 
         # Server setting names
         # Mute interval governs how often to check for unmutes.
@@ -151,6 +176,15 @@ class BanishAndRegion(CogBase):
                 self.self_mute_time_dict[server.id] = int(self_mute_time)
             else:
                 self.self_mute_time_dict[server.id] = self.default_self_mute_time
+
+            # Construct region dict
+            self.regions[server.id] = dict()
+            for region in self.regional_aliases.keys():
+                region_role = discord.utils.get(server.roles, name=region)
+                if region_role:
+                    self.regions[server.id][region] = region_role.id
+                else:
+                    self.regions[server.id][region] = None
 
     async def unbanish_loop(self, server: Guild) -> None:
         """Check for people to unbanish every self.banish_interval seconds."""
@@ -292,16 +326,22 @@ class BanishAndRegion(CogBase):
         usr = [ user for user in mentions if user not in mod and user != self.bot.user ]
 
         invocation = ctx.invoked_with.lower()
-        if invocation[:2] == "un":  unmute = True
-        else:                       unmute = False
+        if invocation[:2] == "un":
+            unmute = True
+        else:
+            unmute = False
 
         is_super = 'super' in invocation
         is_mega = 'mega' in invocation
 
-        if invocation == "banish":          invocation = MuteType.BANISH
-        elif invocation in banish_aliases:  invocation = MuteType.BANISH
-        elif invocation in hogtie_aliases:  invocation = MuteType.HOGTIE
-        elif invocation in mute_aliases:    invocation = MuteType.MUTE
+        if invocation == "banish":
+            invocation = MuteType.BANISH
+        elif invocation in banish_aliases:
+            invocation = MuteType.BANISH
+        elif invocation in hogtie_aliases:
+            invocation = MuteType.HOGTIE
+        elif invocation in mute_aliases:
+            invocation = MuteType.MUTE
 
         # Extract durations from statement
         # If no time is stated both of these will be None
@@ -317,8 +357,10 @@ class BanishAndRegion(CogBase):
             # (or 365 days because timedelta doesn't support years)
             current_time = datetime.datetime.now()
             try:
-                if is_super:    duration += datetime.timedelta(weeks=1)
-                elif is_mega:   duration += datetime.timedelta(days=365)
+                if is_super:
+                    duration += datetime.timedelta(weeks=1)
+                elif is_mega:
+                    duration += datetime.timedelta(days=365)
                 end_date = current_time + duration
             except OverflowError:
                 end_date = datetime.datetime.max
@@ -329,16 +371,22 @@ class BanishAndRegion(CogBase):
 
         elif bot and not unmute:
             # Freeze mutes: FREEZE, FREEZE_SELF, FREEZE_OTHERS
-            if len(mentions) == 1:              template = MuteStr.FREEZE
-            elif len(mentions) == 2 and slf:    template = MuteStr.FREEZE_SELF
-            else:                               template = MuteStr.FREEZE_OTHERS
+            if len(mentions) == 1:
+                template = MuteStr.FREEZE
+            elif len(mentions) == 2 and slf:
+                template = MuteStr.FREEZE_SELF
+            else:
+                template = MuteStr.FREEZE_OTHERS
             fails_list = usr + mod
 
         elif mod and not unmute:
             # Mod mutes: SELF, MOD, MODS
-            if len(mentions) == 1 and slf:      template = MuteStr.SELF
-            elif len(mentions) == 1:            template = MuteStr.MOD
-            else:                               template = MuteStr.MODS
+            if len(mentions) == 1 and slf:
+                template = MuteStr.SELF
+            elif len(mentions) == 1:
+                template = MuteStr.MOD
+            else:
+                template = MuteStr.MODS
             fails_list = mod
 
         else:
@@ -346,15 +394,25 @@ class BanishAndRegion(CogBase):
             # SINGLE, MULTI, FAIL, FAILS, SINGLE_FAIL, SINGLE_FAILS, MULTI_FAIL, MULTI_FAILS
             for member in usr:
                 if unmute:
-                    error = await mute_db.carry_out_unbanish(self.bot, self.mdbname, member)
+                    error = await mute_db.carry_out_unbanish(
+                        self.bot,
+                        self.mdbname,
+                        member)
                 else:
-                    error = await mute_db.carry_out_banish(self.bot, self.mdbname, member, end_date)
+                    error = await mute_db.carry_out_banish(
+                        self.bot,
+                        self.mdbname,
+                        member,
+                        end_date)
 
                 if isinstance(error, Exception):
                     fails_list.append(member)
-                    if isinstance(error, discord.HTTPException):    http_exception = True
-                    elif isinstance(error, discord.Forbidden):      forbidden_exception = True
-                    else:                                           other_exception = True
+                    if isinstance(error, discord.HTTPException):
+                        http_exception = True
+                    elif isinstance(error, discord.Forbidden):
+                        forbidden_exception = True
+                    else:
+                        other_exception = True
 
                 else:
                     success_list.append(member)
@@ -372,22 +430,38 @@ class BanishAndRegion(CogBase):
             fail        = (failures == 1)
             fails       = (failures > 1)
 
-            if single and no_fails and unmute:      template = MuteStr.UNSINGLE
-            elif single and no_fails:               template = MuteStr.SINGLE
-            elif multi and no_fails and unmute:     template = MuteStr.UNMULTI
-            elif multi and no_fails:                template = MuteStr.MULTI
-            elif fail and no_success and unmute:    template = MuteStr.UNFAIL
-            elif fail and no_success:               template = MuteStr.FAIL
-            elif fails and no_success and unmute:   template = MuteStr.UNFAILS
-            elif fails and no_success:              template = MuteStr.FAILS
-            elif single and fail and unmute:        template = MuteStr.UNSINGLE_FAIL
-            elif single and fail:                   template = MuteStr.SINGLE_FAIL
-            elif single and fails and unmute:       template = MuteStr.UNSINGLE_FAILS
-            elif single and fails:                  template = MuteStr.SINGLE_FAILS
-            elif multi and fail and unmute:         template = MuteStr.UNMULTI_FAIL
-            elif multi and fail:                    template = MuteStr.MULTI_FAIL
-            elif multi and fails and unmute:        template = MuteStr.UNMULTI_FAILS
-            elif multi and fails:                   template = MuteStr.MULTI_FAILS
+            if single and no_fails and unmute:
+                template = MuteStr.UNSINGLE
+            elif single and no_fails:
+                template = MuteStr.SINGLE
+            elif multi and no_fails and unmute:
+                template = MuteStr.UNMULTI
+            elif multi and no_fails:
+                template = MuteStr.MULTI
+            elif fail and no_success and unmute:
+                template = MuteStr.UNFAIL
+            elif fail and no_success:
+                template = MuteStr.FAIL
+            elif fails and no_success and unmute:
+                template = MuteStr.UNFAILS
+            elif fails and no_success:
+                template = MuteStr.FAILS
+            elif single and fail and unmute:
+                template = MuteStr.UNSINGLE_FAIL
+            elif single and fail:
+                template = MuteStr.SINGLE_FAIL
+            elif single and fails and unmute:
+                template = MuteStr.UNSINGLE_FAILS
+            elif single and fails:
+                template = MuteStr.SINGLE_FAILS
+            elif multi and fail and unmute:
+                template = MuteStr.UNMULTI_FAIL
+            elif multi and fail:
+                template = MuteStr.MULTI_FAIL
+            elif multi and fails and unmute:
+                template = MuteStr.UNMULTI_FAILS
+            elif multi and fails:
+                template = MuteStr.MULTI_FAILS
 
         # TESTING THINGIE - leave commented unless testing
         # fails_list = success_list
@@ -413,13 +487,20 @@ class BanishAndRegion(CogBase):
         fails_list = self.mentions_list(fails_list)
         error = str()
 
-        if http_exception and forbidden_exception and other_exception:  error = "**a wild mix of crazy exceptions**"
-        elif http_exception and forbidden_exception:                    error = "**a mix of HTTP exception and lack of privilegies**"
-        elif http_exception and other_exception:                        error = "**a wild mix of HTTP exception and other stuff**"
-        elif forbidden_exception and other_exception:                   error = "**a wild mix of lacking privilegies and some other stuff**"
-        elif http_exception:                                            error = "**an HTTP exception**"
-        elif forbidden_exception:                                       error = "**a lack of privilegies**"
-        else:                                                           error = "**an unidentified exception**"
+        if http_exception and forbidden_exception and other_exception:
+            error = "**a wild mix of crazy exceptions**"
+        elif http_exception and forbidden_exception:
+            error = "**a mix of HTTP exception and lack of privilegies**"
+        elif http_exception and other_exception:
+            error = "**a wild mix of HTTP exception and other stuff**"
+        elif forbidden_exception and other_exception:
+            error = "**a wild mix of lacking privilegies and some other stuff**"
+        elif http_exception:
+            error = "**an HTTP exception**"
+        elif forbidden_exception:
+            error = "**a lack of privilegies**"
+        else:
+            error = "**an unidentified exception**"
 
         # Create string
         timestamp = templates[invocation][MuteStr.TIMESTAMP].substitute(
@@ -663,6 +744,100 @@ class BanishAndRegion(CogBase):
         blacklisted = [ str(ctx.guild.get_member(uid[0])) for uid in result ]
         blacklisted = "\n".join(sorted(blacklisted))
         await ctx.send(f"**{ctx.guild.name}** region blacklist:\n{blacklisted}")
+
+    @discord.ext.commands.command(name="region", aliases=["regions"])
+    async def _region(self, ctx, *args):
+        """Assign yourself a colourful regional role."""
+        args = [ a.lower() for a in args ]
+
+        if len(args) == 0 or "help" in args:
+            msg = "Type !region followed by your region, this will assign you a regional role "
+            msg += "with an associated snazzy colour for your nick. These roles are not "
+            msg += "highlightable and only serve to show people where you're from. \n\n"
+            msg += "The available regions are:\n"
+            msg += " - Asia\n - Europe\n - North America\n - South America\n"
+            msg += " - Africa\n - Oceania\n - Middle East"
+            await ctx.send(msg)
+            return
+
+        if "list" in args:
+            msg = "Available regions:\n"
+            msg += " - Asia\n - Europe\n - North America\n - South America\n"
+            msg += " - Africa\n - Oceania\n - Middle East"
+            await ctx.send(msg)
+            return
+
+        if await self.region_antarctica(ctx, args):
+            return
+
+        await self.set_region(ctx, args)
+
+    async def region_antarctica(self, ctx, args):
+        # Check if the user tried to set region to Antarctica
+        said_antarctica = False
+        for variant in self.antarctica_spellings:
+            if variant in args:
+                said_antarctica = True
+                spelling = variant
+                break
+
+        if not said_antarctica:
+            return False
+
+        # User confirmed to have tried to set region to Antarctica
+        # Initiating punishment
+        reply = f"{ctx.author.mention} is a filthy *LIAR* claiming to live in Antarctica. "
+
+        if spelling == "antarctica":
+            duration = datetime.timedelta(minutes = 10)
+            end_date = datetime.datetime.now() + duration
+            duration = self.bot.parse_timedelta(duration)
+            reply += "I'll give them what they want and banish them to that "
+            reply += "frozen hell for ten minutes!"
+
+        else:
+            duration = datetime.timedelta(minutes = 20)
+            end_date = datetime.datetime.now() + duration
+            duration = self.bot.parse_timedelta(duration)
+            reply += f"What's more, they spelled it *{spelling.capitalize()}* instead of *Antarctica*... "
+            reply += "20 minutes in Penguin school ought to teach them some manners!"
+
+        # Carry out the banish with resulting end date
+        error = await mute_db.carry_out_banish(self.bot, self.mdbname, ctx.author, end_date)
+        if isinstance(error, Exception):
+            reply = f"{ctx.author.mention} is a filthy *LIAR* claiming to live in Antarctica. "
+            reply += "Unfortunately there doesn't seem to be much I can do about that. Not sure "
+            reply += "why. Some kind of system malfunction or whatever."
+
+        await ctx.send(reply)
+        return True
+
+    async def set_region(self, ctx, args):
+        regions = self.regions[ctx.guild.id]
+        author_roles = [ i.id for i in ctx.author.roles if i.name not in regions.keys() ]
+        all_args = " ".join(args)
+
+        found_region = False
+        valid_region = True
+        for region in self.regional_aliases:
+            if found_region:
+                break
+
+            for alias in self.regional_aliases[region]:
+                if alias in all_args:
+                    author_roles.append(regions[region])
+                    valid_region = regions[region] != None
+                    new_role_name = region
+                    found_region = True
+
+        if found_region and valid_region:
+            new_roles = [ discord.Object(id=i) for i in author_roles ]
+            await ctx.author.edit(roles=new_roles)
+            await ctx.send(f"{ctx.author.mention} You've been assigned a new role, welcome to {new_role_name}!")
+        else:
+            msg = f"{ctx.author.mention} I couldn't find a match for {' '.join(args)}.\n"
+            msg += "Please check your spelling or type **!region list** for a list of available regions."
+            await ctx.send(msg)
 
     ###########################################################################
     # Various shenanigans that may need to be implemented into the bot proper #
