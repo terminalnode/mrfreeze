@@ -65,7 +65,7 @@ class PinHandler(CogBase):
                     return
 
             except Exception as e:
-                log = f"Encountered {e} fetching pins from {colors.RED_B}{guild.name} "
+                log = f"Encountered {e} fetching pins from {colors.RED_B}{guild} "
                 log += f"{colors.GREEN_B}{channel.name}{colors.RESET}"
                 self.logger.error(log)
                 pass  # Channel probably got deleted or something.
