@@ -525,7 +525,7 @@ class Moderation(CogBase):
 
         await ctx.send(replystr)
 
-    @command(name='kick')
+    @command(name="kick", aliases=["yeet"])
     @check(checks.is_mod)
     async def _kick(self, ctx: Context, *args: str) -> None:
         """Force a user to leave the server temporarily."""
