@@ -130,8 +130,8 @@ class TemperatureConverter(CogBase):
         # Space or ° mandatory for kelvin to avoid
         # collision with k as in thousand.
         numbers = r"(?:(?:\s|^)-)?\d+(?:[,.]\d+)? ?"
-        celsius = r"°?(?:c|celcius|celsius|civili[sz]ed units?)"
-        fahrenheit = r"°?(?:f|fahrenheit|freedom units?)"
+        celsius = r"°?(?:c|cel|celcius|celsius|civili[sz]ed units?)"
+        fahrenheit = r"°?(?:fah|fahrenheit|freedom units?)"
         degrees = r"°?(?:deg|degrees)"
         kelvin = r"(?:k|kelvin)"
         rankine = r"°?(?:r|rankine)"
