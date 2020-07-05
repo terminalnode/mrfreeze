@@ -43,8 +43,8 @@ class DeparturesAndArrivals(CogBase):
         rules_channel = discord.utils.get(member.guild.channels, name="rules")
 
         msg = f"Welcome to {guild}, {member.mention}!\n"
-        msg += "Please specify your region using `!region <region name>` to get a snazzy color for"
-        msg += "your nickname.\nThe available regions are: Asia, Europe, North America, "
+        msg += "Please specify your region using `!region <region name>` to get a snazzy color "
+        msg += "for your nickname.\nThe available regions are: Asia, Europe, North America, "
         msg += "South America, Africa, Oceania, Middle East and Antarctica."
 
         if rules_channel:
