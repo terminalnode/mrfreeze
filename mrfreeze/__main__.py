@@ -45,7 +45,7 @@ load_cogs = [
     "mrfreeze.cogs.inkcyclopedia",
     "mrfreeze.cogs.error_handling",
     "mrfreeze.cogs.temp_converter",
-    "mrfreeze.cogs.departures",
+    "mrfreeze.cogs.departures_and_arrivals",
     "mrfreeze.cogs.pin_handling",
 
     # Mostly for owner/mods
