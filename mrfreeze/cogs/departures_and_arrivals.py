@@ -20,7 +20,7 @@ class DeparturesAndArrivals(CogBase):
     @CogBase.listener()
     async def on_member_remove(self, member: Member):
         guild_channels: List[TextChannel] = member.guild.text_channels
-        mod_channel: TextChannel = discord.utils.get(guild_channels, name="mod-discussion")
+        mod_channel: TextChannel = discord.utils.get(guild_channels, name="leaving-messages")
         mention: str = member.mention
         username: str = f"{member.name}#{member.discriminator}"
 
