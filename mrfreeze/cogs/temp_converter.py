@@ -32,7 +32,7 @@ class TemperatureConverter(CogBase):
     @CogBase.listener()
     async def on_message(self, message):
         """Look through all messages received for temperature statements."""
-        if message.author.bot:
+        if message.author.bot or self.bot.listener_block_check(message):
             return
 
         ctx = await self.bot.get_context(message)

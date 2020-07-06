@@ -91,6 +91,9 @@ class PinHandler(CogBase):
         happens however, usually the bot will automatically retry again within
         five seconds and fix it.
         """
+        if self.bot.listener_block_check(channel):
+            return
+
         # If the pinsDict isn't done yet, log an error and return.
         if self.pinsDict is None:
             msg = f"{colors.CYAN}The {colors.RED_B}pinsDict "

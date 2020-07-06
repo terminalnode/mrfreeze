@@ -19,6 +19,9 @@ class DeparturesAndArrivals(CogBase):
 
     @CogBase.listener()
     async def on_member_remove(self, member: Member):
+        if self.bot.listener_block_check(member):
+            return
+
         guild_channels: List[TextChannel] = member.guild.text_channels
         mod_channel: TextChannel = discord.utils.get(guild_channels, name="leaving-messages")
         mention: str = member.mention
@@ -38,6 +41,9 @@ class DeparturesAndArrivals(CogBase):
 
     @CogBase.listener()
     async def on_member_join(self, member: Member):
+        if self.bot.listener_block_check(member):
+            return
+
         guild = member.guild.name
         # Penposium rules channel
         rules_channel = discord.utils.get(member.guild.channels, name="rules")

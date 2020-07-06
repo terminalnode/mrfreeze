@@ -17,6 +17,7 @@ from typing import Dict
 from typing import List
 from typing import NamedTuple
 from typing import Optional
+from typing import Union
 
 import discord
 from discord import Guild
@@ -107,9 +108,10 @@ class MrFreeze(commands.Bot):
 
         return True
 
-    def listener_block_check(self, message: Message) -> bool:
+    def listener_block_check(self, message: Union[Message, Member, TextChannel]) -> bool:
+        """Return True if non-private message and freeze is muted on this server."""
         server = message.guild
-        return server and self.settings.is_freeze_muted(server)
+        return bool(server and self.settings.is_freeze_muted(server))
 
     async def on_ready(self) -> None:
         """Set the bot up, print some greeting messages and stuff."""
