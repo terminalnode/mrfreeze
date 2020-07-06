@@ -21,6 +21,7 @@ from typing import Optional
 import discord
 from discord import Guild
 from discord import Member
+from discord import Message
 from discord import Role
 from discord import TextChannel
 from discord.ext import commands
@@ -105,6 +106,10 @@ class MrFreeze(commands.Bot):
             raise MuteCheckFailure(message=f"{author} @ {server}: {command}")
 
         return True
+
+    def listener_block_check(self, message: Message) -> bool:
+        server = message.guild
+        return server and self.settings.is_freeze_muted(server)
 
     async def on_ready(self) -> None:
         """Set the bot up, print some greeting messages and stuff."""
