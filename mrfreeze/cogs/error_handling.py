@@ -18,9 +18,12 @@ import inflect
 from mrfreeze.bot import MrFreeze
 from mrfreeze.checks import MuteCheckFailure
 from mrfreeze.colors import CYAN
+from mrfreeze.colors import CYAN_B
+from mrfreeze.colors import MAGENTA
 from mrfreeze.colors import RED_B
 from mrfreeze.colors import RESET
 from mrfreeze.colors import WHITE_B
+from mrfreeze.colors import YELLOW
 
 from .cogbase import CogBase
 
@@ -46,9 +49,10 @@ class ErrorHandler(CogBase):
         status: str
 
         if isinstance(error, MuteCheckFailure):
-            status = f"{RED_B}MrFreeze is muted: {CYAN}{error}{RESET}"
+            author = f"{YELLOW}{ctx.author} {CYAN_B}@ {MAGENTA}{ctx.guild.name}"
+            command = f"{CYAN_B}{ctx.prefix}{ctx.invoked_with}"
+            status  = f"{RED_B}(Freeze is muted) {CYAN}{author} {command}{RESET}"
             self.logger.error(status)
-            return
 
         elif isinstance(error, CheckFailure):
             status  = f"{RED_B}Check failure: {CYAN}"

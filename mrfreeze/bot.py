@@ -102,9 +102,7 @@ class MrFreeze(commands.Bot):
         command = ctx.command.name
 
         if self.settings.is_freeze_muted(ctx.guild) and command != "freezemute":
-            server = ctx.guild.name
-            author = ctx.author
-            raise MuteCheckFailure(message=f"{author} @ {server}: {command}")
+            raise MuteCheckFailure()
 
         return True
 
