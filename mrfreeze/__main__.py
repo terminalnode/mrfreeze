@@ -21,14 +21,13 @@ logging.basicConfig(level  = logging.WARN,
                     datefmt = "%Y-%m-%d %H:%M:%S")
 
 # Set log levels for MrFreeze modules
-logging.getLogger("mrfreeze").setLevel(logging.INFO)
-logging.getLogger("CommandLogger").setLevel(logging.INFO)
-logging.getLogger("Inkcyclopedia").setLevel(logging.INFO)
-logging.getLogger("MrFreeze").setLevel(logging.INFO)
-logging.getLogger("PinHandler").setLevel(logging.INFO)
-logging.getLogger("Settings").setLevel(logging.INFO)
-logging.getLogger("Moderation").setLevel(logging.INFO)
-logging.getLogger("ErrorHandler").setLevel(logging.INFO)
+logging_modules = [
+    "mrfreeze", "CommandLogger", "Inkcyclopedia", "MrFreeze",
+    "PinHandler", "Settings", "Moderation", "ErrorHandler",
+    "BanishAndRegion"
+]
+for logging_module in logging_modules:
+    logging.getLogger(logging_module).setLevel(logging.INFO)
 
 # Get logger for this module
 logger = logging.getLogger("BotInit")

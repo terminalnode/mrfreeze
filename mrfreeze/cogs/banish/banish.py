@@ -10,16 +10,21 @@ Therefor they're both in a cog separate from everything else.
 
 import asyncio
 import datetime
+import logging
 import random
+from typing import Dict
 from typing import Iterable
+from typing import Optional
+from typing import Tuple
 
 import discord
 from discord import Guild
+from discord.ext.commands import Context
 
 from mrfreeze import checks
 from mrfreeze import colors
 from mrfreeze.bot import MrFreeze
-from mrfreeze.cogs.banish import mute_db, region_db
+from mrfreeze.cogs.banish import mute_db
 from mrfreeze.cogs.banish.enums import MuteStr, MuteType
 from mrfreeze.cogs.banish.templates import templates
 from mrfreeze.cogs.cogbase import CogBase
@@ -53,7 +58,8 @@ class BanishAndRegion(CogBase):
 
     def __init__(self, bot: MrFreeze, mdbname: str = "mutes", rdbname: str = "regions") -> None:
         self.bot = bot
-        self.regions = dict()
+        self.regions: Dict[int, Dict[str, Optional[int]]] = dict()
+        self.logger = logging.getLogger(self.__class__.__name__)
 
         self.antarctica_spellings = (
             "anarctica", "antarctica", "antartica", "anartica",
@@ -84,13 +90,13 @@ class BanishAndRegion(CogBase):
         # Mute interval governs how often to check for unmutes.
         self.mute_interval_name = 'mute_interval'
         self.default_mute_interval = 5
-        self.mute_interval_dict = dict()
+        self.mute_interval_dict: Dict[int, int] = dict()
 
         # Self mute interval governs how long to banish
         # unauthorized uses of !mute/!banish etc
         self.self_mute_time_name = 'self_mute_time'
         self.default_self_mute_time = 20
-        self.self_mute_time_dict = dict()
+        self.self_mute_time_dict: Dict[int, int] = dict()
 
         # Mutes database creation
         self.mdbname = mdbname
@@ -101,33 +107,6 @@ class BanishAndRegion(CogBase):
             until       date,
             CONSTRAINT  server_user PRIMARY KEY (id, server));"""
         bot.db_create(self.bot, self.mdbname, mdbtable)
-
-        # Region database creation
-        self.rdbname = rdbname
-        self.region_table = "region"
-        self.blacklist_table = "blacklist"
-        # Complete list of tables and their rows in this database.
-        # Primary key(s) is marked with an asterisk (*).
-        # Mandatory but not primary keys are marked with a pling (!).
-        # TABLE                 ROWS       TYPE     FUNCTION
-        # self.region_table     role*      integer  Role ID
-        #                       server*    integer  Server ID
-        #                       triggers!  string   String of keywords for region
-        # self.blacklist_table  uid*       integer  User ID
-        #                       sid*       integer  Server ID
-        rdbtable = f"""CREATE TABLE IF NOT EXISTS {self.region_table}(
-            role        integer NOT NULL,
-            server      integer NOT NULL,
-            triggers    str NOT NULL,
-            CONSTRAINT  server_user PRIMARY KEY (role, server));"""
-
-        rdbtable_bl = f"""CREATE TABLE IF NOT EXISTS {self.blacklist_table}(
-            uid         integer NOT NULL,
-            sid         integer NOT NULL,
-            CONSTRAINT  sid_uid PRIMARY KEY (uid, sid));"""
-
-        bot.db_create(self.bot, self.rdbname, rdbtable, comment="region table")
-        bot.db_create(self.bot, self.rdbname, rdbtable_bl, comment="blacklist table")
 
     def word_distance(self, a: str, b: str) -> int:
         """Get the word distance between two words."""
@@ -158,7 +137,13 @@ class BanishAndRegion(CogBase):
         return min(candidates, key=lambda k: self.word_distance(k, input))
 
     @CogBase.listener()
-    async def on_ready(self):
+    async def on_ready(self) -> None:
+        """
+        Once ready, do some setup for all servers.
+
+        This is mostly stuff pertaining to banishes and regions, such as setting up the periodic
+        unbanish and indexing all the servers' regional roles.
+        """
         for server in self.bot.guilds:
             # Set intervals in which to check mutes
             mute_interval = self.bot.read_server_setting(self.bot, server, self.mute_interval_name)
@@ -171,7 +156,11 @@ class BanishAndRegion(CogBase):
             self.bot.add_bg_task(self.unbanish_loop(server), f'unbanish@{server.id}')
 
             # Set how long a member should be punished for after unauthorized !mute usage
-            self_mute_time = self.bot.read_server_setting(self.bot, server, self.self_mute_time_name)
+            self_mute_time = self.bot.read_server_setting(
+                self.bot,
+                server,
+                self.self_mute_time_name
+            )
             if self_mute_time and self_mute_time.isdigit():
                 self.self_mute_time_dict[server.id] = int(self_mute_time)
             else:
@@ -193,55 +182,70 @@ class BanishAndRegion(CogBase):
 
             current_time = datetime.datetime.now()
             server_mutes = mute_db.mdb_fetch(self.bot, self.mdbname, server)
+            server_mutes = [ i for i in server_mutes if i.until is not None ]
+
             mute_role = await self.bot.get_mute_role(server)
             mute_channel = await self.bot.get_mute_channel(server)
             unmuted = list()
 
             for mute in server_mutes:
-                if mute.until is None:
-                    continue
-
-                until = mute.until
-
-                if until < current_time:
+                if mute.until < current_time:
                     # Need to refresh the member to get their latest roles
                     member = await server.fetch_member(mute.member.id)
-                    diff = self.bot.parse_timedelta(current_time - until)
+
+                    # Calculate how late we were in unbanishing
+                    diff = self.bot.parse_timedelta(current_time - mute.until)
                     if diff == "":
                         diff = "now"
                     else:
                         diff = f"{diff} ago"
 
-                    mute_db.mdb_del(self.bot, self.mdbname, member) # Remove from database
+                    # Remove from database
+                    mute_db.mdb_del(self.bot, self.mdbname, member)
+
                     if mute_role in member.roles:
                         try:
                             await member.remove_roles(mute_role)
                             # Members are only considered unmuted if they had the antarctica role
                             unmuted.append(member)
-                        except Exception as e:
-                            print(f"{self.current_time()} {colors.RED_B}Mutes DB:{colors.CYAN} failed to remove " +
-                                f"mute role of{colors.CYAN_B} {member.name}#{member.discriminator} @ {server.name}.\n" +
-                                f"{colors.RED}==> {e}{colors.RESET}")
 
-                    print(f"{self.current_time()} {colors.GREEN_B}Mutes DB:{colors.CYAN} auto-unmuted " +
-                        f"{colors.CYAN_B}{member.name}#{member.discriminator} @ {server.name}." +
-                        f"{colors.YELLOW} (due {diff}){colors.RESET}")
+                            log = f"Auto-unmuted {colors.CYAN_B}{member.name}#"
+                            log += f"{member.discriminator} @ {server.name}."
+                            log += f"{colors.YELLOW} (due {diff}){colors.RESET}"
+                            self.logger.info(log)
+
+                        except Exception as e:
+                            log = f"Failed to remove mute role of {colors.YELLOW}"
+                            log += f"{member.name}#{member.discriminator}"
+                            log += f"{colors.CYAN_B} @ {colors.MAGENTA} {server.name}:"
+                            log += f"\n{colors.RED}==> {colors.RESET}{e}"
+                            self.logger.error(log)
+                    else:
+                        log = f"User {colors.YELLOW}{member.name}#{member.discriminator}"
+                        log += f"{colors.CYAN_B} @ {colors.MAGENTA} {server.name}{colors.CYAN} "
+                        log += f"due for unmute but does not have a mute role!{colors.RESET}"
+                        self.logger.warning(log)
 
             # Time for some great regrets
             if len(unmuted) > 0:
-                unmuted = self.mentions_list(unmuted)
-                if len(unmuted) == 1:
-                    await mute_channel.send(
-                        f"It's with great regret that I must inform you all that {unmuted}'s exile has come to an end."
-                    )
-                else:
-                    await mute_channel.send(
-                        f"It's with great regret that I must inform you all that the exile of {unmuted} has come to an end."
-                    )
+                unmuted_str = self.mentions_list(unmuted)
+                msg = None
 
-    @discord.ext.commands.command(name='banishinterval', aliases=['banishint', 'baninterval', 'banint', 'muteinterval', 'muteint'])
+                if len(unmuted_str) == 1:
+                    msg = "It's with great regret that I must inform you all that "
+                    msg += f"{unmuted_str}'s exile has come to an end."
+                else:
+                    msg = "It's with great regret that I must inform you all that the exile of "
+                    msg += f"{unmuted_str} has come to an end."
+
+                if msg is not None:
+                    await mute_channel.send(msg)
+
+    @discord.ext.commands.command(
+        name="banishinterval",
+        aliases=[ "banishint", "baninterval", "banint", "muteinterval", "muteint" ])
     @discord.ext.commands.check(checks.is_mod)
-    async def _banishinterval(self, ctx, *args):
+    async def _banishinterval(self, ctx: Context, *args: str) -> None:
         author = ctx.author.mention
         server = ctx.guild
         interval = None
@@ -252,28 +256,40 @@ class BanishAndRegion(CogBase):
                 interval = int(arg)
                 break
 
+        reply = None
         if interval is None:
-            await ctx.send(f"{author} You didn't specify a valid interval. Please try again.")
+            reply = f"{author} You didn't specify a valid interval. Please try again."
 
         elif interval == self.mute_interval_dict[server.id]:
-            await ctx.send(f"{author} The interval for this server is already set to {interval}.")
+            reply = f"{author} The interval for this server is already set to {interval}."
 
         elif interval < 5:
-            await ctx.send(f"{author} You greedy little smud you, trying to steal my CPU cycles like that. Minimum interval is 5 seconds.")
+            reply = f"{author} You greedy little smud you, trying to steal my CPU cycles "
+            reply += "like that. Minimum interval is 5 seconds."
 
         else:
             oldinterval = self.mute_interval_dict[server.id]
             self.mute_interval_dict[server.id] = interval
-            setting_saved = self.bot.write_server_setting(self.bot, server, self.mute_interval_name, str(interval))
+            setting_saved = self.bot.write_server_setting(
+                self.bot,
+                server,
+                self.mute_interval_name, str(interval)
+            )
+
             if setting_saved:
-                await ctx.send(f"{author} The interval has been changed from {oldinterval} to {interval} seconds.")
+                reply = f"{author} The interval has been changed from {oldinterval} to "
+                reply += f"{interval} seconds."
             else:
-                await ctx.send(f"{author} The interval has been changed from {oldinterval} to {interval} seconds, *BUT* " +
-                    f"for some reason I was unable to save this setting, so it will be reset to {oldinterval} once I restart.")
+                reply = f"{author} The interval has been changed from {oldinterval} to "
+                reply += f"{interval} seconds, *BUT* for some reason I was unable to save "
+                reply += f"this setting, so it will be reset to {oldinterval} once I restart."
+
+        if reply is not None:
+            await ctx.send(reply)
 
     @discord.ext.commands.command(name='selfmutetime', aliases=['smt', 'selfmute', 'mutetime'])
     @discord.ext.commands.check(checks.is_mod)
-    async def _selfmutetime(self, ctx, *args):
+    async def _selfmutetime(self, ctx: Context, *args: str) -> None:
         author = ctx.author.mention
         server = ctx.guild
         proposed_time = None
@@ -284,32 +300,45 @@ class BanishAndRegion(CogBase):
                 proposed_time = int(arg)
                 break
 
+        msg = None
         if proposed_time is None:
-            await ctx.send(f"{author} Please specify the time in minutes and try again.")
+            msg = f"{author} Please specify the time in minutes and try again."
 
         elif proposed_time == self.self_mute_time_dict[server.id]:
-            await ctx.send(f"{author} The self mute time for this server is already set to {proposed_time}.")
+            msg = f"{author} The self mute time for this server is already set to {proposed_time}."
 
         elif proposed_time == 0:
-            await ctx.send(f"{author} Zero is not a valid self mute time, smud.")
+            msg = f"{author} Zero is not a valid self mute time, smud."
 
         elif proposed_time > 3600 * 24 * 7:
-            await ctx.send(f"{author} I may be evil, but even I think more than a weeks punishment is a bit harsh...")
+            msg = f"{author} I may be evil, but even I think more than a weeks punishment is "
+            msg += "a bit harsh..."
 
         else:
             old_time = self.self_mute_time_dict[server.id]
             self.self_mute_time_dict[server.id] = proposed_time
-            setting_saved = self.bot.write_server_setting(self.bot, server, self.self_mute_time_name, str(proposed_time))
+            setting_saved = self.bot.write_server_setting(
+                self.bot,
+                server,
+                self.self_mute_time_name,
+                str(proposed_time)
+            )
+
             if setting_saved:
-                await ctx.send(f"{author} The self mute time has been changed from {old_time} to {proposed_time} minutes.")
+                msg = f"{author} The self mute time has been changed from {old_time} to "
+                msg += f"{proposed_time} minutes."
             else:
-                await ctx.send(f"{author} The self mute time has been changed from {old_time} to {proposed_time} minutes, *BUT* " +
-                        f"for some reason I was unable to save this setting, so it will be reset to {old_time} once I restart.")
+                msg = f"{author} The self mute time has been changed from {old_time} to "
+                msg += f"{proposed_time} minutes, *BUT* for some reason I was unable to "
+                msg += f"save this setting, so it will be reset to {old_time} once I restart."
+
+        if msg is not None:
+            await ctx.send(msg)
 
     @discord.ext.commands.command(name='banish', aliases=all_aliases)
     @discord.ext.commands.check(checks.is_mod)
-    async def _banish(self, ctx, *args):
-        """Mute one or more users (can only be invoked by mods)"""
+    async def _banish(self, ctx: Context, *args: str) -> None:
+        """Mute one or more users (can only be invoked by mods)."""
         # Lists where we will store our results
         success_list = list()
         fails_list = list()
@@ -484,8 +513,8 @@ class BanishAndRegion(CogBase):
         # other_exception = True
 
         # Turn successes, fails and exceptions into strings
-        success_list = self.mentions_list(success_list)
-        fails_list = self.mentions_list(fails_list)
+        success_str = self.mentions_list(success_list)
+        fails_str = self.mentions_list(fails_list)
         error = str()
 
         if http_exception and forbidden_exception and other_exception:
@@ -505,20 +534,25 @@ class BanishAndRegion(CogBase):
 
         # Create string
         timestamp = templates[invocation][MuteStr.TIMESTAMP].substitute(
-               duration=self.bot.parse_timedelta(duration)
+            duration=self.bot.parse_timedelta(duration)
         )
 
-        reply =f"{ctx.author.mention} " + templates[invocation][template].substitute(
-            author=ctx.author.mention, victims=success_list, fails=fails_list, errors=error, timestamp=timestamp
+        reply = f"{ctx.author.mention} "
+        reply += templates[invocation][template].substitute(
+            author=ctx.author.mention,
+            victims=success_str,
+            fails=fails_str,
+            errors=error,
+            timestamp=timestamp
         )
         await ctx.send(reply)
 
     # This decorator makes it discord.py automatically
     # trigger it when _banish throws an error.
     @_banish.error
-    async def unauthorized_banish(self, ctx, error):
+    async def unauthorized_banish(self, ctx: Context, error: Exception) -> None:
         """
-        Trigger on unauthorized banish, i.e. when a non-administrator try to banish one or more people.
+        Trigger on unauthorized banish, i.e. when a non-administrator try to banish people.
 
         When _banish() encounters an error this method is automatically triggered. If the error
         is an instance of discord.ext.commands.CheckFailure the user will be punished accordingly,
@@ -530,7 +564,6 @@ class BanishAndRegion(CogBase):
         USER_USER     User tried muting other user(s)
         USER_MIXED    User tried musing themselves and other user(s)
         """
-
         if not isinstance(error, discord.ext.commands.CheckFailure):
             # Only run this on Check Failure.
             return
@@ -542,10 +575,14 @@ class BanishAndRegion(CogBase):
         server = ctx.guild
 
         invocation = ctx.invoked_with
-        if invocation == "banish":          invocation = MuteType.BANISH
-        elif invocation in banish_aliases:  invocation = MuteType.BANISH
-        elif invocation in hogtie_aliases:  invocation = MuteType.HOGTIE
-        elif invocation in mute_aliases:    invocation = MuteType.MUTE
+        if invocation == "banish":
+            invocation = MuteType.BANISH
+        elif invocation in banish_aliases:
+            invocation = MuteType.BANISH
+        elif invocation in hogtie_aliases:
+            invocation = MuteType.HOGTIE
+        elif invocation in mute_aliases:
+            invocation = MuteType.MUTE
 
         none     = (len(mentions) == 0)
         selfmute = (len(mentions) == 1 and author in mentions)
@@ -553,10 +590,14 @@ class BanishAndRegion(CogBase):
         user     = (not selfmute and not mix and len(mentions) > 0)
         fails    = self.mentions_list([ mention for mention in mentions if mention != author ])
 
-        if none:        template = MuteStr.USER_NONE
-        elif selfmute:  template = MuteStr.USER_SELF
-        elif user:      template = MuteStr.USER_USER
-        elif mix:       template = MuteStr.USER_MIXED
+        if none:
+            template = MuteStr.USER_NONE
+        elif selfmute:
+            template = MuteStr.USER_SELF
+        elif user:
+            template = MuteStr.USER_USER
+        elif mix:
+            template = MuteStr.USER_MIXED
 
         duration = datetime.timedelta(minutes = self.self_mute_time_dict[server.id])
         end_date = datetime.datetime.now() + duration
@@ -566,27 +607,35 @@ class BanishAndRegion(CogBase):
         error = await mute_db.carry_out_banish(self.bot, self.mdbname, author, end_date)
 
         if isinstance(error, Exception):
-            if isinstance(error, discord.Forbidden):        error = "**a lack of privilegies**"
-            elif isinstance(error, discord.HTTPException):  error = "**an HTTP exception**"
-            else:                                           error = "**an unknown error**"
+            if isinstance(error, discord.Forbidden):
+                error = "**a lack of privilegies**"
+            elif isinstance(error, discord.HTTPException):
+                error = "**an HTTP exception**"
+            else:
+                error = "**an unknown error**"
             template = MuteStr.USER_FAIL
 
-        reply=templates[invocation][template].substitute(
+        reply = templates[invocation][template].substitute(
             author=author.mention, fails=fails, errors=error, timestamp=duration
         )
 
         await ctx.send(reply)
 
     @discord.ext.commands.command(name="roulette")
-    async def roulette(self, ctx, *args):
+    async def roulette(self, ctx: Context, *args: str) -> None:
+        """Roll the dice and test your luck, banish or nothing."""
         member = ctx.author
         mention = member.mention
         http_exception = False
         forbidden_exception = False
         other_exception = False
 
+        penposium = 444289793141112864
+        bot_trash = 471909336377982976
+        bots = 445708393789915146
+
         # Skip if server is Penposium and channel isn't #bot-trash or #bots
-        if ctx.guild.id == 444289793141112864 and ctx.channel.id not in (471909336377982976, 445708393789915146):
+        if ctx.guild.id == penposium and ctx.channel.id not in (bot_trash, bots):
             await ctx.send("Please only use that command in the bot-trash channel... smud.")
             return
 
@@ -596,47 +645,52 @@ class BanishAndRegion(CogBase):
             banish_time = random.randint(1, 5)
             duration = datetime.timedelta(minutes = banish_time)
             end_date = datetime.datetime.now() + duration
-            reply = "I should probably say something now... but I don't know what."
+            msg = "I should probably say something now... but I don't know what."
 
             if banish_time == 1:
-                reply = f"{mention} rolls the dice, the gun doesn't fire but somehow "
-                reply += "they manage to hurt themselves with it anyway. A minute in "
-                reply += "Antarctica and they'll be good as new!"
+                msg = f"{mention} rolls the dice, the gun doesn't fire but somehow "
+                msg += "they manage to hurt themselves with it anyway. A minute in "
+                msg += "Antarctica and they'll be good as new!"
 
             elif banish_time == 2:
-                reply = f"{mention} rolls the dice, but the gun misfires and explodes in "
-                reply += "their hand. Better put some ice on that, should be fine in 2 minutes."
+                msg = f"{mention} rolls the dice, but the gun misfires and explodes in "
+                msg += "their hand. Better put some ice on that, should be fine in 2 minutes."
 
             elif banish_time == 3:
-                reply = f"{mention} rolls the dice, slips and shoots themselves in the leg. "
-                reply += "The nearest hospital they can afford is in Antarctica, where "
-                reply += "they will be spending the next 3 minutes."
+                msg = f"{mention} rolls the dice, slips and shoots themselves in the leg. "
+                msg += "The nearest hospital they can afford is in Antarctica, where "
+                msg += "they will be spending the next 3 minutes."
 
             elif banish_time == 4:
-                reply = f"{mention} rolls the dice of death, but the gun is jammed. "
-                reply += "As they're looking down the barrel something blows up and "
-                reply += "hits them in the eye. 4 minutes in Antarctica!"
+                msg = f"{mention} rolls the dice of death, but the gun is jammed. "
+                msg += "As they're looking down the barrel something blows up and "
+                msg += "hits them in the eye. 4 minutes in Antarctica!"
 
             else:
-                reply = f"{mention} rolls a headshot on the dice of death! 5 minutes in Antarctica!"
+                msg = f"{mention} rolls a headshot on the dice of death! 5 minutes in Antarctica!"
 
             error = await mute_db.carry_out_banish(self.bot, self.mdbname, member, end_date)
             if isinstance(error, Exception):
-                if isinstance(error, discord.HTTPException):    http_exception = True
-                elif isinstance(error, discord.Forbidden):      forbidden_exception = True
-                else:                                           other_exception = True
+                if isinstance(error, discord.HTTPException):
+                    http_exception = True
+                elif isinstance(error, discord.Forbidden):
+                    forbidden_exception = True
+                else:
+                    other_exception = True
 
             if http_exception:
-                reply = f"While {mention} did fail and hurt themselves spectacularly in the roulette "
-                reply += "there's not much I can do about it due to some stupid HTTP error."
+                msg = f"While {mention} did fail and hurt themselves spectacularly in the "
+                msg += "roulette there's not much I can do about it due to some stupid HTTP error."
             elif forbidden_exception:
-                reply = f"While {mention} did fail and hurt themselves spectacularly in the roulette "
-                reply += "there's not much I can do about it because I'm not allowed to banish people."
+                msg = f"While {mention} did fail and hurt themselves spectacularly in the "
+                msg += "roulette there's not much I can do about it because I'm not allowed "
+                msg += "to banish people."
             elif other_exception:
-                reply = f"While {mention} did fail and hurt themselves spectacularly in the roulette "
-                reply += "there's not much I can do about it because, uh, reasons. I don't know."
+                msg = f"While {mention} did fail and hurt themselves spectacularly in the "
+                msg += "roulette there's not much I can do about it because, uh, reasons. "
+                msg += "I don't know."
 
-            await ctx.send(reply)
+            await ctx.send(msg)
 
         else:
             # Congratulations bruh!
@@ -645,111 +699,10 @@ class BanishAndRegion(CogBase):
             await ctx.message.delete()
             await response.delete()
 
-    @discord.ext.commands.command(name="blacklist")
-    async def blacklist(self, ctx, *args):
-        # TODO add some fancy shenanigans for checking if the user already
-        #      is on the blacklist if adding them fails.
-        success_list = list()
-        failures_list = list()
-        for mention in ctx.message.mentions:
-            try:
-                result = region_db.add_blacklist(
-                    self.bot,
-                    self.rdbname,
-                    self.blacklist_table,
-                    mention)
-                if result: success_list.append(mention)
-                else:      failures_list.append(mention)
-            except Exception:
-                failures_list.append(mention)
-
-
-        successes = len(success_list)
-        failures = len(failures_list)
-        success_mentions = self.bot.mentions_list(success_list)
-        failure_mentions = self.bot.mentions_list(failures_list)
-
-        if successes == 0 and failures == 0:
-            # No mentions
-            await ctx.send(f"{ctx.author.mention} please specify the users you want to blacklist...")
-
-        elif successes > 0 and failures == 0:
-            # No failures
-            await ctx.send(
-                f"{success_mentions} successfully blacklisted! " +
-                "They may no longer change their region... unless they change it to Antarctica.")
-
-        elif successes == 0 and failures > 0:
-            # No successes
-            await ctx.send(
-                f"{failure_mentions} could not be blacklisted! Not sure why.")
-
-        else:
-            # Mixed result
-            await ctx.send(
-                f"{success_mentions} successfully blacklisted, but {failure_mentions} could not be blacklisted. " +
-                "The ones that could not be blacklisted may already be blacklisted, in which case they can not be blacklisted again.")
-
-    @discord.ext.commands.command(name="unblacklist", aliases=[ "unlist" ])
-    async def unblacklist(self, ctx, *args):
-        success_list = list()
-        failures_list = list()
-        for mention in ctx.message.mentions:
-            try:
-                result = region_db.remove_blacklist(
-                    self.bot,
-                    self.rdbname,
-                    self.blacklist_table,
-                    mention)
-
-                if result: success_list.append(mention)
-                else:      failures_list.append(mention)
-            except Exception as e:
-                failures_list.append(mention)
-
-        successes = len(success_list)
-        failures = len(failures_list)
-        success_mentions = self.bot.mentions_list(success_list)
-        failure_mentions = self.bot.mentions_list(failures_list)
-
-        if successes == 0 and failures == 0:
-            # No mentions
-            await ctx.send(f"{ctx.author.mention} please specify the users you want to unblacklist...")
-
-        elif successes > 0 and failures == 0:
-            # No failures
-            await ctx.send(
-                f"{success_mentions} successfully unblacklisted! " +
-                "They may no longer change their region... unless they change it to Antarctica.")
-
-        elif successes == 0 and failures > 0:
-            # No successes
-            await ctx.send(
-                f"{failure_mentions} could not be unblacklisted! " +
-                "This may be because they're already banished or something. Who even knows?")
-
-        else:
-            # Mixed result
-            await ctx.send(
-                f"{success_mentions} successfully unblacklisted, but {failure_mentions} could not be blacklisted. " +
-                "The unblacklisted ones may not be blacklisted, in which case they can not be unblacklisted again.")
-
-    @discord.ext.commands.command(name="blacklistlist")
-    async def blacklistlist(self, ctx, *args):
-        result = region_db.fetch_blacklist(
-            self.bot,
-            self.rdbname,
-            self.blacklist_table,
-            ctx.guild)
-
-        blacklisted = [ str(ctx.guild.get_member(uid[0])) for uid in result ]
-        blacklisted = "\n".join(sorted(blacklisted))
-        await ctx.send(f"**{ctx.guild.name}** region blacklist:\n{blacklisted}")
-
     @discord.ext.commands.command(name="region", aliases=["regions"])
-    async def _region(self, ctx, *args):
+    async def _region(self, ctx: Context, *args: str) -> None:
         """Assign yourself a colourful regional role."""
-        args = [ a.lower() for a in args ]
+        args = tuple([ a.lower() for a in args ])
 
         if len(args) == 0 or "help" in args:
             msg = "Type !region followed by your region, this will assign you a regional role "
@@ -773,7 +726,13 @@ class BanishAndRegion(CogBase):
 
         await self.set_region(ctx, args)
 
-    async def region_antarctica(self, ctx, args):
+    async def region_antarctica(self, ctx: Context, args: Tuple[str, ...]) -> bool:
+        """
+        Analyze arguments to see if user tried to set region to Antarctica.
+
+        If they did, the method will return True, banish them and send some snarky repyl.
+        Otherwise it returns False.
+        """
         # Check if the user tried to set region to Antarctica
         said_antarctica = False
         for variant in self.antarctica_spellings:
@@ -800,8 +759,9 @@ class BanishAndRegion(CogBase):
             duration = datetime.timedelta(minutes = 20)
             end_date = datetime.datetime.now() + duration
             duration = self.bot.parse_timedelta(duration)
-            reply += f"What's more, they spelled it *{spelling.capitalize()}* instead of *Antarctica*... "
-            reply += "20 minutes in Penguin school ought to teach them some manners!"
+            reply += f"What's more, they spelled it *{spelling.capitalize()}* "
+            reply += "instead of *Antarctica*... 20 minutes in Penguin school "
+            reply += "ought to teach them some manners!"
 
         # Carry out the banish with resulting end date
         error = await mute_db.carry_out_banish(self.bot, self.mdbname, ctx.author, end_date)
@@ -813,7 +773,14 @@ class BanishAndRegion(CogBase):
         await ctx.send(reply)
         return True
 
-    async def set_region(self, ctx, args):
+    async def set_region(self, ctx: Context, args: Tuple[str, ...]) -> None:
+        """
+        Set the region of a user based on what they said.
+
+        Determine which region the user tried to set using the !region command,
+        then set that region (if found) and send an appropriate response. If
+        the region isn't found don't set a role, just send an appropriate response.
+        """
         regions = self.regions[ctx.guild.id]
         author_roles = [ i.id for i in ctx.author.roles if i.name not in regions.keys() ]
         all_args = " ".join(args)
@@ -827,18 +794,21 @@ class BanishAndRegion(CogBase):
             for alias in self.regional_aliases[region]:
                 if alias in all_args:
                     author_roles.append(regions[region])
-                    valid_region = regions[region] != None
+                    valid_region = regions[region] is not None
                     new_role_name = region
                     found_region = True
 
         if found_region and valid_region:
             new_roles = [ discord.Object(id=i) for i in author_roles ]
             await ctx.author.edit(roles=new_roles)
-            await ctx.send(f"{ctx.author.mention} You've been assigned a new role, welcome to {new_role_name}!")
+
+            msg = f"{ctx.author.mention} You've been assigned a new role, "
+            msg += f"welcome to {new_role_name}!"
         else:
             msg = f"{ctx.author.mention} I couldn't find a match for {' '.join(args)}.\n"
-            msg += "Please check your spelling or type **!region list** for a list of available regions."
-            await ctx.send(msg)
+            msg += "Please check your spelling or type **!region list** for a list of "
+            msg += "available regions."
+        await ctx.send(msg)
 
     ###########################################################################
     # Various shenanigans that may need to be implemented into the bot proper #
@@ -876,8 +846,10 @@ class BanishAndRegion(CogBase):
     #     if old_antarctica != new_antarctica:
     #         self.antarctica_channel[guild.id] = new_antarctica
 
-    #         if new_antarctica is not None:  new_antarctica = f"{var.green}#{new_antarctica.name}{var.reset}"
-    #         else:                       new_antarctica = f"{var.red}undefined"
+    #         if new_antarctica is not None:
+    #           new_antarctica = f"{var.green}#{new_antarctica.name}{var.reset}"
+    #         else:
+    #           new_antarctica = f"{var.red}undefined"
 
     #         print(f"{var.cyan}The {var.boldwhite}Antarctica channel{var.cyan} in",
     #               f"{var.red}{guild.name}{var.cyan} was updated to: {new_antarctica}{var.reset}")
@@ -922,4 +894,3 @@ class BanishAndRegion(CogBase):
     # @commands.Cog.listener()
     # async def on_guild_role_update(self, before, after):
     #     self.check_roles(after)
-
