@@ -191,7 +191,10 @@ class BanishAndRegion(CogBase):
             for mute in server_mutes:
                 if mute.until < current_time:
                     # Need to refresh the member to get their latest roles
-                    member = await server.fetch_member(mute.member.id)
+                    try:
+                        member = await server.fetch_member(mute.member.id)
+                    except Exception as e:
+                        self.logger.error(f"Failed to refresh muted member: {e}")
 
                     # Calculate how late we were in unbanishing
                     diff = self.bot.parse_timedelta(current_time - mute.until)
