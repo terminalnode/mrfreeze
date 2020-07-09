@@ -1,33 +1,42 @@
-import json
+"""Cog for handling ink lookups via thisisverytricky's ink API."""
 import logging
 import re
-from typing import List, NamedTuple, Optional, Pattern, Set
+from typing import List
+from typing import Optional
+from typing import Pattern
+from typing import Set
 
 import discord
-import requests
 from discord import Message
-from discord.ext.commands.context import Context
 
-from mrfreeze import checks
 from mrfreeze.bot import MrFreeze
-from mrfreeze.colors import CYAN, MAGENTA_B, RESET
+from mrfreeze.cogs.cogbase import CogBase
 
-from .cogbase import CogBase
+import requests
 
 
-# Small cog listening to all incoming messages looking for mentions of inks.
-# Based on The Inkcyclopedia by klundtasaur:
-# https://www.reddit.com/r/fountainpens/comments/5egjsa/klundtasaurs_inkcyclopedia_for_rfountainpens/
 def setup(bot: MrFreeze) -> None:
     """Add the cog to the bot."""
     bot.add_cog(Inkcyclopedia(bot))
 
 
-class InkyTuple(NamedTuple):
-    """A NamedTuple-class used to store information pertaining to an ink entry."""
+class Ink:
+    """A class used to store information pertaining to an ink entry."""
 
-    name:  str
-    url:   str
+    id:         Optional[str]
+    name:       Optional[str]
+    url:        Optional[str]
+    submitter:  Optional[str]
+    alternates: List[str]
+    review:     Optional[str]
+
+    def __init__(self) -> None:
+        self.id = None
+        self.name = None
+        self.url = None
+        self.submitter = None
+        self.alternates = list()
+        self.review = None
 
 
 class Inkcyclopedia(CogBase):
@@ -35,29 +44,37 @@ class Inkcyclopedia(CogBase):
 
     def __init__(self, bot: MrFreeze) -> None:
         self.bot: MrFreeze = bot
-        self.inkydb: Set[InkyTuple] = set()
-        self.search_url: str = "https://system-inks-api.us-e2.cloudhub.io/api/inks/search"
+        self.inkydb: Set[Ink] = set()
+        self.url: str = "https://system-inks-api.us-e2.cloudhub.io/api/inks"
         self.bracketmatch: Pattern = re.compile(r"[{]([\w\-\s]+)[}]")
 
         self.logger = logging.getLogger(self.__class__.__name__)
 
-    async def search_inks(self, inks: List[str]) -> List[InkyTuple]:
+    async def search_inks(self, inks: List[str]) -> List[Ink]:
         """Search for the listed inks in the Inkcyclopedia, return a list of inks."""
         try:
-            response = requests.post(self.search_url, json=inks).json()["found"]
+            response = requests.post(f"{self.url}/search", json=inks).json()["found"]
         except Exception:
             return []
 
-        result: List[InkyTuple] = list()
+        result: List[Ink] = list()
         for ink in response:
             body = response[ink]
 
             if "fullName" in body and "primaryImage" in body:
-                fullName: str = body["fullName"]
-                url: str = body["primaryImage"]
+                ink = Ink()
+                ink.id = body.get("id")
+                ink.name = body.get("fullName")
+                ink.url = body.get("primaryImage")
+                ink.submitter = body.get("submittedBy")
+                ink.review = body.get("reviewLink")
 
-                if fullName and url:
-                    result.append(InkyTuple(fullName, url))
+                alternates = body.get("alternateImages")
+                if alternates:
+                    ink.alternates = alternates
+
+                if ink.name and ink.url:
+                    result.append(ink)
 
         return result
 
@@ -73,11 +90,26 @@ class Inkcyclopedia(CogBase):
         if message.author.bot or not matches:
             return
 
-        results: List[InkyTuple] = await self.search_inks(matches)
+        results: List[Ink] = await self.search_inks(matches)
 
         if results:
             ink = results[0]
             image = discord.Embed()
-            image.set_author(name=ink.name)
+            image.title = ink.name
             image.set_image(url=ink.url)
+            image.description = f"[Primary image link]({ink.url})"
+
+            if ink.alternates:
+                alternateUrls = [f"[[{index}]]({url})" for index, url in enumerate(ink.alternates)]
+                alternativeImageLinks = " ".join(alternateUrls)
+                image.add_field(name="Additional images", value=alternativeImageLinks)
+
+            if ink.review:
+                image.add_field(name="Review", value=ink.review)
+
+            if ink.submitter:
+                image.set_footer(text=f"Submitted by: {ink.submitter}")
+            else:
+                image.set_footer(text=f"Submitter unknown")
+
             await message.channel.send(embed=image)
