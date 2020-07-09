@@ -23,7 +23,8 @@ from discord.ext.commands import Context
 
 from mrfreeze.bot import MrFreeze
 from mrfreeze.cogs.banish import mute_db
-from mrfreeze.cogs.banish.enums import MuteStr, MuteType
+from mrfreeze.cogs.banish.enums import MuteStr
+from mrfreeze.cogs.banish.enums import MuteType
 from mrfreeze.cogs.banish.templates import templates
 from mrfreeze.cogs.cogbase import CogBase
 from mrfreeze.lib import checks
@@ -56,7 +57,7 @@ def setup(bot: MrFreeze) -> None:
 class BanishAndRegion(CogBase):
     """Good mod! Read the manual! Or if you're not mod - sod off."""
 
-    def __init__(self, bot: MrFreeze, mdbname: str = "mutes", rdbname: str = "regions") -> None:
+    def __init__(self, bot: MrFreeze, mdbname: str = "mutes") -> None:
         self.bot = bot
         self.regions: Dict[int, Dict[str, Optional[int]]] = dict()
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -195,6 +196,7 @@ class BanishAndRegion(CogBase):
                         member = await server.fetch_member(mute.member.id)
                     except Exception as e:
                         self.logger.error(f"Failed to refresh muted member: {e}")
+                        continue  # Will try again next unbanish loop
 
                     # Calculate how late we were in unbanishing
                     diff = self.bot.parse_timedelta(current_time - mute.until)
