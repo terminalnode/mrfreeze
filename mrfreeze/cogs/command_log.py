@@ -3,7 +3,7 @@ import logging
 
 from discord import Message
 
-from mrfreeze import colors
+from mrfreeze.lib import colors
 from mrfreeze.cogs.cogbase import CogBase
 
 

@@ -29,10 +29,13 @@ from discord.ext import commands
 from discord.ext.commands import Context
 
 # Importing MrFreeze submodules
-from mrfreeze import colors, greeting
-from mrfreeze import dbfunctions, server_settings, time
-from mrfreeze.checks import MuteCheckFailure
 from mrfreeze.database.settings import Settings
+from mrfreeze.lib import colors
+from mrfreeze.lib import dbfunctions
+from mrfreeze.lib import greeting
+from mrfreeze.lib import server_settings
+from mrfreeze.lib import time
+from mrfreeze.lib.checks import MuteCheckFailure
 
 
 # Usage note!

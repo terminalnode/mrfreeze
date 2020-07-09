@@ -4,6 +4,7 @@ import re
 from enum import Enum
 
 import discord
+from discord.ext.commands.bot import Bot
 
 from mrfreeze.cogs.cogbase import CogBase
 
@@ -17,7 +18,7 @@ class TempUnit(Enum):
     R = "°R"
 
 
-def setup(bot):
+def setup(bot: Bot) -> None:
     """Add the cog to the bot."""
     bot.add_cog(TemperatureConverter(bot))
 
@@ -25,7 +26,7 @@ def setup(bot):
 class TemperatureConverter(CogBase):
     """Listener that detects and converts temperature statements."""
 
-    def __init__(self, bot):
+    def __init__(self, bot) -> None:
         """Initialize the cog."""
         self.bot = bot
 

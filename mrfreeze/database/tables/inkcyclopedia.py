@@ -2,7 +2,7 @@
 
 import logging
 
-from .abc_table_dict import ABCTableDict
+from mrfreeze.database.tables.abc_table_dict import ABCTableDict
 
 
 class InkcyclopediaInks(ABCTableDict):

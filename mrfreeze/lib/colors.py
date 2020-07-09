@@ -1,3 +1,5 @@
+"""Module containing all the color escape strings."""
+
 import re
 
 BLACK = "\033[00;30m"

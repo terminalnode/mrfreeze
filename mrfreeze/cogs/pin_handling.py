@@ -11,8 +11,8 @@ from discord import Message, MessageType, TextChannel
 from discord.abc import GuildChannel
 from discord.ext.commands.bot import Bot
 
-from mrfreeze import colors
 from mrfreeze.cogs.cogbase import CogBase
+from mrfreeze.lib import colors
 
 
 def setup(bot: Bot) -> None:

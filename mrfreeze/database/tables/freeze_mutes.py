@@ -4,7 +4,7 @@ import logging
 
 from discord import Guild
 
-from .abc_table_dict import ABCTableDict
+from mrfreeze.database.tables.abc_table_dict import ABCTableDict
 
 
 class FreezeMutes(ABCTableDict):

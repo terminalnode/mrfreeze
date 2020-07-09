@@ -21,13 +21,13 @@ import discord
 from discord import Guild
 from discord.ext.commands import Context
 
-from mrfreeze import checks
-from mrfreeze import colors
 from mrfreeze.bot import MrFreeze
 from mrfreeze.cogs.banish import mute_db
 from mrfreeze.cogs.banish.enums import MuteStr, MuteType
 from mrfreeze.cogs.banish.templates import templates
 from mrfreeze.cogs.cogbase import CogBase
+from mrfreeze.lib import checks
+from mrfreeze.lib import colors
 
 
 banish_aliases = ["unbanish", "microbanish",

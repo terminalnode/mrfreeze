@@ -16,16 +16,15 @@ from discord.ext.commands.cooldowns import BucketType
 import inflect
 
 from mrfreeze.bot import MrFreeze
-from mrfreeze.checks import MuteCheckFailure
-from mrfreeze.colors import CYAN
-from mrfreeze.colors import CYAN_B
-from mrfreeze.colors import MAGENTA
-from mrfreeze.colors import RED_B
-from mrfreeze.colors import RESET
-from mrfreeze.colors import WHITE_B
-from mrfreeze.colors import YELLOW
-
-from .cogbase import CogBase
+from mrfreeze.cogs.cogbase import CogBase
+from mrfreeze.lib.checks import MuteCheckFailure
+from mrfreeze.lib.colors import CYAN
+from mrfreeze.lib.colors import CYAN_B
+from mrfreeze.lib.colors import MAGENTA
+from mrfreeze.lib.colors import RED_B
+from mrfreeze.lib.colors import RESET
+from mrfreeze.lib.colors import WHITE_B
+from mrfreeze.lib.colors import YELLOW
 
 
 def setup(bot: MrFreeze) -> None:

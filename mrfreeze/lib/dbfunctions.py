@@ -7,7 +7,7 @@ for handling interraction with databases.
 import datetime
 import sqlite3
 
-from mrfreeze import colors
+from mrfreeze.lib import colors
 
 
 def db_connect(bot, dbname):

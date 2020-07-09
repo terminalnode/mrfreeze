@@ -1,37 +1,45 @@
-import discord  # Required for basic discord functionality
-import re       # Required for !vote to find custom emoji
-import random   # Required for !cointoss and !mrfreeze
+"""Cog used for fun user commands."""
+
+import random
+import re
+from typing import Optional
+from typing import Union
+
+import discord
+from discord import Emoji
+from discord.ext.commands import command
+from discord.ext.commands.bot import Bot
+from discord.ext.commands.bot import Context
+
 from mrfreeze.cogs.cogbase import CogBase
-from mrfreeze import colors
+from mrfreeze.lib import colors
 
 
-def setup(bot):
+def setup(bot: Bot) -> None:
     """Add the cog to the bot."""
     bot.add_cog(UserCommands(bot))
 
 
 class UserCommands(CogBase):
     """
-    These are the fun commands, everything else is
-    boring and lame. Frankly there's no reason you should pay
-    attention to anything that's not on this page.
+    These are the fun commands, everything else is boring and lame.
+
+    Frankly there's no reason you should pay attention to anything that's not on this page.
     """
-    def __init__(self, bot):
+
+    def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
-    @CogBase.listener()
-    async def on_ready(self):
-        pass
-
-    @discord.ext.commands.command(name="praise")
-    async def _praise(self, ctx, *args):
+    @command(name="praise")
+    async def _praise(self, ctx: Context, *args: str) -> None:
         """Praise me."""
         author = ctx.author.mention
-        await ctx.send(f"{author} Your praises have been heard, and " +
-                       "in return I bestow upon you... nothing!")
+        msg = f"{author} Your praises have been heard, and "
+        msg += "in return I bestow upon you... nothing!"
+        await ctx.send(msg)
 
-    @discord.ext.commands.command(name="icon", aliases=["logo"])
-    async def _logo(self, ctx, *args):
+    @command(name="icon", aliases=["logo"])
+    async def _logo(self, ctx: Context, *args: str) -> None:
         """Post the logo of the current server."""
         author = ctx.author.mention
         server = ctx.guild.name
@@ -45,8 +53,8 @@ class UserCommands(CogBase):
             f"{author} Here's the server {word} for {server}!",
             embed=logo)
 
-    @discord.ext.commands.command(name="mrfreeze", aliases=["freeze"])
-    async def _mrfreeze(self, ctx, *args):
+    @command(name="mrfreeze", aliases=["freeze"])
+    async def _mrfreeze(self, ctx: Context, *args: str) -> None:
         """Get a quote from my timeless classic "Batman & Robin"."""
         author = ctx.author.mention
         server = ctx.guild.name
@@ -58,29 +66,17 @@ class UserCommands(CogBase):
         quote = quote.replace("Gotham", f"**{server}**")
         await ctx.send(quote)
 
-    @discord.ext.commands.command(name="cointoss",
-                                  aliases=["coin", "coinflip"])
-    async def _cointoss(self, ctx, *args):
+    @command(name="cointoss", aliases=["coin", "coinflip"])
+    async def _cointoss(self, ctx: Context, *args: str) -> None:
         """Toss a coin, results are 50/50."""
         if random.randint(0, 1):
             await ctx.send(f"{ctx.author.mention} Heads")
         else:
             await ctx.send(f"{ctx.author.mention} Tails")
 
-    @discord.ext.commands.command(name="vote",
-                                  aliases=["election", "choice", "choose"])
-    async def _vote(self, ctx, *args):
+    @command(name="vote", aliases=["election", "choice", "choose"])
+    async def _vote(self, ctx: Context, *args: str) -> None:
         """Create a handy little vote using reacts."""
-        def find_custom_emoji(line):
-            emoji = re.match(r"<a?:\w+:(\d+)>", line)
-
-            if emoji is None:
-                # Non-custom emoji can be up to three characters long.
-                return line[0:3]
-            else:
-                emo_id = emoji.group(1)
-                return self.bot.get_emoji(int(emo_id))
-
         async def add_reacts(reacts):
             react_error = False
             at_least_one = False
@@ -107,34 +103,49 @@ class UserCommands(CogBase):
                         except Exception:
                             pass
 
+            msg: Optional[str] = None
+
             if react_error:
-                print(f"{colors.RED_B}!vote{colors.CYAN} Not allowed to " +
-                      f"add react in {ctx.guild.name}{colors.RESET}")
-                await ctx.send(f"{ctx.author.mention} The moderators dun " +
-                               "goofed I think. I encountered some sort of " +
-                               "anomaly when trying to vote.")
+                log = f"{colors.RED_B}!vote{colors.CYAN} Not allowed to add react "
+                log += f"in {ctx.guild.name}{colors.RESET}"
+                print(log)
+
+                msg = f"{ctx.author.mention} The moderators dun goofed I think. I encountered "
+                msg += f"some sort of anomaly when trying to vote."
+
             elif nitro_error:
-                await ctx.send(f"{ctx.author.mention} There seem to be some " +
-                               "emoji there I don't have access to.\nI need " +
-                               "to be in the server the emoji is from.")
+                msg = f"{ctx.author.mention} There seem to be some emoji there I don't have "
+                msg += "access to.\nI need to be in the server the emoji is from."
+
             elif not at_least_one:
-                await ctx.send(f"{ctx.author.mention} There's literally " +
-                               "nothing I can vote for you little " +
-                               "smudmeister!")
+                msg = f"{ctx.author.mention} There's literally nothing I can vote for you little "
+                msg += "smudmeister!"
+
+            if msg is not None:
+                await ctx.send(msg)
 
         rows = ctx.message.content.split("\n")
         rows[0] = rows[0].replace("!vote ", "")
-        reacts = [find_custom_emoji(row) for row in rows]
+        reacts = [self.find_custom_emoji(row) for row in rows]
         await add_reacts(reacts)
 
-    @discord.ext.commands.command(name="activity",
-                                  aliases=["listen", "listening",
-                                           "playing", "play",
-                                           "game", "gaming", "gameing",
-                                           "stream", "streaming",
-                                           "watch", "watching"])
+    def find_custom_emoji(self, line: str) -> Union[Emoji, str]:
+        """Match custom emojis in strings, or return first three characters."""
+        emoji = re.match(r"<a?:\w+:(\d+)>", line)
+
+        if emoji is None:
+            # Non-custom emoji can be up to three characters long.
+            return line[0:3]
+
+        else:
+            emo_id = emoji.group(1)
+            return self.bot.get_emoji(int(emo_id))
+
+    @command(name="activity", aliases=[
+        "listen", "listening", "playing", "play", "game", "gaming", "gameing",
+        "stream", "streaming", "watch", "watching"])
     # @discord.ext.commands.cooldown(1, (60*10), BucketType.default)
-    async def _activity(self, ctx, *args):
+    async def _activity(self, ctx: Context, *args: str) -> None:
         """Dictate what text should be displayed under my nick."""
         # Dictionary of all different activity types with keywords.
         # The keywords are defined in separate tuples so I can access
@@ -209,29 +220,29 @@ class UserCommands(CogBase):
             # Default activity.
             reply_activity = "listening to"
 
+        msg: Optional[str] = None
         if success:
-            await ctx.send(f"{ctx.author.mention} OK then, I guess I'm " +
-                           f"**{reply_activity} {joint_args}** now.")
+            msg = f"{ctx.author.mention} OK then, I guess I'm "
+            msg += f"**{reply_activity} {joint_args}** now."
 
         elif len(args) == 0:
             # No activity specified.
             if chosen_activity is None:
-                await ctx.send(f"{ctx.author.mention} " +
-                               "You didn't tell me what to do.")
+                msg = f"{ctx.author.mention} You didn't tell me what to do."
 
             else:
                 # No name specified.
-                await ctx.send(f"{ctx.author.mention} I can tell you want " +
-                               f"me to be **{reply_activity}** something, " +
-                               "but I don't know what.")
+                msg = f"{ctx.author.mention} I can tell you want me to be **{reply_activity}** "
+                msg += "something, but I don't know what."
 
         elif len(joint_args) >= max_activity_length:
             # Too long.
-            await ctx.send(f"{ctx.author.mention} That activity is stupidly " +
-                           f"long ({len(joint_args)}). The limit is " +
-                           f"{max_activity_length} characters.")
+            msg = f"{ctx.author.mention} That activity is stupidly long ({len(joint_args)}). "
+            msg += f"The limit is {max_activity_length} characters."
 
         else:
-            await ctx.send("<@!154516898434908160> Something went wrong " +
-                           "when trying to change my activity and I have no " +
-                           "idea what. Come see!")
+            msg = "<@!154516898434908160> Something went wrong when trying to change my "
+            msg += "activity and I have no idea what. Come see!"
+
+        if msg:
+            await ctx.send(msg)

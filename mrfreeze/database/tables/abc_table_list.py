@@ -5,7 +5,7 @@ from typing import Any
 from typing import List
 from typing import Optional
 
-from .abc_table_base import ABCTableBase
+from mrfreeze.database.tables.abc_table_base import ABCTableBase
 
 
 class ABCTableList(ABCTableBase):

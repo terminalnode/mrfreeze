@@ -18,13 +18,13 @@ def extract_time(args, fallback_minutes=True):
     weeks = r"weeks?|w[, ]"
     months = r"months?|mnth?s?|mons?"
     years = r"years?|yrs?|y[, ]"
-    find_time = (fr"(-?\d+) ?(({seconds})|({minutes})|({hours})" +
-                 fr"|({days})|({weeks})|({months})|({years}))")
+    find_time = fr"(-?\d+) ?(({seconds})|({minutes})|({hours})"
+    find_time += fr"|({days})|({weeks})|({months})|({years}))"
 
     regex_output = re.findall(
-            find_time,       # Use our newly created regex.
-            " ".join(args),  # Search through the arguments.
-            re.IGNORECASE)   # Ignore case when applying the expression.
+        find_time,       # Use our newly created regex.
+        " ".join(args),  # Search through the arguments.
+        re.IGNORECASE)   # Ignore case when applying the expression.
 
     # Sum up all hits for the different time units
     time_dict = {
@@ -39,8 +39,9 @@ def extract_time(args, fallback_minutes=True):
 
     # Create a new datetime object based on these numbers.
     # Months and years are converted to 30 and 365 days respectively.
-    time_dict["days"] += ((time_dict["months"] * 30) +
-                          (time_dict["years"] * 365))
+    time_dict["days"] += (
+        (time_dict["months"] * 30) + (time_dict["years"] * 365)
+    )
     current_time = datetime.datetime.now()
 
     try:
@@ -120,7 +121,7 @@ def parse_timedelta(time_delta):
 
             # Going through all trailing values and
             # checking which are non-zero.
-            for i in size_order[value+1:]:
+            for i in size_order[value + 1:]:
                 if i[1] > 0:
                     trailing_values += 1
 

@@ -9,7 +9,7 @@ this is very low.
 """
 import os
 
-from mrfreeze import colors
+from mrfreeze.lib import colors
 
 
 def read_server_setting(bot, server, setting):

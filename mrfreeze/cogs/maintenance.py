@@ -1,15 +1,17 @@
+"""Small cog with a few owner-commands used for bot maintenance."""
+
 import os
 import sys
-from subprocess import PIPE, run
+from subprocess import PIPE
+from subprocess import run
 from typing import Tuple
 
 import discord
 from discord.ext.commands.context import Context
 
-from mrfreeze import checks
 from mrfreeze.bot import MrFreeze
-
-from .cogbase import CogBase
+from mrfreeze.cogs.cogbase import CogBase
+from mrfreeze.lib import checks
 
 
 # This cog is for commands restricted to the owner of the bot (me!).

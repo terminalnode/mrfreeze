@@ -1,4 +1,5 @@
-from enum import Enum, auto         # Used for the templates dictionary
+from enum import Enum
+from enum import auto
 
 
 # Templates for the various responses. There are lots of them.

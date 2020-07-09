@@ -9,7 +9,12 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
-from mrfreeze.colors import CYAN, CYAN_B, GREEN_B, RED, RED_B, RESET
+from mrfreeze.lib.colors import CYAN
+from mrfreeze.lib.colors import CYAN_B
+from mrfreeze.lib.colors import GREEN_B
+from mrfreeze.lib.colors import RED
+from mrfreeze.lib.colors import RED_B
+from mrfreeze.lib.colors import RESET
 
 
 class ExecutionResult:

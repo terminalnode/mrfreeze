@@ -9,7 +9,7 @@ from discord import User
 from discord.ext.commands import Cog
 from discord.ext.commands.context import Context
 
-from mrfreeze import colors
+from mrfreeze.lib import colors
 
 
 class CogBase(Cog):

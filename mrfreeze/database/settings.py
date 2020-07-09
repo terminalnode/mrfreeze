@@ -8,12 +8,12 @@ and provides a single interface for working with them all.
 import logging
 from typing import List
 
-from .tables.abc_table_base import ABCTableBase
-from .tables.freeze_mutes import FreezeMutes
-from .tables.inkcyclopedia import InkcyclopediaInks
-from .tables.mute_channels import MuteChannels
-from .tables.mute_roles import MuteRoles
-from .tables.trash_channels import TrashChannels
+from mrfreeze.database.tables.abc_table_base import ABCTableBase
+from mrfreeze.database.tables.freeze_mutes import FreezeMutes
+from mrfreeze.database.tables.inkcyclopedia import InkcyclopediaInks
+from mrfreeze.database.tables.mute_channels import MuteChannels
+from mrfreeze.database.tables.mute_roles import MuteRoles
+from mrfreeze.database.tables.trash_channels import TrashChannels
 
 
 class Settings:

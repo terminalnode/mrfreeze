@@ -11,11 +11,14 @@ from discord import Guild
 from discord import Role
 from discord import TextChannel
 
-from mrfreeze.colors import GREEN, MAGENTA, RED, RESET, YELLOW_B
-
-from .abc_table_base import ABCTableBase
-from ..helpers import db_connect
-from ..helpers import db_execute
+from mrfreeze.database.helpers import db_connect
+from mrfreeze.database.helpers import db_execute
+from mrfreeze.database.tables.abc_table_base import ABCTableBase
+from mrfreeze.lib.colors import GREEN
+from mrfreeze.lib.colors import MAGENTA
+from mrfreeze.lib.colors import RED
+from mrfreeze.lib.colors import RESET
+from mrfreeze.lib.colors import YELLOW_B
 
 
 class ABCTableDict(ABCTableBase):

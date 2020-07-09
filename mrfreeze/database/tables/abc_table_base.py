@@ -8,10 +8,13 @@ from typing import Any
 from typing import Dict
 from typing import Tuple
 
-from mrfreeze.colors import GREEN, MAGENTA, RED, RESET, YELLOW_B
-
-from ..helpers import db_connect
-from ..helpers import db_execute
+from mrfreeze.database.helpers import db_connect
+from mrfreeze.database.helpers import db_execute
+from mrfreeze.lib.colors import GREEN
+from mrfreeze.lib.colors import MAGENTA
+from mrfreeze.lib.colors import RED
+from mrfreeze.lib.colors import RESET
+from mrfreeze.lib.colors import YELLOW_B
 
 
 class ABCTableBase(metaclass=ABCMeta):

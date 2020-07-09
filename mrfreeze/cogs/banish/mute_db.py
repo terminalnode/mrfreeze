@@ -1,10 +1,18 @@
-import discord
+from datetime import datetime
 from typing import NamedTuple
 
+import discord
 from discord import Member
-from datetime import datetime
 
-from mrfreeze.colors import CYAN, CYAN_B, GREEN, GREEN_B, RED, RED_B, YELLOW, RESET
+from mrfreeze.lib.colors import CYAN
+from mrfreeze.lib.colors import CYAN_B
+from mrfreeze.lib.colors import GREEN
+from mrfreeze.lib.colors import GREEN_B
+from mrfreeze.lib.colors import RED
+from mrfreeze.lib.colors import RED_B
+from mrfreeze.lib.colors import RESET
+from mrfreeze.lib.colors import YELLOW
+
 
 class BanishTuple(NamedTuple):
     member: Member

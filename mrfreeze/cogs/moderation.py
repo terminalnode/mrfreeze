@@ -17,18 +17,17 @@ from discord.ext.commands import Context
 from discord.ext.commands import check
 from discord.ext.commands import command
 
-from mrfreeze import checks
 from mrfreeze.bot import MrFreeze
-from mrfreeze.colors import CYAN
-from mrfreeze.colors import CYAN_B
-from mrfreeze.colors import GREEN_B
-from mrfreeze.colors import RED_B
-from mrfreeze.colors import RESET
-from mrfreeze.colors import WHITE
-from mrfreeze.colors import WHITE_B
-from mrfreeze.colors import YELLOW_B
-
-from .cogbase import CogBase
+from mrfreeze.cogs.cogbase import CogBase
+from mrfreeze.lib import checks
+from mrfreeze.lib.colors import CYAN
+from mrfreeze.lib.colors import CYAN_B
+from mrfreeze.lib.colors import GREEN_B
+from mrfreeze.lib.colors import RED_B
+from mrfreeze.lib.colors import RESET
+from mrfreeze.lib.colors import WHITE
+from mrfreeze.lib.colors import WHITE_B
+from mrfreeze.lib.colors import YELLOW_B
 
 
 def setup(bot: MrFreeze) -> None:
@@ -557,15 +556,14 @@ class Moderation(CogBase):
                         status  = f"{WHITE_B}{victim.name}#{victim.discriminator}{CYAN} was "
                         status += f"{RED_B}kicked from {ctx.guild.name} {CYAN}by {GREEN_B}"
                         status += f"{ctx.author.name}#{ctx.author.discriminator}"
-                        print(status)
                     else:
                         await ctx.guild.kick(victim, reason=reason)
                         status  = f"{WHITE_B}{victim.name}#{victim.discriminator}{CYAN} was "
                         status += f"{RED_B}kicked from {ctx.guild.name} {CYAN}by {GREEN_B}"
                         status += f"{ctx.author.name}#{ctx.author.discriminator}{CYAN}."
                         status += f"\n{WHITE_B}Reason given: {WHITE}{reason}{RESET}"
-                        print(status)
                     success_list.append(victim)
+                    self.logger.info(status)
 
                 except discord.Forbidden:
                     fail_list.append(victim)
@@ -574,7 +572,7 @@ class Moderation(CogBase):
                     status = f"{RED_B}ERROR {CYAN}I was not allowed to {RED_B}!kick "
                     status += f"{WHITE_B}{victim.name}#{victim.discriminator}"
                     status += f"{CYAN} in {RED_B}{ctx.guild.name}{CYAN}.{RESET}"
-                    print(status)
+                    self.logger.info(status)
 
                 except discord.HTTPException:
                     fail_list.append(victim)
@@ -583,7 +581,7 @@ class Moderation(CogBase):
                     status = f"{RED_B}ERROR {CYAN}I couldn't {RED_B}!kick {WHITE_B}"
                     status += f"{victim.name}#{victim.discriminator}{CYAN} in {RED_B}"
                     status += f"{ctx.guild.name} {CYAN}due to an HTTP Exception.{RESET}"
-                    print(status)
+                    self.logger.info(status)
 
         # This will convert the lists into mentions suitable for text display:
         # user1, user2 and user 3
@@ -736,7 +734,7 @@ class Moderation(CogBase):
             status  = f"{RED_B}!purge failed{CYAN} in "
             status += f"{CYAN_B}#{ctx.channel.name}{YELLOW_B} @ {CYAN_B}{ctx.guild.name}"
             status += f"{RED_B} (Forbidden){RESET}"
-            print(status)
+            self.logger.error(status)
 
             reply  = f"{ctx.author.mention} An error occured, it seems I'm lacking the"
             reply += "privilegies to carry out your Great Purge."
@@ -746,7 +744,7 @@ class Moderation(CogBase):
             status  = f"{RED_B}!purge failed{CYAN} in "
             status += f"{CYAN_B}#{ctx.channel.name}{YELLOW_B} @ {CYAN_B}{ctx.guild.name}"
             status += f"{RED_B} (HTTP Exception){RESET}"
-            print(status)
+            self.logger.error(status)
 
             reply  = f"{ctx.author.mention} An error occured, it seems my HTTP sockets are "
             reply += "glitching out and thus I couldn't carry out your Great Purge."
@@ -755,7 +753,7 @@ class Moderation(CogBase):
         except Exception as e:
             status  = f"{RED_B}!purge failed{CYAN} in {CYAN_B}#{ctx.channel.name}"
             status += f"{YELLOW_B} @ {CYAN_B}{ctx.guild.name}{RED_B}\n({e}){RESET}"
-            print(status)
+            self.logger.error(status)
 
             reply  = f"{ctx.author.mention} Something went wrong with your Great Purge "
             reply += "and I don't really know what."
@@ -777,7 +775,7 @@ class Moderation(CogBase):
                 await ctx.guild.ban(new_user)
                 await ctx.send("That little smud, whoever it is, has been banned!")
             except Exception as e:
-                print(e)
+                self.logger.error(e)
         else:
             await ctx.send(f"{ctx.author.mention} PAPERS PLEASE! :rage:")
 

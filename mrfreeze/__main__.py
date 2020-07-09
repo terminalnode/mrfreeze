@@ -7,7 +7,12 @@ import traceback
 import discord
 
 from mrfreeze import bot
-from mrfreeze.colors import BLUE_B, CYAN, CYAN_B, MAGENTA_B, RED, RESET
+from mrfreeze.lib.colors import BLUE_B
+from mrfreeze.lib.colors import CYAN
+from mrfreeze.lib.colors import CYAN_B
+from mrfreeze.lib.colors import MAGENTA_B
+from mrfreeze.lib.colors import RED
+from mrfreeze.lib.colors import RESET
 
 # Set general logging to warn, this will display warnings
 # from various modules we have imported such as discord,
