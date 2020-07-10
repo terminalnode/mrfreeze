@@ -72,7 +72,7 @@ class Moderation(CogBase):
             return output.strip()
 
     @command(name="freezemute", aliases=["shutup", "mutefreeze"])
-    @check(checks.is_mod)
+    @check(checks.is_owner_or_mod)
     async def freezemute(self, ctx: Context, *args: str) -> None:
         """
         Make freeze ignore all commands except this one in a server.
@@ -97,7 +97,7 @@ class Moderation(CogBase):
                 f"{mention} Yay I'm back!!")
 
     @command(name="trashchannel", aliases=["settrashchannel"])
-    @check(checks.is_mod)
+    @check(checks.is_owner_or_mod)
     async def set_trash_channel(self, ctx: Context, channel: TextChannel, *args: str) -> None:
         """Set the trash channel for the given server."""
         mention = ctx.author.mention
@@ -126,7 +126,7 @@ class Moderation(CogBase):
         await ctx.send(reply)
 
     @command(name="mutechannel", aliases=["setmutechannel"])
-    @check(checks.is_mod)
+    @check(checks.is_owner_or_mod)
     async def set_mute_channel(self, ctx: Context, channel: TextChannel, *args: str) -> None:
         """Set the mute channel for the given server."""
         mention = ctx.author.mention
@@ -155,7 +155,7 @@ class Moderation(CogBase):
         await ctx.send(reply)
 
     @command(name="muterole", aliases=["setmuterole"])
-    @check(checks.is_mod)
+    @check(checks.is_owner_or_mod)
     async def set_mute_role(self, ctx: Context, channel: Role, *args: str) -> None:
         """Set the mute role for the given server."""
         pass
