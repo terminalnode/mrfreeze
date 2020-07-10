@@ -189,7 +189,7 @@ class MrFreeze(commands.Bot):
         """
         self.bg_tasks[name] = self.loop.create_task(task)
 
-    async def get_trash_channel(self, server: Guild) -> TextChannel:
+    async def get_trash_channel(self, server: Guild, silent: bool = False) -> TextChannel:
         """
         Get the server's trash channel.
 
@@ -198,10 +198,11 @@ class MrFreeze(commands.Bot):
         returned instead.
         """
         channel_id = self.settings.get_trash_channel(server)
-        if channel_id is not None:
-            self.logger.info(f"Fetching trash channel for {server.name}")
-        else:
-            self.logger.info(f"{server.name} has no designated trash channel")
+        if not silent:
+            if channel_id is not None:
+                self.logger.info(f"Fetching trash channel for {server.name}")
+            else:
+                self.logger.info(f"{server.name} has no designated trash channel")
 
         if channel_id:
             channel = await self.fetch_channel(channel_id)
@@ -209,7 +210,7 @@ class MrFreeze(commands.Bot):
         else:
             return server.system_channel
 
-    async def get_mute_channel(self, server: Guild) -> TextChannel:
+    async def get_mute_channel(self, server: Guild, silent: bool = False) -> TextChannel:
         """
         Get the server's mute channel.
 
@@ -218,10 +219,11 @@ class MrFreeze(commands.Bot):
         returned instead.
         """
         channel_id = self.settings.get_mute_channel(server)
-        if channel_id is not None:
-            self.logger.info(f"Fetching mute channel for {server.name}")
-        else:
-            self.logger.info(f"{server.name} has no designated mute channel")
+        if not silent:
+            if channel_id is not None:
+                self.logger.info(f"Fetching mute channel for {server.name}")
+            else:
+                self.logger.info(f"{server.name} has no designated mute channel")
 
         if channel_id:
             channel = await self.fetch_channel(channel_id)

@@ -186,7 +186,7 @@ class BanishAndRegion(CogBase):
             server_mutes = [ i for i in server_mutes if i.until is not None ]
 
             mute_role = await self.bot.get_mute_role(server)
-            mute_channel = await self.bot.get_mute_channel(server)
+            mute_channel = await self.bot.get_mute_channel(server, silent=True)
             unmuted = list()
 
             for mute in server_mutes:
