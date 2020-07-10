@@ -646,20 +646,21 @@ class BanishAndRegion(CogBase):
         msg: Optional[str] = None
         if not banish_list:
             msg = f"{mention} You're not banished right now."
+
         else:
             until = banish_list[0].until
             left: str
+            now = datetime.datetime.now()
 
-            if until:
-                now = datetime.datetime.now()
-                if (until < now):
-                    left = f"{mention} You're due for unbanishment. Hold on a sec."
-                else:
-                    left = self.bot.parse_timedelta(until - now)
+            if until and until < now:
+                msg = f"{mention} You're due for unbanishment. Hold on a sec."
+
             else:
-                left = "an eternity"
-
-            msg = f"{mention} You have about **{left}** left to go."
+                if until:
+                    left = self.bot.parse_timedelta(until - now)
+                else:
+                    left = "an eternity"
+                msg = f"{mention} You have about **{left}** left to go."
 
         if msg:
             await ctx.send(msg)
