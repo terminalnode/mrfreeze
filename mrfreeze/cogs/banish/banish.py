@@ -182,23 +182,32 @@ class BanishAndRegion(CogBase):
         """Check for people to unbanish every self.banish_interval seconds."""
         while not self.bot.is_closed():
             await asyncio.sleep(self.mute_interval_dict[server.id])
+            self.logger.debug(f"Running unbanish loop for {server.name}.")
 
             current_time = datetime.datetime.now()
             server_mutes = mute_db.mdb_fetch(self.bot, self.mdbname, server)
+            self.logger.debug(f"There are {len(server_mutes)} mutes total in {server.name}.")
             server_mutes = [ i for i in server_mutes if i.until is not None ]
+            self.logger.debug(f"There are {len(server_mutes)} timed mutes in {server.name}.")
 
             mute_role = await self.bot.get_mute_role(server)
+            self.logger.debug(f"Mute role in {server.name}: {mute_role}")
             mute_channel = await self.bot.get_mute_channel(server, silent=True)
+            self.logger.debug(f"Mute channel in {server.name}: {mute_channel}")
             unmuted = list()
 
             for mute in server_mutes:
+                self.logger.debug(f"Checking if {mute} is due for unbanish.")
                 if mute.until < current_time:
+                    self.logger.debug(f"{mute} is due for unbanish!")
                     # Need to refresh the member to get their latest roles
                     try:
                         member = await server.fetch_member(mute.member.id)
                     except Exception as e:
                         self.logger.error(f"Failed to refresh muted member: {e}")
                         continue  # Will try again next unbanish loop
+
+                    self.logger.debug(f"Refreshed {member}, they have {len(member.roles)} roles.")
 
                     # Calculate how late we were in unbanishing
                     diff = self.bot.parse_timedelta(current_time - mute.until)
@@ -211,8 +220,10 @@ class BanishAndRegion(CogBase):
                     mute_db.mdb_del(self.bot, self.mdbname, member, self.logger)
 
                     if mute_role in member.roles:
+                        self.logger.debug(f"{member} has the mute role! Removing it.")
                         try:
                             await member.remove_roles(mute_role)
+                            self.logger.debug(f"{member} should no longer have the mute role.")
                             # Members are only considered unmuted if they had the antarctica role
                             unmuted.append(member)
 

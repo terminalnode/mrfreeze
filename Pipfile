@@ -5,8 +5,8 @@ verify_ssl = true
 
 [packages]
 discord-py = "~=1.3"
-inflect = "~=3.0"
-requests = "*"
+inflect = "~=4.1"
+requests = "~=2.24"
 
 [dev-packages]
 pylint = "*"
