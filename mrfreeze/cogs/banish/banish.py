@@ -251,7 +251,7 @@ class BanishAndRegion(CogBase):
     @command(
         name="banishinterval",
         aliases=[ "banishint", "baninterval", "banint", "muteinterval", "muteint" ])
-    @discord.ext.commands.check(checks.is_mod)
+    @discord.ext.commands.check(checks.is_owner_or_mod)
     async def _banishinterval(self, ctx: Context, *args: str) -> None:
         author = ctx.author.mention
         server = ctx.guild
