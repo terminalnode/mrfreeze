@@ -1,3 +1,5 @@
+"""Module for handling various database interractions with the mute_db."""
+
 from datetime import datetime
 from typing import NamedTuple
 
@@ -15,6 +17,8 @@ from mrfreeze.lib.colors import YELLOW
 
 
 class BanishTuple(NamedTuple):
+    """NamedTuple for holding banish information."""
+
     member: Member
     voluntary: bool
     until: datetime
@@ -31,12 +35,16 @@ class BanishTuple(NamedTuple):
 #               voluntary!  boolean     If this mute was self-inflicted or not
 #               until       date        The date when the user will be unbanned
 #                                       Leave empty if indefinite
+
 async def carry_out_banish(bot, mdbname, member, end_date):
-    """Add the antarctica role to a user, then add them to the db.
-    Return None if successful, Exception otherwise."""
+    """
+    Add the antarctica role to a user, then add them to the db.
+
+    Return None if successful, Exception otherwise.
+    """
     server = member.guild
     roles = member.roles
-    mute_role = bot.servertuples[server.id].mute_role
+    mute_role = await bot.get_mute_role(server)
     result = None
 
     if mute_role not in roles:
@@ -52,11 +60,14 @@ async def carry_out_banish(bot, mdbname, member, end_date):
 
 
 async def carry_out_unbanish(bot, mdbname, member):
-    """Remove the antarctica role from a user, then remove them from the db.
-    Return None if successful, Exception otherwise."""
+    """
+    Remove the antarctica role from a user, then remove them from the db.
+
+    Return None if successful, Exception otherwise.
+    """
     server = member.guild
     roles = member.roles
-    mute_role = bot.servertuples[server.id].mute_role
+    mute_role = await bot.get_mute_role(server)
     result = None
 
     if mute_role in roles:
@@ -143,8 +154,9 @@ def mdb_add(bot, mdbname, user, voluntary=False, end_date=None, prolong=True):
                 f"\n{RED}==> {error}{RESET}")
         return False
 
+
 def mdb_del(bot, mdbname, user):
-    """Removes a user from the mutes database."""
+    """Remove a user from the mutes database."""
     is_member = isinstance(user, discord.Member)
     if not is_member:
         # This should never happen, no point in even logging it.
@@ -177,9 +189,14 @@ def mdb_del(bot, mdbname, user):
                 f"\n{RED}==> {error}{RESET}")
             return False
 
+
 def mdb_fetch(bot, mdbname, in_data):
-    """If input is a server, return a list of all users from that server in the database.
-    If input is a member, return what we've got on that member."""
+    """
+    Return user or server mute information.
+
+    If input is a server, return a list of all users from that server in the database.
+    If input is a member, return what we've got on that member.
+    """
     is_member = isinstance(in_data, discord.Member)
     is_server = isinstance(in_data, discord.Guild)
 

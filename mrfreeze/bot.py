@@ -15,7 +15,6 @@ from typing import Any
 from typing import Awaitable
 from typing import Dict
 from typing import List
-from typing import NamedTuple
 from typing import Optional
 from typing import Union
 
@@ -23,7 +22,6 @@ import discord
 from discord import Guild
 from discord import Member
 from discord import Message
-from discord import Role
 from discord import TextChannel
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -50,12 +48,6 @@ from mrfreeze.lib.checks import MuteCheckFailure
 #     while not self.bot.is_closed():
 #         await asyncio.sleep(NUMBER)
 #         pass # Do stuff on loop
-class ServerTuple(NamedTuple):
-    """Class for holding various information about a given server."""
-
-    trash:        TextChannel
-    mute_channel: TextChannel
-    mute_role:    Optional[Role]
 
 
 class MrFreeze(commands.Bot):
@@ -69,9 +61,6 @@ class MrFreeze(commands.Bot):
 
         # Dict in which to save all the background tasks.
         self.bg_tasks: Dict[str, Awaitable] = dict()
-
-        # Dict in which to save the ServerTuple for each server.
-        self.servertuples: Dict[int, ServerTuple] = dict()
 
         # Setting up imported functions so they can be accessed by all cogs
         self.logger.debug("Linking imported functions as own methods")
@@ -116,10 +105,6 @@ class MrFreeze(commands.Bot):
 
     async def on_ready(self) -> None:
         """Set the bot up, print some greeting messages and stuff."""
-        # Set tuples up for all servers
-        for server in self.guilds:
-            await self.server_tuple(server)
-
         # Greeting (printed to console)
         greetmsg = greeting.bot_greeting(self)
         for line in greetmsg:
@@ -163,23 +148,6 @@ class MrFreeze(commands.Bot):
                 status += f"created:\n{colors.RED}==> {e}{colors.RESET}"
                 self.logger.error(status)
                 sys.exit(0)
-
-    async def server_tuple(self, server: Guild) -> None:
-        """
-        Create the server tuple for a given server.
-
-        The purpose of the server tuple is to keep various information so
-        that we won't have to make as many api calls to get channels from
-        ids and so on.
-
-        Avoid using this for now as it's not really in active use and doesn't
-        get updated when the values are updated.
-        """
-        self.servertuples[server.id] = ServerTuple(
-            await self.get_trash_channel(server),
-            await self.get_mute_channel(server),
-            await self.get_mute_role(server)
-        )
 
     def add_bg_task(self, task, name: str) -> None:
         """
