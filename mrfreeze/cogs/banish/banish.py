@@ -20,6 +20,7 @@ from typing import Tuple
 
 import discord
 from discord import Guild
+from discord.ext.commands import CheckFailure
 from discord.ext.commands import Context
 from discord.ext.commands import command
 
@@ -584,11 +585,9 @@ class BanishAndRegion(CogBase):
         USER_USER     User tried muting other user(s)
         USER_MIXED    User tried musing themselves and other user(s)
         """
-        if not isinstance(error, discord.ext.commands.CheckFailure):
+        if not isinstance(error, CheckFailure):
             # Only run this on Check Failure.
             return
-        else:
-            raise error
 
         mentions = ctx.message.mentions
         author = ctx.author
@@ -624,25 +623,26 @@ class BanishAndRegion(CogBase):
         duration = self.bot.parse_timedelta(duration)
 
         # Carry out the banish with resulting end date
-        error = await mute_db.carry_out_banish(
+        banish_error = await mute_db.carry_out_banish(
             self.bot,
             self.mdbname,
             author,
             self.logger,
             end_date
         )
+        error_msg = "unspecified error"
 
-        if isinstance(error, Exception):
-            if isinstance(error, discord.Forbidden):
-                error = "**a lack of privilegies**"
-            elif isinstance(error, discord.HTTPException):
-                error = "**an HTTP exception**"
+        if isinstance(banish_error, Exception):
+            if isinstance(banish_error, discord.Forbidden):
+                error_msg = "**a lack of privilegies**"
+            elif isinstance(banish_error, discord.HTTPException):
+                error_msg = "**an HTTP exception**"
             else:
-                error = "**an unknown error**"
+                error_msg = "**an unknown error**"
             template = MuteStr.USER_FAIL
 
         reply = templates[invocation][template].substitute(
-            author=author.mention, fails=fails, errors=error, timestamp=duration
+            author=author.mention, fails=fails, errors=error_msg, timestamp=duration
         )
 
         await ctx.send(reply)

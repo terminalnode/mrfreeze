@@ -4,11 +4,11 @@ from typing import Union
 
 import discord
 from discord import Member
-from discord.ext.commands import CheckFailure
+from discord.ext.commands import CommandError
 from discord.ext.commands import Context
 
 
-class MuteCheckFailure(CheckFailure):
+class MuteCheckFailure(CommandError):
     """Empty CheckFailure class for when the bot is muted in a server."""
 
     pass
