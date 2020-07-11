@@ -1,0 +1,38 @@
+[config]
+  name = [ "mute" ]
+  undo = [ "unmute" ]
+  micro = [ "micromute" ]
+  super = [ "supermute" ]
+  mega = [ "megamute" ]
+
+[templates]
+  freeze = "No *you* shut up!"
+  freeze_self = "If you shut up, I shut up. Deal?"
+  freeze_others = "If you could silence me you would've done so long ago, now $fails on the other hand... just give me the word."
+  self = "Believe me, if I could've I would've muted you the day I walked in here."
+  mod = "Look, nobody likes $fails but they're a mod so we're stuck with them."
+  mods = "Look, nobody likes $fails, but they're mods so we're stuck with them."
+  none = "You want me to mute... no one? Well, that makes my job easy."
+  single = "About time! $victims has been muted. $timestamp"
+  multi = "About time! $victims have been muted. $timestamp"
+  fail = "Due to $errors it seems I was unable to mute $fails. Damn shame."
+  fails = "Due to $errors it seems I was unable to mute $fails. Damn shame."
+  single_fail = "About time! $victims has been muted. $timestamp However due to $errors I was unable to mute $fails."
+  single_fails = "About time! $victims has been muted. $timestamp However due to $errors I was unable to mute $fails."
+  multi_fail = "About time! $victims have been muted. $timestamp However due to $errors I was unable to mute $fails."
+  multi_fails = "About time! $victims have been muted. $timestamp However due to $errors I was unable to mute $fails."
+  invalid = "If none of the users are muteable, how do you expect me to unmute them smud?"
+  unsingle = "Oh yay, it seems $victims is allowed to talk again."
+  unmulti = "Oh yay, it seems $victims are allowed to talk again."
+  unfail = "Fortunately $errors has come to save the day, $victims will remain muted for a while longer."
+  unfails = "Fortunately $errors has come to save the day, $victims will remain muted for a while longer."
+  unsingle_fail = "Oh yay, it seems $victims is allowed to talk again. However due to $errors $fails will remain muted for a while longer."
+  unsingle_fails = "Oh yay, it seems $victims is allowed to talk again. However due to $errors $fails will remain muted for a while longer."
+  unmulti_fail = "Oh yay, it seems $victims are allowed to talk again. However due to $errors $fails will remain muted for a while longer."
+  unmulti_fails = "Oh yay, it seems $victims are allowed to talk again. However due to $errors $fails will remain muted for a while longer."
+  user_none = "You forgot to specify who I'm supposed to mute $author, perhaps you should leave that command to the mods? You'll be muted $timestamp for your incompetency."
+  user_self = "So you want mute $author? Oh I'll give you mute! $timestamp of it!"
+  user_user = "Oh, look. The smuds are fighting again. Perhaps if I mute $author for $timestamp things will calm down for a while."
+  user_mixed = "No fear $fails! $author is a filthy smud unauthorized to use that command anyway. They won't be bothering you for the next $timestamp."
+  user_fail = "$author is a filthy smud trying to use access powers well beyond their capabilities, unfortunately I wasn't able to punish them for it due to $errors."
+  timestamp = "This will last for about $duration."

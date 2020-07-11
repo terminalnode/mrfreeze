@@ -4,6 +4,7 @@ token
 # Local files
 config/*
 !config/mrfreezequotes
+!config/banish_templates/
 databases
 .coverage
 .vim

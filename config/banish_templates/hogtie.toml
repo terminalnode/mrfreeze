@@ -1,0 +1,38 @@
+[config]
+  name = [ "tie", "hogtie" ]
+  undo = [ "untie", "unhogtie" ]
+  micro = [ "microtie", "microhogtie" ]
+  super = [ "supertie", "superhogtie" ]
+  mega = [ "megatie", "megahogtie" ]
+
+[templates]
+  freeze = "Hogtie myself? Why don't you come over here and make me?!"
+  freeze_self = "As lovely as it would be to be tied together with your smuddy ass, I think I'm gonna have to pass."
+  freeze_others = "I can think of at least a thousand things I'd rather do than tie myself to those smuds."
+  self = "You're into some kinky shit, I'll give you that."
+  mod = "Oh get a room you two..."
+  mods = "As much as I'd love to participate in your kink fest, it seems I'm all out of rope."
+  none = "Right, zero hogties coming up. That's saving me a lot of rope."
+  single = "$victims is all tied up and ready, just the way you like it... $timestamp"
+  multi = "$victims are all tied up nice and tight. Don't know why and don't want to know. $timestamp"
+  fail = "The ropes snapped and I wasn't able to tie $fails. The ropes most likely suffered from $errors."
+  fails = "The ropes snapped and I wasn't able to tie $fails. The ropes most likely suffered from $errors."
+  single_fail = "I was able to tie $victims up nice and tight, but my ropes snapped due to $errors before I was able to do the same to $fails. $timestamp"
+  single_fails = "I was able to tie $victims up nice and tight, but my ropes snapped due to $errors before I was able to do the same to $fails. $timestamp"
+  multi_fail = "I was able to tie $victims up nice and tight, but my ropes snapped due to $errors before I was able to do the same to $fails. $timestamp"
+  multi_fails = "I was able to tie $victims up nice and tight, but my ropes snapped due to $errors before I was able to do the same to $fails. $timestamp"
+  invalid = "Unfortunately none of the members you specified can be tied up to begin with, so there isn't much for me to do."
+  unsingle = "After all that work tying them up... $victims has been untied."
+  unmulti = "After all that work tying them up... $victims have been untied."
+  unfail = "I used a very special knot implementing $errors when I tied $fails up, and I can't seem to get it undone.."
+  unfails = "I used a very special knot implementing $errors when I tied $fails up, and I can't seem to get it undone."
+  unsingle_fail = "I managed to untie $victims, but for $fails I used a very special knot implementing $errors, and I can't seem to get it undone."
+  unsingle_fails = "I managed to untie $victims, but for $fails I used a very special knot implementing $errors, and I can't seem to get it undone."
+  unmulti_fail = "I managed to untie $victims, but for $fails I used a very special knot implementing $errors, and I can't seem to get it undone."
+  unmulti_fails = "I managed to untie $victims, but for $fails I used a very special knot implementing $errors, and I can't seem to get it undone."
+  user_none = "$author fumbles with the ropes and accidentally entangle themselves. Roll a d20 for mods to help you out or wait $timestamp."
+  user_self = "Looks like $author tied themselves up AGAIN. Ugh, I'll help them out... in $timestamp or so."
+  user_user = "No worries $fails, these ropes are MOD ONLY and last time I checked $author was just a filthy smud. Now they'll be a hogtied filthy smud for the next $timestamp."
+  user_mixed = "$fails want nothing to do with your smuddy kinks $author, perhaps $timestamp in the ropes will teach you a lesson."
+  user_fail = "Looks like $author is trying to access the mod tools again. I'd tie them up myself but my ropes are currently suffering from $errors. Maybe next time."
+  timestamp = "The knots will last for about $duration."

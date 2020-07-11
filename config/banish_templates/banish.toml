@@ -1,0 +1,38 @@
+[config]
+  name = [ "banish" ]
+  undo = [ "unbanish" ]
+  micro = [ "microbanish" ]
+  super = [ "superbanish" ]
+  mega = [ "megabanish" ]
+
+[templates]
+  freeze = "OK, I'll just march right on home then."
+  freeze_self = "Oh heeeeell no! This is my realm and you're not invited."
+  freeze_others = "If you think I'm spending a second more than necessary with $fails you're gravely mistaken."
+  self = "Oh heeeeell no! This is my realm and you're not invited."
+  mod = "Sorry, I have a strict no mods-policy at home."
+  mods = "Oh yay, mod party at my house! Me, $fails can have long enthralling talks on server policy all night! On second thought... PASS."
+  none = "Oki-doki, zero banishes coming up! That's OK, I like solitude. $timestamp"
+  single = "Good work! The filthy smud $victims has been banished! $timestamp"
+  multi = "Good work! The filthy smuds $victims have been banished! $timestamp"
+  fail = "Seems $fails is banned from going to Antarctica after having caused $errors there a few years back."
+  fails = "Seems $fails is banned from going to Antarctica after having caused $errors there a few years back."
+  single_fail = "Good work! The filthy smud $victims has been banished! $timestamp\n\nHowever it seems $fails is banned from going to Antarctica after having caused $errors there a few years back."
+  single_fails = "Good work! The filthy smud $victims has been banished! $timestamp\n\nHowever it seems $fails are banned from going to Antarctica after having caused $errors there a few years back."
+  multi_fail = "Good work! The filthy smuds $victims have been banished! $timestamp\n\nHowever it seems $fails is banned from going to Antarctica after having caused $errors there a few years back."
+  multi_fails = "Good work! The filthy smuds $victims have been banished! $timestamp\n\nHowever it seems $fails are banned from going to Antarctica after having caused $errors there a few years back."
+  invalid = "None of the users specified are even banishable you filthy smud."
+  unsingle = "Ew, $victims has been let back in."
+  unmulti = "Ew, $victims have been let back in."
+  unfail = "It seems $victims's boat encountered some $errors on the way back here. They'll stay in Antarctica for a while longer."
+  unfails = "It seems the boat $victims were travelling with encountered some $errors on the way back here. They'll stay in Antarctica for a while longer."
+  unsingle_fail = "Ew, $victims has been let back in. However $fails is being detained by the penguin police, suspected of having caused $errors."
+  unsingle_fails = "Ew, $victims has been let back in. However $fails are being detained by penguin police, suspected of having caused $errors."
+  unmulti_fail = "Ew, $victims have been let back in. However $fails is being detained by the penguin police, suspected of having caused $errors."
+  unmulti_fails = "Ew, $victims have been let back in. However $fails are being detained by penguin police, suspected of having caused $errors."
+  user_none = "If you're gonna be playing with mod tools $author you might at least use them correctly... you forgot to mention anyone. Congratulations, you've earned yourself $timestamp with the penguins!"
+  user_self = "Well, technically you're not even allowed to banish yourself $author but... how about I banish you for $timestamp instead?"
+  user_user = "$author Ignorant smud, you're not allowed to banish people. For your transgression you will be banished for $timestamp!"
+  user_mixed = "Sorry $author, it seems $fails had to cancel their trip. You'll have $timestamp all to yourself in the frozen wastelands of Antarctica. Enjoy!"
+  user_fail = "Ugh, my tools are malfunctioning. Due to $errors I was unable to punish $author for unauthorized use of the Antarctica Beam. I'll get them next time."
+  timestamp = "They will be stuck in the frozen hells of Antarctica for about $duration."

@@ -1,0 +1,38 @@
+[config]
+  name = [ "" ]
+  undo = [ "" ]
+  micro = [ "" ]
+  super = [ "" ]
+  mega = [ "" ]
+
+[templates]
+  freeze = ""
+  freeze_self = ""
+  freeze_others = ""
+  self = ""
+  mod = ""
+  mods = ""
+  none = ""
+  single = ""
+  multi = ""
+  fail = ""
+  fails = ""
+  single_fail = ""
+  single_fails = ""
+  multi_fail = ""
+  multi_fails = ""
+  invalid = ""
+  unsingle = ""
+  unmulti = ""
+  unfail = ""
+  unfails = ""
+  unsingle_fail = ""
+  unsingle_fails = ""
+  unmulti_fail = ""
+  unmulti_fails = ""
+  user_none = ""
+  user_self = ""
+  user_user = ""
+  user_mixed = ""
+  user_fail = ""
+  timestamp = ""
