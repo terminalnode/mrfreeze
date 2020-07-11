@@ -1,7 +1,6 @@
 """Cog used for fun user commands."""
 
 import random
-from typing import Optional
 
 import discord
 from discord.ext.commands import BotMissingPermissions
@@ -11,6 +10,7 @@ from discord.ext.commands.bot import Bot
 from discord.ext.commands.bot import Context
 
 from mrfreeze.cogs.cogbase import CogBase
+from mrfreeze.lib import activity
 from mrfreeze.lib import vote
 
 
@@ -93,102 +93,4 @@ class UserCommands(CogBase):
     # @discord.ext.commands.cooldown(1, (60*10), BucketType.default)
     async def _activity(self, ctx: Context, *args: str) -> None:
         """Dictate what text should be displayed under my nick."""
-        # Dictionary of all different activity types with keywords.
-        # The keywords are defined in separate tuples so I can access
-        # them without the dictionary.
-        play_words = ("play", "playing", "game", "gaming", "gameing")
-        stream_words = ("stream", "streaming")
-        listen_words = ("listen", "listening")
-        watch_words = ("watch", "watching")
-
-        activity_types = {
-            None: ("activity",),
-            discord.ActivityType.playing: play_words,
-            discord.ActivityType.streaming: stream_words,
-            discord.ActivityType.listening: listen_words,
-            discord.ActivityType.watching: watch_words
-        }
-
-        # We will determine the chosen activity in one of two ways.
-        # 1. By checking which alias they used.
-        # 2. By seeing which arguments they tried.
-        for type in activity_types:
-            for alias in activity_types[type]:
-                if alias == ctx.invoked_with:
-                    chosen_activity = type
-
-        # On to step 2, seeing which arguments they tried and
-        # possibly identifying a type of activity.
-        if chosen_activity is None:
-            for activity in activity_types:
-                for alias in activity_types[activity]:
-                    without_is = len(args) >= 1 and (args[0] == alias)
-                    with_is = (len(args) >= 2) and (args[0:2] == ("is", alias))
-                    if without_is:
-                        chosen_activity = activity
-                        args = args[1:]
-
-                    elif with_is:
-                        chosen_activity = activity
-                        args = args[2:]
-
-        success = False
-        max_activity_length = 30
-        if len(args) != 0:
-            joint_args = ' '.join(args)
-
-            # If we haven't been able to identify an
-            # activity we'll default to listening.
-            if chosen_activity is None:
-                chosen_activity = discord.ActivityType.listening
-
-            if len(joint_args) <= max_activity_length:
-                try:
-                    activity_obj = discord.Activity(
-                        name=joint_args,
-                        type=chosen_activity)
-                    await self.bot.change_presence(activity=activity_obj)
-                    success = True
-                except Exception:
-                    pass
-
-        if chosen_activity == discord.ActivityType.playing:
-            reply_activity = "playing"
-        elif chosen_activity == discord.ActivityType.streaming:
-            # streaming doesn't work as I want it,
-            # always says playing not streaming.
-            reply_activity = "playing"
-        elif chosen_activity == discord.ActivityType.listening:
-            reply_activity = "listening to"
-        elif chosen_activity == discord.ActivityType.watching:
-            reply_activity = "watching"
-        else:
-            # Default activity.
-            reply_activity = "listening to"
-
-        msg: Optional[str] = None
-        if success:
-            msg = f"{ctx.author.mention} OK then, I guess I'm "
-            msg += f"**{reply_activity} {joint_args}** now."
-
-        elif len(args) == 0:
-            # No activity specified.
-            if chosen_activity is None:
-                msg = f"{ctx.author.mention} You didn't tell me what to do."
-
-            else:
-                # No name specified.
-                msg = f"{ctx.author.mention} I can tell you want me to be **{reply_activity}** "
-                msg += "something, but I don't know what."
-
-        elif len(joint_args) >= max_activity_length:
-            # Too long.
-            msg = f"{ctx.author.mention} That activity is stupidly long ({len(joint_args)}). "
-            msg += f"The limit is {max_activity_length} characters."
-
-        else:
-            msg = "<@!154516898434908160> Something went wrong when trying to change my "
-            msg += "activity and I have no idea what. Come see!"
-
-        if msg:
-            await ctx.send(msg)
+        await activity.set_activity(ctx, self.bot, args)
