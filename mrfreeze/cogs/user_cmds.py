@@ -1,18 +1,17 @@
 """Cog used for fun user commands."""
 
 import random
-import re
 from typing import Optional
-from typing import Union
 
 import discord
-from discord import Emoji
+from discord.ext.commands import BotMissingPermissions
+from discord.ext.commands import bot_has_permissions
 from discord.ext.commands import command
 from discord.ext.commands.bot import Bot
 from discord.ext.commands.bot import Context
 
 from mrfreeze.cogs.cogbase import CogBase
-from mrfreeze.lib import colors
+from mrfreeze.lib import vote
 
 
 def setup(bot: Bot) -> None:
@@ -29,6 +28,20 @@ class UserCommands(CogBase):
 
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
+
+    @command(name="vote", aliases=["poll"])
+    @bot_has_permissions(add_reactions=True)
+    async def vote_cmd(self, ctx: Context, *args: str) -> None:
+        """Create a poll."""
+        await vote.vote(ctx, self.bot)
+
+    @vote_cmd.error
+    async def vote_cmd_error(self, ctx: Context, error: Exception) -> None:
+        """Handle errors that happen in the vote command."""
+        if isinstance(error, BotMissingPermissions):
+            msg = f"{ctx.author.mention} The moderators goofed up it seems. "
+            msg += "I'm not allowed to react."
+            await ctx.send(msg)
 
     @command(name="praise")
     async def _praise(self, ctx: Context, *args: str) -> None:
@@ -73,73 +86,6 @@ class UserCommands(CogBase):
             await ctx.send(f"{ctx.author.mention} Heads")
         else:
             await ctx.send(f"{ctx.author.mention} Tails")
-
-    @command(name="vote", aliases=["election", "choice", "choose"])
-    async def _vote(self, ctx: Context, *args: str) -> None:
-        """Create a handy little vote using reacts."""
-        async def add_reacts(reacts):
-            react_error = False
-            at_least_one = False
-            if None in reacts:
-                nitro_error = True
-            else:
-                nitro_error = False
-
-            for react in reacts:
-                if isinstance(react, discord.Emoji):
-                    try:
-                        await ctx.message.add_reaction(react)
-                        at_least_one = True
-                    except Exception:
-                        react_error = True
-
-                elif isinstance(react, str):
-                    string_options = (react, react[0:2], react[0])
-                    for option in string_options:
-                        try:
-                            await ctx.message.add_reaction(option)
-                            at_least_one = True
-                            break
-                        except Exception:
-                            pass
-
-            msg: Optional[str] = None
-
-            if react_error:
-                log = f"{colors.RED_B}!vote{colors.CYAN} Not allowed to add react "
-                log += f"in {ctx.guild.name}{colors.RESET}"
-                print(log)
-
-                msg = f"{ctx.author.mention} The moderators dun goofed I think. I encountered "
-                msg += f"some sort of anomaly when trying to vote."
-
-            elif nitro_error:
-                msg = f"{ctx.author.mention} There seem to be some emoji there I don't have "
-                msg += "access to.\nI need to be in the server the emoji is from."
-
-            elif not at_least_one:
-                msg = f"{ctx.author.mention} There's literally nothing I can vote for you little "
-                msg += "smudmeister!"
-
-            if msg is not None:
-                await ctx.send(msg)
-
-        rows = ctx.message.content.split("\n")
-        rows[0] = rows[0].replace("!vote ", "")
-        reacts = [self.find_custom_emoji(row) for row in rows]
-        await add_reacts(reacts)
-
-    def find_custom_emoji(self, line: str) -> Union[Emoji, str]:
-        """Match custom emojis in strings, or return first three characters."""
-        emoji = re.match(r"<a?:\w+:(\d+)>", line)
-
-        if emoji is None:
-            # Non-custom emoji can be up to three characters long.
-            return line[0:3]
-
-        else:
-            emo_id = emoji.group(1)
-            return self.bot.get_emoji(int(emo_id))
 
     @command(name="activity", aliases=[
         "listen", "listening", "playing", "play", "game", "gaming", "gameing",
