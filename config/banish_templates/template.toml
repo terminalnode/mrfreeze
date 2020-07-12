@@ -1,38 +1,95 @@
-[config]
-  name = [ "" ]
-  undo = [ "" ]
-  micro = [ "" ]
-  super = [ "" ]
-  mega = [ "" ]
+# This is a template for creating your own banish commands. A banish command can be thought of
+# as a sort of "skin" for !mute/!banish. The underlying mechanisms are the same, the user is given
+# the mute role and it can be ungiven using !unmute/!unbanish.
+#
+# The commands are not separated in any way except by the responses and invocations used.
+# A person who was muted with !banish can be unmuted with !unmute and vice versa.
+
+[names]
+  # Do NOT include the "!" in front of the names!
+  # None of these can be empty strings.
+
+  # Required!
+  # The base name(s) of the command, e.g. "banish"
+  # The "undo" variant(s) of the command, e.g. "unbanish"
+  main = [ "mybanish" ]
+  undo = [ "unmybanish", "myunbanish" ]
+
+  # Not required
+  # The "micro" variant(s) of the command, e.g. "microbanish"
+  # The "super" variant(s) of the command, e.g. "superbanish"
+  # The "mega" variant(s) of the command, e.g. "megabanish"
+  micro = [ ]
+  super = [ ]
+  mega = [ ]
 
 [templates]
+  # Here we define our string templates. The comments above each value explain when it will be used.
+  #
+  # Available wild cards are:
+  # $author     A mention of the author.
+  # $victims    A list of all the users who were banished. (mentions list)
+  # $fails      A list of all the failed banish attempts. (mentions list)
+  # $timestamp  A timestamp saying how long the mute will last.
+  # $errors     A list of all errors encountered.
+
+  # Tried muting: MrFreeze
   freeze = ""
+  # Tried muting: MrFreeze + only self
   freeze_self = ""
+  # Tried muting: MrFreeze + others (possibly self)
   freeze_others = ""
+  # Tried muting: self
   self = ""
+  # Tried muting: a single mod
   mod = ""
+  # Tried muting: several mods (possibly self)
   mods = ""
+  # No mentions in list
   none = ""
+  # Successfully muted one
   single = ""
+  # Successfully muted more than one
   multi = ""
+  # Failed to mute one
   fail = ""
+  # Failed to mute more than one
   fails = ""
+  # Muted one, failed one
   single_fail = ""
+  # Muted one, failed multiple
   single_fails = ""
+  # Muted multiple, failed one
   multi_fail = ""
+  # Muted multiple, failed multiple
   multi_fails = ""
+  # Invalid unmute (targeting freeze or mods)
   invalid = ""
+  # Successfully unmuted one
   unsingle = ""
+  # Successfully unmuted more than one
   unmulti = ""
+  # Failed to unmute one
   unfail = ""
+  # Failed to unmute more than one
   unfails = ""
+  # Unmuted one, failed one
   unsingle_fail = ""
+  # Unmuted one, failed multiple
   unsingle_fails = ""
+  # Unmuted multiple, failed one
   unmulti_fail = ""
+  # Unmuted multiple, failed multiple
   unmulti_fails = ""
+  # User invoked mute with no arguments
   user_none = ""
+  # User tried muting themselves
   user_self = ""
+  # User tried muting other user(s)
   user_user = ""
+  # User tried musing themselves and other user(s)
   user_mixed = ""
+  # User punishment failed
   user_fail = ""
+  # The time stamp for the end of the message
   timestamp = ""

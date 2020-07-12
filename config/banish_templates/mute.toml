@@ -1,9 +1,9 @@
-[config]
-  name = [ "mute" ]
+[names]
+  main = [ "mute" ]
   undo = [ "unmute" ]
   micro = [ "micromute" ]
-  super = [ "supermute" ]
-  mega = [ "megamute" ]
+  super = [ "supermute", "SUPERMUTE" ]
+  mega = [ "megamute", "MEGAMUTE" ]
 
 [templates]
   freeze = "No *you* shut up!"

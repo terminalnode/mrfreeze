@@ -1,9 +1,9 @@
-[config]
-  name = [ "banish" ]
+[names]
+  main = [ "banish" ]
   undo = [ "unbanish" ]
   micro = [ "microbanish" ]
-  super = [ "superbanish" ]
-  mega = [ "megabanish" ]
+  super = [ "superbanish", "SUPERBANISH" ]
+  mega = [ "megabanish", "MEGABANISH" ]
 
 [templates]
   freeze = "OK, I'll just march right on home then."

@@ -1,9 +1,9 @@
-[config]
-  name = [ "tie", "hogtie" ]
+[names]
+  main = [ "tie", "hogtie" ]
   undo = [ "untie", "unhogtie" ]
   micro = [ "microtie", "microhogtie" ]
-  super = [ "supertie", "superhogtie" ]
-  mega = [ "megatie", "megahogtie" ]
+  super = [ "supertie", "superhogtie", "SUPERTIE", "SUPERHOGTIE" ]
+  mega = [ "megatie", "megahogtie", "MEGATIE", "MEGAHOGTIE" ]
 
 [templates]
   freeze = "Hogtie myself? Why don't you come over here and make me?!"
