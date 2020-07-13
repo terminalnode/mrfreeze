@@ -161,7 +161,7 @@ class Moderation(CogBase):
         pass
 
     @command(name='say', aliases=['speak', 'chat'])
-    @check(checks.is_mod)
+    @check(checks.is_owner_or_mod)
     async def _say(self, ctx: Context, channel: TextChannel, *args: str) -> None:
         """Let me be your voice."""
         replystr = ' '.join(args)
