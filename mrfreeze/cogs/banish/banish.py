@@ -32,8 +32,15 @@ from mrfreeze.cogs.banish.templates import templates
 from mrfreeze.cogs.cogbase import CogBase
 from mrfreeze.lib import checks
 from mrfreeze.lib import colors
+from mrfreeze.lib.banish import templates as banish_templates
 
+mute_templates: banish_templates.TemplateEngine
+mute_command: str
+mute_command_aliases: List[str]
+template_engine = banish_templates.TemplateEngine()
+(mute_command, *mute_command_aliases) = template_engine.get_aliases()
 
+# TODO Delete once template engine is done
 banish_aliases = ["unbanish", "microbanish",
                   "superbanish", "SUPERBANISH",
                   "megabanish", "MEGABANISH"]
@@ -48,8 +55,7 @@ hogtie_aliases = ["hogtie", "unhogtie", "microhogtie",
 mute_aliases = ["mute", "unmute", "micromute",
                 "supermute", "SUPERMUTE",
                 "megamute", "MEGAMUTE"]
-
-all_aliases = banish_aliases + hogtie_aliases + mute_aliases
+# TODO Delete above once template engine is done
 
 
 def setup(bot: MrFreeze) -> None:
@@ -98,9 +104,7 @@ class BanishAndRegion(CogBase):
 
         # Self mute interval governs how long to banish
         # unauthorized uses of !mute/!banish etc
-        self.self_mute_time_name = 'self_mute_time'
         self.default_self_mute_time = 20
-        self.self_mute_time_dict: Dict[int, int] = dict()
 
         # Mutes database creation
         self.mdbname = mdbname
@@ -158,17 +162,6 @@ class BanishAndRegion(CogBase):
 
             # Add unbanish loop to bot
             self.bot.add_bg_task(self.unbanish_loop(server), f'unbanish@{server.id}')
-
-            # Set how long a member should be punished for after unauthorized !mute usage
-            self_mute_time = self.bot.read_server_setting(
-                self.bot,
-                server,
-                self.self_mute_time_name
-            )
-            if self_mute_time and self_mute_time.isdigit():
-                self.self_mute_time_dict[server.id] = int(self_mute_time)
-            else:
-                self.self_mute_time_dict[server.id] = self.default_self_mute_time
 
             # Construct region dict
             self.regions[server.id] = dict()
@@ -323,7 +316,7 @@ class BanishAndRegion(CogBase):
         if proposed_time is None:
             msg = f"{author} Please specify the time in minutes and try again."
 
-        elif proposed_time == self.self_mute_time_dict[server.id]:
+        elif proposed_time == await self.bot.get_self_mute_time(server):
             msg = f"{author} The self mute time for this server is already set to {proposed_time}."
 
         elif proposed_time == 0:
@@ -334,14 +327,8 @@ class BanishAndRegion(CogBase):
             msg += "a bit harsh..."
 
         else:
-            old_time = self.self_mute_time_dict[server.id]
-            self.self_mute_time_dict[server.id] = proposed_time
-            setting_saved = self.bot.write_server_setting(
-                self.bot,
-                server,
-                self.self_mute_time_name,
-                str(proposed_time)
-            )
+            old_time = await self.bot.get_self_mute_time(server)
+            setting_saved = self.bot.settings.set_self_mute_time(server, proposed_time)
 
             if setting_saved:
                 msg = f"{author} The self mute time has been changed from {old_time} to "
@@ -354,7 +341,7 @@ class BanishAndRegion(CogBase):
         if msg is not None:
             await ctx.send(msg)
 
-    @command(name='banish', aliases=all_aliases)
+    @command(name=mute_command, aliases=mute_command_aliases)
     @discord.ext.commands.check(checks.is_mod)
     async def _banish(self, ctx: Context, *args: str) -> None:
         """Mute one or more users (can only be invoked by mods)."""
@@ -618,7 +605,11 @@ class BanishAndRegion(CogBase):
         elif mix:
             template = MuteStr.USER_MIXED
 
-        duration = datetime.timedelta(minutes = self.self_mute_time_dict[server.id])
+        self_mute_time: Optional[int] = await self.bot.get_self_mute_time(server)
+        if not (self_mute_time):
+            self_mute_time = self.default_self_mute_time
+
+        duration = datetime.timedelta(minutes = float(self_mute_time))
         end_date = datetime.datetime.now() + duration
         duration = self.bot.parse_timedelta(duration)
 

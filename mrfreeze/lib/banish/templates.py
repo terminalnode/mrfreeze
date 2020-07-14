@@ -71,11 +71,14 @@ class BanishTemplate:
     data: MutableMapping[str, Any]
     filename: str
     names: List[str]
+    templates: Dict[MuteResponse, Template]
 
     def __init__(self, file: str) -> None:
         print(f"Hello, {file} here!")
-        self.filename = file
         self.data = toml.load(f"config/banish_templates/{file}")
+        self.filename = file
+        self.names = list()
+        self.templates = dict()
 
     def has_name(self, name: str) -> bool:
         """Check if this template has this name."""
@@ -87,6 +90,8 @@ class BanishTemplate:
 
     def parse_names(self, others: List['BanishTemplate']) -> None:
         """Read this template's command names from data."""
+        # Verify that all the required fields are filled in,  add used fields to
+        # unflattened_aliases and finally set self.names to this flattened list.
         names = self.data.get("names")
         if not names:
             raise MissingNameException(f"{self.filename} is missing names section.")
@@ -123,14 +128,13 @@ class BanishTemplate:
             error = f"{self.filename} is missing templates section."
             raise MissingTemplateException(error)
 
-        parsed_templates: Dict[MuteResponse, Template] = dict()
         for template in MuteResponse:
             template_string = templates.get(template.value)
             if not template_string:
                 error = f"{self.filename} is missing template: {template.value}"
                 raise MissingTemplateException(error)
 
-            parsed_templates[template] = Template(template_string)
+            self.templates[template] = Template(template_string)
 
     def strip_iterable(self, iterable: Iterable) -> Iterable:
         """Remove all empty strings from an iterable."""
@@ -155,3 +159,8 @@ class TemplateEngine:
             self.templates.append(new_template)
 
         print(f"Loaded {len(self.templates)}!")
+
+    def get_aliases(self) -> List[str]:
+        """Get a list of all command names."""
+        name_lists = [ template.names for template in self.templates ]
+        return list(itertools.chain.from_iterable(name_lists))
