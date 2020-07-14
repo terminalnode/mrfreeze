@@ -209,6 +209,14 @@ class MrFreeze(commands.Bot):
                 return role
         return None
 
+    async def get_self_mute_time(self, guild: Guild) -> Optional[int]:
+        """
+        Get the server's designated self mute time.
+
+        If none is specified this simply returns None.
+        """
+        return self.settings.get_self_mute_time(guild)
+
     def mentions_list(self, mentions: List[Member]) -> str:
         """Create a string of mentions from a list of user objects."""
         mentions = [user.mention for user in mentions]
