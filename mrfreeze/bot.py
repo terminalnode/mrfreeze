@@ -209,7 +209,7 @@ class MrFreeze(commands.Bot):
                 return role
         return None
 
-    async def get_self_mute_time(self, guild: Guild) -> Optional[int]:
+    def get_self_mute_time(self, guild: Guild) -> Optional[int]:
         """
         Get the server's designated self mute time.
 

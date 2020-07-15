@@ -253,6 +253,19 @@ class BanishAndRegion(CogBase):
                 if msg is not None:
                     await mute_channel.send(msg)
 
+    def get_self_mute_time(self, server: Guild) -> int:
+        """
+        Return the default self-mute time for the server.
+
+        If the server lacks its own self-mute time, the default is returned instead.
+        """
+        server_smt: Optional[int]
+        server_smt = self.bot.get_self_mute_time(server)
+        if server_smt:
+            return server_smt
+        else:
+            return self.default_self_mute_time
+
     @command(
         name="banishinterval",
         aliases=[ "banishint", "baninterval", "banint", "muteinterval", "muteint" ])
@@ -304,6 +317,7 @@ class BanishAndRegion(CogBase):
     async def _selfmutetime(self, ctx: Context, *args: str) -> None:
         author = ctx.author.mention
         server = ctx.guild
+        old_time = self.get_self_mute_time(server)
         proposed_time = None
 
         # Look for first number in args and use as new self mute time.
@@ -316,7 +330,7 @@ class BanishAndRegion(CogBase):
         if proposed_time is None:
             msg = f"{author} Please specify the time in minutes and try again."
 
-        elif proposed_time == await self.bot.get_self_mute_time(server):
+        elif proposed_time == old_time:
             msg = f"{author} The self mute time for this server is already set to {proposed_time}."
 
         elif proposed_time == 0:
@@ -327,7 +341,6 @@ class BanishAndRegion(CogBase):
             msg += "a bit harsh..."
 
         else:
-            old_time = await self.bot.get_self_mute_time(server)
             setting_saved = self.bot.settings.set_self_mute_time(server, proposed_time)
 
             if setting_saved:
@@ -605,7 +618,7 @@ class BanishAndRegion(CogBase):
         elif mix:
             template = MuteStr.USER_MIXED
 
-        self_mute_time: Optional[int] = await self.bot.get_self_mute_time(server)
+        self_mute_time: Optional[int] = self.get_self_mute_time(server)
         if not (self_mute_time):
             self_mute_time = self.default_self_mute_time
 
