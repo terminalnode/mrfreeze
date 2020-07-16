@@ -70,7 +70,7 @@ class ABCTableDict(ABCTableBase):
                 new_dict[entry[0]] = entry[1]
 
             self.dict = new_dict
-            self.infolog(f"successfully fetched data")
+            self.infolog("successfully fetched data")
         else:
             self.errorlog(f"failed to fetch data: {query.error}")
             self.dict = None
@@ -92,7 +92,7 @@ class ABCTableDict(ABCTableBase):
         # Finally, return the actual value from the dictionary.
         return self.dict[server.id]
 
-    def update_dictionary(self, key: int, value: Union[int, bool]) -> bool:
+    def update_dictionary(self, key: int, value: Any) -> bool:
         """Update the dictionary for a given module."""
         if self.dict is None:
             self.load_from_db()
@@ -107,11 +107,11 @@ class ABCTableDict(ABCTableBase):
         """Set the value using a TextChannel or Role object."""
         return self.upsert(object.guild, object.id)
 
-    def set_by_id(self, server: Guild, value: Union[bool, int]) -> bool:
+    def set_by_id(self, server: Guild, value: Any) -> bool:
         """Set the value using a Guild object and a value."""
         return self.upsert(server, value)
 
-    def upsert(self, server: Guild, value: Union[int, bool]) -> bool:
+    def upsert(self, server: Guild, value: Any) -> bool:
         """Insert or update the value for `server.id` with `value`."""
         query = db_execute(self.dbpath, self.insert, (server.id, value, value))
 
