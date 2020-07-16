@@ -528,19 +528,17 @@ class Moderation(CogBase):
     @check(checks.is_mod)
     async def _kick(self, ctx: Context, *args: str) -> None:
         """Force a user to leave the server temporarily."""
-        # This function kicks the user out of the server in which it is issued.
         success_list = list()
         fail_list = list()
         mods_list = list()
+        mentions = ctx.message.mentions
         forbidden_error = False
         http_error = False
         reason = self.extract_reason(" ".join(args))
+        verb = ctx.invoked_with
 
         # If they tried to kick a mod christmas is cancelled.
-        mod_role = discord.utils.get(ctx.guild.roles, name="Administration")
-        mods_list = [user
-                     for user in ctx.message.mentions
-                     if mod_role in user.roles]
+        mods_list = [ user for user in mentions if user.guild_permissions.administrator ]
         ment_mods = self.mentions_list(mods_list)
 
         tried_to_kick_mod = False
@@ -548,18 +546,18 @@ class Moderation(CogBase):
             tried_to_kick_mod = True
 
         # Start the kicking.
-        if len(ctx.message.mentions) > 0 and not tried_to_kick_mod:
-            for victim in ctx.message.mentions:
+        if len(mentions) > 0 and not tried_to_kick_mod:
+            for victim in mentions:
                 try:
                     if reason is None:
                         await ctx.guild.kick(victim)
                         status  = f"{WHITE_B}{victim.name}#{victim.discriminator}{CYAN} was "
-                        status += f"{RED_B}kicked from {ctx.guild.name} {CYAN}by {GREEN_B}"
+                        status += f"{RED_B}{verb}ed from {ctx.guild.name} {CYAN}by {GREEN_B}"
                         status += f"{ctx.author.name}#{ctx.author.discriminator}"
                     else:
                         await ctx.guild.kick(victim, reason=reason)
                         status  = f"{WHITE_B}{victim.name}#{victim.discriminator}{CYAN} was "
-                        status += f"{RED_B}kicked from {ctx.guild.name} {CYAN}by {GREEN_B}"
+                        status += f"{RED_B}{verb}ed from {ctx.guild.name} {CYAN}by {GREEN_B}"
                         status += f"{ctx.author.name}#{ctx.author.discriminator}{CYAN}."
                         status += f"\n{WHITE_B}Reason given: {WHITE}{reason}{RESET}"
                     success_list.append(victim)
@@ -569,7 +567,7 @@ class Moderation(CogBase):
                     fail_list.append(victim)
                     forbidden_error = True
 
-                    status = f"{RED_B}ERROR {CYAN}I was not allowed to {RED_B}!kick "
+                    status = f"{RED_B}ERROR {CYAN}I was not allowed to {RED_B}!{verb} "
                     status += f"{WHITE_B}{victim.name}#{victim.discriminator}"
                     status += f"{CYAN} in {RED_B}{ctx.guild.name}{CYAN}.{RESET}"
                     self.logger.info(status)
@@ -578,7 +576,7 @@ class Moderation(CogBase):
                     fail_list.append(victim)
                     http_error = True
 
-                    status = f"{RED_B}ERROR {CYAN}I couldn't {RED_B}!kick {WHITE_B}"
+                    status = f"{RED_B}ERROR {CYAN}I couldn't {RED_B}!{verb} {WHITE_B}"
                     status += f"{victim.name}#{victim.discriminator}{CYAN} in {RED_B}"
                     status += f"{ctx.guild.name} {CYAN}due to an HTTP Exception.{RESET}"
                     self.logger.info(status)
@@ -597,37 +595,38 @@ class Moderation(CogBase):
             # Singular
             if len(success_list) == 1:
                 replystr = f"{ctx.author.mention} The smud who goes by the name of {ment_success} "
-                replystr += "has been kicked from the server, never to be seen again!"
+                replystr += f"has been {verb}ed from the server, never to be seen again!"
 
             # Plural
             else:
                 replystr = f"{ctx.author.mention} The smuds who go by the names of {ment_success} "
-                replystr += "have been kicked from the server, never to be seen again!"
+                replystr += f"have been {verb}ed from the server, never to be seen again!"
 
         # Had no successes and at least one fail.
         elif (len(success_list) == 0) and (len(fail_list) > 0):
 
             # Singular
             if len(fail_list) == 1:
-                replystr  = f"{ctx.author.mention} So... it seems I wasn't able to kick "
-                replystr += "{ment_fail} due to: "
+                replystr  = f"{ctx.author.mention} So... it seems I wasn't able to {verb} "
+                replystr += f"{ment_fail} due to: "
 
             # Plural
             else:
                 replystr  = f"{ctx.author.mention} So... it seems I wasn't able to "
-                replystr += "kick any of {ment_fail}.\nThis was due to: "
+                replystr += f"{verb} any of {ment_fail}.\nThis was due to: "
 
         # Had at least one success and at least one fail.
         elif (len(success_list) > 0) and (len(fail_list) > 0):
             # Singular and plural don't matter here.
             replystr =  f"{ctx.author.mention} The request was executed with mixed results."
-            replystr += f"\nKicked: {ment_success}\nNot kicked: {ment_fail}\nThis was due to: "
+            replystr += f"\n{verb.capitalize()}ed: {ment_success}\n"
+            replystr += f"Not {verb.capitalize()}ed: {ment_fail}\nThis was due to: "
 
         # Had no mentions whatsoever.
-        elif len(ctx.message.mentions) == 0:
+        elif len(mentions) == 0:
             # Singular and plural don't matter here.
             replystr  = f"{ctx.author.mention} You forgot to mention anyone "
-            replystr += "you doofus. Who exactly am I meant to kick??"
+            replystr += "you doofus. Who exactly am I meant to {verb}??"
 
         # Now we're adding in the error codes if there are any.
         if forbidden_error and http_error:
@@ -640,9 +639,13 @@ class Moderation(CogBase):
         # Finally, a special message to people who tried to kick a mod.
         if tried_to_kick_mod:
             if (len(mods_list) == 1) and ctx.author in mods_list:
-                replystr = f"{ctx.author.mention} You can't kick yourself, silly."
+                replystr = f"{ctx.author.mention} You can't {verb} yourself, silly."
+            elif (len(mods_list)) == 1:
+                replystr = f"{ctx.author.mention} Unfortunately you can't {verb} "
+                replystr += f"{ment_mods}, because they're a mod."
             else:
-                replystr = f"{ctx.author.mention} Not even you can kick the likes of {ment_mods}."
+                replystr = f"{ctx.author.mention} Unfortunately you can't {verb} "
+                replystr += f"{ment_mods}, because they're mods."
 
         await ctx.send(replystr)
 
