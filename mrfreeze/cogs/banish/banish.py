@@ -33,6 +33,7 @@ from mrfreeze.cogs.cogbase import CogBase
 from mrfreeze.lib import checks
 from mrfreeze.lib import colors
 from mrfreeze.lib.banish import templates as banish_templates
+from mrfreeze.lib.banish.time_settings import set_self_mute
 
 mute_templates: banish_templates.TemplateEngine
 mute_command: str
@@ -56,6 +57,15 @@ mute_aliases = ["mute", "unmute", "micromute",
                 "supermute", "SUPERMUTE",
                 "megamute", "MEGAMUTE"]
 # TODO Delete above once template engine is done
+
+selfmute_command = "selfmutetime"
+selfmute_aliases = ['smt', 'selfmute', 'mutetime']
+
+banish_interval_command = "banishinterval"
+banish_interval_aliases = [ "muteinterval" ]
+
+banishtime_command = "banishtime"
+banishtime_aliases = [ "amibanished", "howmuchlonger" ]
 
 
 def setup(bot: MrFreeze) -> None:
@@ -115,6 +125,20 @@ class BanishAndRegion(CogBase):
             until       date,
             CONSTRAINT  server_user PRIMARY KEY (id, server));"""
         bot.db_create(self.bot, self.mdbname, mdbtable)
+
+    def get_self_mute_time(self, server: Guild, return_none: bool = False) -> Optional[int]:
+        """
+        Return the default self-mute time for the server.
+
+        If the server lacks its own self-mute time, the default is returned instead.
+        """
+        server_smt: Optional[int]
+        server_smt = self.bot.get_self_mute_time(server)
+
+        if server_smt or return_none:
+            return server_smt
+        else:
+            return self.default_self_mute_time
 
     def word_distance(self, a: str, b: str) -> int:
         """Get the word distance between two words."""
@@ -253,22 +277,7 @@ class BanishAndRegion(CogBase):
                 if msg is not None:
                     await mute_channel.send(msg)
 
-    def get_self_mute_time(self, server: Guild) -> int:
-        """
-        Return the default self-mute time for the server.
-
-        If the server lacks its own self-mute time, the default is returned instead.
-        """
-        server_smt: Optional[int]
-        server_smt = self.bot.get_self_mute_time(server)
-        if server_smt:
-            return server_smt
-        else:
-            return self.default_self_mute_time
-
-    @command(
-        name="banishinterval",
-        aliases=[ "banishint", "baninterval", "banint", "muteinterval", "muteint" ])
+    @command(name=banish_interval_command, aliases=banish_interval_aliases)
     @discord.ext.commands.check(checks.is_owner_or_mod)
     async def _banishinterval(self, ctx: Context, *args: str) -> None:
         author = ctx.author.mention
@@ -312,47 +321,10 @@ class BanishAndRegion(CogBase):
         if reply is not None:
             await ctx.send(reply)
 
-    @command(name='selfmutetime', aliases=['smt', 'selfmute', 'mutetime'])
-    @discord.ext.commands.check(checks.is_mod)
-    async def _selfmutetime(self, ctx: Context, *args: str) -> None:
-        author = ctx.author.mention
-        server = ctx.guild
-        old_time = self.get_self_mute_time(server)
-        proposed_time = None
-
-        # Look for first number in args and use as new self mute time.
-        for arg in args:
-            if arg.isdigit():
-                proposed_time = int(arg)
-                break
-
-        msg = None
-        if proposed_time is None:
-            msg = f"{author} Please specify the time in minutes and try again."
-
-        elif proposed_time == old_time:
-            msg = f"{author} The self mute time for this server is already set to {proposed_time}."
-
-        elif proposed_time == 0:
-            msg = f"{author} Zero is not a valid self mute time, smud."
-
-        elif proposed_time > 3600 * 24 * 7:
-            msg = f"{author} I may be evil, but even I think more than a weeks punishment is "
-            msg += "a bit harsh..."
-
-        else:
-            setting_saved = self.bot.settings.set_self_mute_time(server, proposed_time)
-
-            if setting_saved:
-                msg = f"{author} The self mute time has been changed from {old_time} to "
-                msg += f"{proposed_time} minutes."
-            else:
-                msg = f"{author} The self mute time has been changed from {old_time} to "
-                msg += f"{proposed_time} minutes, *BUT* for some reason I was unable to "
-                msg += f"save this setting, so it will be reset to {old_time} once I restart."
-
-        if msg is not None:
-            await ctx.send(msg)
+    @command(name=selfmute_command, aliases=selfmute_aliases)
+    @discord.ext.commands.check(checks.is_owner_or_mod)
+    async def _selfmutetime(self, ctx: Context, number: Optional[int], *args: str) -> None:
+        await set_self_mute(ctx, self.bot, number)
 
     @command(name=mute_command, aliases=mute_command_aliases)
     @discord.ext.commands.check(checks.is_mod)
@@ -651,7 +623,7 @@ class BanishAndRegion(CogBase):
 
         await ctx.send(reply)
 
-    @command(name="banishtime", aliases=["amibanished", "howmuchlonger"])
+    @command(name=banishtime_command, aliases=banishtime_aliases)
     async def banishtime(self, ctx: Context) -> None:
         """Check how long until you're unbanished."""
         banish_list: List[mute_db.BanishTuple]
