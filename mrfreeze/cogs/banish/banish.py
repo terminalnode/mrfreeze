@@ -32,6 +32,7 @@ from mrfreeze.cogs.cogbase import CogBase
 from mrfreeze.lib import checks
 from mrfreeze.lib import colors
 from mrfreeze.lib.banish import mute_db
+from mrfreeze.lib.banish.roulette import roulette
 from mrfreeze.lib.banish import templates as banish_templates
 from mrfreeze.lib.banish.time_settings import set_self_mute
 
@@ -655,87 +656,7 @@ class BanishAndRegion(CogBase):
     @command(name="roulette")
     async def roulette(self, ctx: Context, *args: str) -> None:
         """Roll the dice and test your luck, banish or nothing."""
-        member = ctx.author
-        mention = member.mention
-        http_exception = False
-        forbidden_exception = False
-        other_exception = False
-
-        penposium = 444289793141112864
-        bot_trash = 471909336377982976
-        bots = 445708393789915146
-
-        # Skip if server is Penposium and channel isn't #bot-trash or #bots
-        if ctx.guild.id == penposium and ctx.channel.id not in (bot_trash, bots):
-            await ctx.send("Please only use that command in the bot-trash channel... smud.")
-            return
-
-        if random.randint(1, 6) == 1:
-            # Tough luck, yer goin' down
-
-            banish_time = random.randint(1, 5)
-            duration = datetime.timedelta(minutes = banish_time)
-            end_date = datetime.datetime.now() + duration
-            msg = "I should probably say something now... but I don't know what."
-
-            if banish_time == 1:
-                msg = f"{mention} rolls the dice, the gun doesn't fire but somehow "
-                msg += "they manage to hurt themselves with it anyway. A minute in "
-                msg += "Antarctica and they'll be good as new!"
-
-            elif banish_time == 2:
-                msg = f"{mention} rolls the dice, but the gun misfires and explodes in "
-                msg += "their hand. Better put some ice on that, should be fine in 2 minutes."
-
-            elif banish_time == 3:
-                msg = f"{mention} rolls the dice, slips and shoots themselves in the leg. "
-                msg += "The nearest hospital they can afford is in Antarctica, where "
-                msg += "they will be spending the next 3 minutes."
-
-            elif banish_time == 4:
-                msg = f"{mention} rolls the dice of death, but the gun is jammed. "
-                msg += "As they're looking down the barrel something blows up and "
-                msg += "hits them in the eye. 4 minutes in Antarctica!"
-
-            else:
-                msg = f"{mention} rolls a headshot on the dice of death! 5 minutes in Antarctica!"
-
-            error = await mute_db.carry_out_banish(
-                self.bot,
-                self.mdbname,
-                member,
-                self.logger,
-                end_date
-            )
-
-            if isinstance(error, Exception):
-                if isinstance(error, discord.HTTPException):
-                    http_exception = True
-                elif isinstance(error, discord.Forbidden):
-                    forbidden_exception = True
-                else:
-                    other_exception = True
-
-            if http_exception:
-                msg = f"While {mention} did fail and hurt themselves spectacularly in the "
-                msg += "roulette there's not much I can do about it due to some stupid HTTP error."
-            elif forbidden_exception:
-                msg = f"While {mention} did fail and hurt themselves spectacularly in the "
-                msg += "roulette there's not much I can do about it because I'm not allowed "
-                msg += "to banish people."
-            elif other_exception:
-                msg = f"While {mention} did fail and hurt themselves spectacularly in the "
-                msg += "roulette there's not much I can do about it because, uh, reasons. "
-                msg += "I don't know."
-
-            await ctx.send(msg)
-
-        else:
-            # Congratulations bruh!
-            response = await ctx.send(f"Sorry chat, seems {mention} will live to see another day.")
-            await asyncio.sleep(5)
-            await ctx.message.delete()
-            await response.delete()
+        await roulette(ctx, self.bot, self.logger, self.mdbname)
 
     @command(name="region", aliases=["regions"])
     async def _region(self, ctx: Context, *args: str) -> None:
