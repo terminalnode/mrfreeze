@@ -9,11 +9,19 @@ import discord
 from discord.ext.commands import Context
 
 from mrfreeze.bot import MrFreeze
+from mrfreeze.cogs.coginfo import CogInfo
 from mrfreeze.lib.banish import mute_db
 
 
-async def roulette(ctx: Context, bot: MrFreeze, logger: Logger, db_name: str) -> None:
+async def roulette(ctx: Context, coginfo: CogInfo) -> None:
     """Roll the dice and test your luck, banish or nothing."""
+    if coginfo.bot and coginfo.logger and coginfo.mdbname:
+        bot = coginfo.bot
+        logger = coginfo.logger
+        db_name = coginfo.mdbname
+    else:
+        return
+
     member = ctx.author
     mention = member.mention
     is_mod = ctx.author.guild_permissions.administrator

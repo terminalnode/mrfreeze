@@ -11,7 +11,6 @@ Therefor they're both in a cog separate from everything else.
 import asyncio
 import datetime
 import logging
-import random
 from typing import Dict
 from typing import Iterable
 from typing import List
@@ -29,11 +28,12 @@ from mrfreeze.cogs.banish.enums import MuteStr
 from mrfreeze.cogs.banish.enums import MuteType
 from mrfreeze.cogs.banish.templates import templates
 from mrfreeze.cogs.cogbase import CogBase
+from mrfreeze.cogs.coginfo import CogInfo
 from mrfreeze.lib import checks
 from mrfreeze.lib import colors
 from mrfreeze.lib.banish import mute_db
-from mrfreeze.lib.banish.roulette import roulette
 from mrfreeze.lib.banish import templates as banish_templates
+from mrfreeze.lib.banish.roulette import roulette
 from mrfreeze.lib.banish.time_settings import set_self_mute
 
 mute_templates: banish_templates.TemplateEngine
@@ -81,6 +81,7 @@ class BanishAndRegion(CogBase):
         self.bot = bot
         self.regions: Dict[int, Dict[str, Optional[int]]] = dict()
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.coginfo = CogInfo(self)
 
         self.antarctica_spellings = (
             "anarctica", "antarctica", "antartica", "anartica",
@@ -656,7 +657,7 @@ class BanishAndRegion(CogBase):
     @command(name="roulette")
     async def roulette(self, ctx: Context, *args: str) -> None:
         """Roll the dice and test your luck, banish or nothing."""
-        await roulette(ctx, self.bot, self.logger, self.mdbname)
+        await roulette(ctx, self.coginfo)
 
     @command(name="region", aliases=["regions"])
     async def _region(self, ctx: Context, *args: str) -> None:
