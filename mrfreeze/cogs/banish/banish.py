@@ -25,13 +25,13 @@ from discord.ext.commands import Context
 from discord.ext.commands import command
 
 from mrfreeze.bot import MrFreeze
-from mrfreeze.cogs.banish import mute_db
 from mrfreeze.cogs.banish.enums import MuteStr
 from mrfreeze.cogs.banish.enums import MuteType
 from mrfreeze.cogs.banish.templates import templates
 from mrfreeze.cogs.cogbase import CogBase
 from mrfreeze.lib import checks
 from mrfreeze.lib import colors
+from mrfreeze.lib.banish import mute_db
 from mrfreeze.lib.banish import templates as banish_templates
 from mrfreeze.lib.banish.time_settings import set_self_mute
 
