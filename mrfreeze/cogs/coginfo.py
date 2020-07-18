@@ -2,9 +2,14 @@
 
 from logging import Logger
 from typing import Any
+from typing import Dict
 from typing import Optional
 
 from mrfreeze.bot import MrFreeze
+
+
+class InsufficientCogInfo(Exception):
+    """An exception raised when CogInfo doesn't contain the right information."""
 
 
 class CogInfo:
@@ -14,12 +19,14 @@ class CogInfo:
     logger: Optional[Logger]
     bot: Optional[MrFreeze]
     mdbname: Optional[str]
+    regions: Optional[Dict[int, Dict[str, Optional[int]]]]
 
     def __init__(self, cog: Any) -> None:
         self.cog = cog
         self.set_attribute("logger")
         self.set_attribute("bot")
         self.set_attribute("mdbname")
+        self.set_attribute("regions")
 
     def set_attribute(self, name: str) -> None:
         """Check if the cog has the given attribute and return it."""

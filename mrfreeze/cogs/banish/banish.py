@@ -15,7 +15,6 @@ from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import Optional
-from typing import Tuple
 
 import discord
 from discord import Guild
@@ -35,6 +34,7 @@ from mrfreeze.lib.banish import mute_db
 from mrfreeze.lib.banish import templates as banish_templates
 from mrfreeze.lib.banish.roulette import roulette
 from mrfreeze.lib.banish.time_settings import set_self_mute
+from mrfreeze.lib.region import region_cmd
 
 mute_templates: banish_templates.TemplateEngine
 mute_command: str
@@ -81,6 +81,7 @@ class BanishAndRegion(CogBase):
         self.bot = bot
         self.regions: Dict[int, Dict[str, Optional[int]]] = dict()
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.mdbname = mdbname
         self.coginfo = CogInfo(self)
 
         self.antarctica_spellings = (
@@ -119,7 +120,6 @@ class BanishAndRegion(CogBase):
         self.default_self_mute_time = 20
 
         # Mutes database creation
-        self.mdbname = mdbname
         mdbtable = f"""CREATE TABLE IF NOT EXISTS {self.mdbname}(
             id          integer NOT NULL,
             server      integer NOT NULL,
@@ -662,116 +662,4 @@ class BanishAndRegion(CogBase):
     @command(name="region", aliases=["regions"])
     async def _region(self, ctx: Context, *args: str) -> None:
         """Assign yourself a colourful regional role."""
-        args = tuple([ a.lower() for a in args ])
-
-        if len(args) == 0 or "help" in args:
-            msg = "Type !region followed by your region, this will assign you a regional role "
-            msg += "with an associated snazzy colour for your nick. These roles are not "
-            msg += "highlightable and only serve to show people where you're from. \n\n"
-            msg += "The available regions are:\n"
-            msg += " - Asia\n - Europe\n - North America\n - South America\n"
-            msg += " - Africa\n - Oceania\n - Middle East"
-            await ctx.send(msg)
-            return
-
-        if "list" in args:
-            msg = "Available regions:\n"
-            msg += " - Asia\n - Europe\n - North America\n - South America\n"
-            msg += " - Africa\n - Oceania\n - Middle East"
-            await ctx.send(msg)
-            return
-
-        if await self.region_antarctica(ctx, args):
-            return
-
-        await self.set_region(ctx, args)
-
-    async def region_antarctica(self, ctx: Context, args: Tuple[str, ...]) -> bool:
-        """
-        Analyze arguments to see if user tried to set region to Antarctica.
-
-        If they did, the method will return True, banish them and send some snarky repyl.
-        Otherwise it returns False.
-        """
-        # Check if the user tried to set region to Antarctica
-        said_antarctica = False
-        for variant in self.antarctica_spellings:
-            if variant in args:
-                said_antarctica = True
-                spelling = variant
-                break
-
-        if not said_antarctica:
-            return False
-
-        # User confirmed to have tried to set region to Antarctica
-        # Initiating punishment
-        reply = f"{ctx.author.mention} is a filthy *LIAR* claiming to live in Antarctica. "
-
-        if spelling == "antarctica":
-            duration = datetime.timedelta(minutes = 10)
-            end_date = datetime.datetime.now() + duration
-            duration = self.bot.parse_timedelta(duration)
-            reply += "I'll give them what they want and banish them to that "
-            reply += "frozen hell for ten minutes!"
-
-        else:
-            duration = datetime.timedelta(minutes = 20)
-            end_date = datetime.datetime.now() + duration
-            duration = self.bot.parse_timedelta(duration)
-            reply += f"What's more, they spelled it *{spelling.capitalize()}* "
-            reply += "instead of *Antarctica*... 20 minutes in Penguin school "
-            reply += "ought to teach them some manners!"
-
-        # Carry out the banish with resulting end date
-        error = await mute_db.carry_out_banish(
-            self.bot,
-            self.mdbname,
-            ctx.author,
-            self.logger,
-            end_date
-        )
-        if isinstance(error, Exception):
-            reply = f"{ctx.author.mention} is a filthy *LIAR* claiming to live in Antarctica. "
-            reply += "Unfortunately there doesn't seem to be much I can do about that. Not sure "
-            reply += "why. Some kind of system malfunction or whatever."
-
-        await ctx.send(reply)
-        return True
-
-    async def set_region(self, ctx: Context, args: Tuple[str, ...]) -> None:
-        """
-        Set the region of a user based on what they said.
-
-        Determine which region the user tried to set using the !region command,
-        then set that region (if found) and send an appropriate response. If
-        the region isn't found don't set a role, just send an appropriate response.
-        """
-        regions = self.regions[ctx.guild.id]
-        author_roles = [ i.id for i in ctx.author.roles if i.name not in regions.keys() ]
-        all_args = " ".join(args)
-
-        found_region = False
-        valid_region = True
-        for region in self.regional_aliases:
-            if found_region:
-                break
-
-            for alias in self.regional_aliases[region]:
-                if alias in all_args:
-                    author_roles.append(regions[region])
-                    valid_region = regions[region] is not None
-                    new_role_name = region
-                    found_region = True
-
-        if found_region and valid_region:
-            new_roles = [ discord.Object(id=i) for i in author_roles ]
-            await ctx.author.edit(roles=new_roles)
-
-            msg = f"{ctx.author.mention} You've been assigned a new role, "
-            msg += f"welcome to {new_role_name}!"
-        else:
-            msg = f"{ctx.author.mention} I couldn't find a match for {' '.join(args)}.\n"
-            msg += "Please check your spelling or type **!region list** for a list of "
-            msg += "available regions."
-        await ctx.send(msg)
+        await region_cmd(ctx, self.coginfo, args)
