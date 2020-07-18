@@ -1,72 +1,62 @@
-# MrFreeze (Rewrite)
-This is a rewrite of MrFreeze using cogs instead of mashing everything into a single file. I also hope my adventures in writing MrFreeze will result in a somewhat cleaner bot.
+# MrFreeze
+MrFreeze is the chat bot designed for [The Penposium](https://discord.gg/FRSg6f5)
+Discord server, which is probably the largest chat dedicated to fountain pens there
+is. If you're interested in fountain pens you should check it out, they're a friendly
+bunch. :)
 
-This project uses pipenv. For requirements, see the Pipfile.
+## Feature suggestions and bug reports
+Feel free to suggest new features and/or report bugs you've discovered via
+the repository's [issues section](https://github.com/terminalnode/mrfreeze/issues).
 
-It also has a number of "scripts" or commands built-in for running the bot using pipenv:
+## Contributing
+Anyone in The Penposium discord server with some knowledge of Python is welcome to
+contribute. Contact me (TerminalNode#1917 on Discord) via DM or in the dev server
+[MrFreeze's Cave](https://discord.com/invite/wcwshah) and I'll help you get up to
+speed and coordinate our efforts.
+
+For suggestions on what to do, check out the current
+[list of issues](https://github.com/terminalnode/mrfreeze/issues).
+
+Also take a look at the next section on how to get the bot up and running.
+
+## Running the bot
+This project uses [pipenv](https://github.com/pypa/pipenv/), a tool for managing
+dependencies and automatically setup virtual environments. Just run `pipenv install --dev`
+and it should supply you with anything you need.
+If you have [pyenv](https://github.com/pyenv/pyenv) installed it will even install
+the correct version of python if you don't have it already.
+
+In addition to this you will have to create a plain text file called `token` in the
+project root directory. This text file should contain a single line with your bots
+token (which you can get through the discord developer portal).
+
+To run the bot or the tests in the pipenv environtment, use one of the following commands:
 * **pipenv run bot**         - Starts the bot
 * **pipenv run test**        - Runs the tests through pytest (recommended)
 * **pipenv run unittest**    - Runs the tests through unittest
 * **pipenv run report**      - Runs coverage report to show test coverage
 * **pipenv run report_html** - Generates an HTML version of the coverage report in `htmlcov`
 
-By default the pytests will run on all cores at once, using xdist. To disable this behaviour add the option `-n 0`.
+By default the pytests will run on all cores at once, using xdist.
+To disable this behaviour add the option `-n 0`.
 
 ## Why is there one folder called `database` and one called `databases`?
-Valid question. Basically the way the bot stores information in permanent storage
-(i.e. in one or more sqlite3 databases) is being reworked into a more centralised
-and maintainable system. Right now some shit's stored in text files, due to a sudden
-impulse to linux things up and make everything a file, some stuff is stored in a
-number of separate database files (with like one or two tables each).
+Valid question. The bot stores some data, perhaps most notably the list of muted
+users, in SQLite databases. The key word here being database**s** plural.
 
-This is kind of stupid and stems from me not knowing anything about databases
-when the system was first designed, and as such keeping things in separate containers
-was hugely beneficial.
+In the beginning of the project every table had it's own database, the idea being that
+if one wanted to reset a given table one could simply delete that file and there'd
+be no reason to worry about affecting the other tables.
 
-The new system stores all information in a single file, `settings.db` which is created
-when the bot runs for the first time. The settings are then divided logically into
-modules which in turn are then further divided up into modules responsible for a
-single table.
+This approach is a bit silly however, and results in a lot of duplicate code for
+all of the tables. As such there's been some effort to create some sort of unified
+framework for database tables, and saving all of these tables in a single database.
 
-## Reimplemented functions:
-### Owner commands
-* **!restart**   - Restarts the bot. Very useful for testing new code.
-* **!gitupdate** - Fetches latest updates from github.
+Modules using the old system are stored in `databases`, modules using the new system
+are stored in `database`.
 
-### Mod commands
-* **!kick**      - Kicks the user from the server.
-* **!purge**     - Purge a certain number of messages. Upper limit is 100 messages.
-* **!mute**      - Mutes the user.
-* * **!banish**  - Sub-function to mute with a default mute time and custom message.
-* **!unmute**    - Unmutes the user.
-* **!ban**       - Bans the user from the server.
-* **!listban**   - Lists all currently banned users. Can also be called by '!ban list'.
-* **!unban**     - Removes ban from the server.
-
-### User utility commands
-* **!temp**      - DMs a help message regarding the automatic temperature conversion. Does no conversion of it's own.
-* **!rules**     - Displays one, several or all rules depending on how the command is executed.
-* **!quote**     - Add, delete, and read random quotes.
-* **!vote**      - Creates a vote where users vote by reacting with specified emoji.
-* * **Caveat:** This does not work with nitro emojis, but does work with server emojis.
-* **!region**    - Allows a user to assign themselves a regional role.
-* **!coin**      - Flips a coin. (!coinflip and !cointoss also work)
-* **!icon**      - Shows the icon/logo for the current server (!logo also works)
-
-### Silly commands
-* **!activity**   - Changes the activity of the bot ('Playing [...]', 'Listening to [...]' etc). No mod requirement, have fun!
-* **!mrfreeze**   - Posts a MrFreeze-quote with user instead of Batman and server instead of Gotham.
-* Commands which post (more or less) useful links
-* * **!readme**    - Posts a link to the github page as well, but to the README.md file (this one!).
-* * **!source**    - Posts a link to this github page.
-* * **!todo**      - Posts a link to the TODO list for the bot.
-* * **!getfreeze** - Posts a link for inviting MrFreeze to your server.
-* * **!dummies**   - Posts invite links for the two dummy bots.
-
-### Non-command features
-* Will greet a server when coming online.
-* Will automatically detect temperature statements and convert them with no user interaction required.
-* Will post a message to #mod-discussion when a user leaves.
-* Will quote a message that was just pinned so people don't have to check the list of pins. This deletes and replaces the system message.
-* * **Caveat:** The bot does a lot of loading when starting up for this to work. If a message was pinned while this loading occurred the next message to get pinned won't be posted, however the next one after that will.
-* Will give a rude response when mentioned without a command/temperature statement by someone else.
+The new system is as of yet incomplete and can only hold one kind of table, which is
+a table where each server has exactly one row and one value. There is some work being
+done to also create a base where one server can have multiple rows with one value each.
+As of yet, nothing has been implemented to hold more complex tables with an arbitrary
+number of columns - such as is required for the mutes database.
