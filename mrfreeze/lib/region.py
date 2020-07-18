@@ -72,10 +72,9 @@ async def region_antarctica(ctx: Context, cog: CogInfo, args: Tuple[str, ...]) -
     If they did, the method will return True, banish them and send some snarky repyl.
     Otherwise it returns False.
     """
-    if cog.bot and cog.logger and cog.mdbname:
+    if cog.bot and cog.logger:
         bot = cog.bot
         logger = cog.logger
-        mdbname = cog.mdbname
     else:
         raise InsufficientCogInfo()
 
@@ -112,7 +111,6 @@ async def region_antarctica(ctx: Context, cog: CogInfo, args: Tuple[str, ...]) -
     # Carry out the banish with resulting end date
     error = await mute_db.carry_out_banish(
         bot,
-        mdbname,
         ctx.author,
         logger,
         end_date

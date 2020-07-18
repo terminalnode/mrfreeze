@@ -30,11 +30,11 @@ from mrfreeze.cogs.cogbase import CogBase
 from mrfreeze.cogs.coginfo import CogInfo
 from mrfreeze.lib import checks
 from mrfreeze.lib import colors
+from mrfreeze.lib import region
 from mrfreeze.lib.banish import mute_db
 from mrfreeze.lib.banish import templates as banish_templates
 from mrfreeze.lib.banish.roulette import roulette
 from mrfreeze.lib.banish.time_settings import set_self_mute
-from mrfreeze.lib.region import region_cmd
 
 mute_templates: banish_templates.TemplateEngine
 mute_command: str
@@ -77,37 +77,11 @@ def setup(bot: MrFreeze) -> None:
 class BanishAndRegion(CogBase):
     """Good mod! Read the manual! Or if you're not mod - sod off."""
 
-    def __init__(self, bot: MrFreeze, mdbname: str = "mutes") -> None:
+    def __init__(self, bot: MrFreeze) -> None:
         self.bot = bot
         self.regions: Dict[int, Dict[str, Optional[int]]] = dict()
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.mdbname = mdbname
         self.coginfo = CogInfo(self)
-
-        self.antarctica_spellings = (
-            "anarctica", "antarctica", "antartica", "anartica",
-            "anctartica", "anctarctica", "antacrtica")
-
-        self.regional_aliases = {
-            "Asia": [
-                "asia", "china", "japan", "thailand", "korea"
-            ], "Europe": [
-                "europe", "united kingdom", "gb", "great britain", "scandinavia", "germany",
-                "sweden", "norway", "spain", "france", "italy", "ireland", "poland", "russia",
-                "finland", "estonia", "scotland", "scottland", "portugal"
-            ], "North America": [
-                "north america", "us", "canada", "mexico", "na", "usa", "united states"
-            ], "Africa": [
-                "africa", "kongo", "uganda"
-            ], "Oceania": [
-                "oceania", "australia", "new zealand"
-            ], "South America": [
-                "south america", "argentina", "chile", "brazil", "peru"
-            ], "Middle East": [
-                "middleeast", "middle-east", "midleeast", "midle-east", "middleast", "midleast",
-                "mesa", "saudi", "saudiarabia", "arabia", "arabian", "middle east", "midle east"
-            ]
-        }
 
         # Server setting names
         # Mute interval governs how often to check for unmutes.
@@ -119,14 +93,7 @@ class BanishAndRegion(CogBase):
         # unauthorized uses of !mute/!banish etc
         self.default_self_mute_time = 20
 
-        # Mutes database creation
-        mdbtable = f"""CREATE TABLE IF NOT EXISTS {self.mdbname}(
-            id          integer NOT NULL,
-            server      integer NOT NULL,
-            voluntary   boolean NOT NULL,
-            until       date,
-            CONSTRAINT  server_user PRIMARY KEY (id, server));"""
-        bot.db_create(self.bot, self.mdbname, mdbtable)
+        mute_db.create_table(self.bot)
 
     def get_self_mute_time(self, server: Guild, return_none: bool = False) -> Optional[int]:
         """
@@ -191,12 +158,12 @@ class BanishAndRegion(CogBase):
 
             # Construct region dict
             self.regions[server.id] = dict()
-            for region in self.regional_aliases.keys():
-                region_role = discord.utils.get(server.roles, name=region)
+            for region_name in region.regional_aliases.keys():
+                region_role = discord.utils.get(server.roles, name=region_name)
                 if region_role:
-                    self.regions[server.id][region] = region_role.id
+                    self.regions[server.id][region_name] = region_role.id
                 else:
-                    self.regions[server.id][region] = None
+                    self.regions[server.id][region_name] = None
 
     async def unbanish_loop(self, server: Guild) -> None:
         """Check for people to unbanish every self.banish_interval seconds."""
@@ -205,7 +172,7 @@ class BanishAndRegion(CogBase):
             self.logger.debug(f"Running unbanish loop for {server.name}.")
 
             current_time = datetime.datetime.now()
-            server_mutes = mute_db.mdb_fetch(self.bot, self.mdbname, server)
+            server_mutes = mute_db.mdb_fetch(self.bot, server)
             self.logger.debug(f"There are {len(server_mutes)} mutes total in {server.name}.")
             server_mutes = [ i for i in server_mutes if i.until is not None ]
             self.logger.debug(f"There are {len(server_mutes)} timed mutes in {server.name}.")
@@ -237,7 +204,7 @@ class BanishAndRegion(CogBase):
                         diff = f"{diff} ago"
 
                     # Remove from database
-                    mute_db.mdb_del(self.bot, self.mdbname, member, self.logger)
+                    mute_db.mdb_del(self.bot, member, self.logger)
 
                     if mute_role in member.roles:
                         self.logger.debug(f"{member} has the mute role! Removing it.")
@@ -419,13 +386,11 @@ class BanishAndRegion(CogBase):
                 if unmute:
                     error = await mute_db.carry_out_unbanish(
                         self.bot,
-                        self.mdbname,
                         member,
                         self.logger)
                 else:
                     error = await mute_db.carry_out_banish(
                         self.bot,
-                        self.mdbname,
                         member,
                         self.logger,
                         end_date)
@@ -603,7 +568,6 @@ class BanishAndRegion(CogBase):
         # Carry out the banish with resulting end date
         banish_error = await mute_db.carry_out_banish(
             self.bot,
-            self.mdbname,
             author,
             self.logger,
             end_date
@@ -629,7 +593,7 @@ class BanishAndRegion(CogBase):
     async def banishtime(self, ctx: Context) -> None:
         """Check how long until you're unbanished."""
         banish_list: List[mute_db.BanishTuple]
-        banish_list = mute_db.mdb_fetch(self.bot, self.mdbname, ctx.author)
+        banish_list = mute_db.mdb_fetch(self.bot, ctx.author)
         mention = ctx.author.mention
 
         msg: Optional[str] = None
@@ -662,4 +626,4 @@ class BanishAndRegion(CogBase):
     @command(name="region", aliases=["regions"])
     async def _region(self, ctx: Context, *args: str) -> None:
         """Assign yourself a colourful regional role."""
-        await region_cmd(ctx, self.coginfo, args)
+        await region.region_cmd(ctx, self.coginfo, args)

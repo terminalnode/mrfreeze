@@ -3,22 +3,18 @@
 import asyncio
 import datetime
 import random
-from logging import Logger
 
 import discord
 from discord.ext.commands import Context
 
-from mrfreeze.bot import MrFreeze
 from mrfreeze.cogs.coginfo import CogInfo
 from mrfreeze.lib.banish import mute_db
 
 
-async def roulette(ctx: Context, coginfo: CogInfo) -> None:
+async def roulette(ctx: Context, cog: CogInfo) -> None:
     """Roll the dice and test your luck, banish or nothing."""
-    if coginfo.bot and coginfo.logger and coginfo.mdbname:
-        bot = coginfo.bot
-        logger = coginfo.logger
-        db_name = coginfo.mdbname
+    if cog.bot and cog.logger:
+        bot = cog.bot
     else:
         return
 
@@ -39,7 +35,7 @@ async def roulette(ctx: Context, coginfo: CogInfo) -> None:
 
     # Roll the dice!
     if random.randint(1, 6) == 1:
-        await lost_roulette(ctx, bot, logger, db_name)
+        await lost_roulette(ctx, cog)
 
     else:
         response = await ctx.send(f"Sorry chat, seems {mention} will live to see another day.")
@@ -48,8 +44,14 @@ async def roulette(ctx: Context, coginfo: CogInfo) -> None:
         await response.delete()
 
 
-async def lost_roulette(ctx: Context, bot: MrFreeze, logger: Logger, db_name: str) -> None:
+async def lost_roulette(ctx: Context, cog: CogInfo) -> None:
     """Do what happens when the user loses."""
+    if cog.bot and cog.logger:
+        bot = cog.bot
+        logger = cog.logger
+    else:
+        return
+
     mention = ctx.author.mention
     banish_time = random.randint(1, 5)
     duration = datetime.timedelta(minutes = banish_time)
@@ -63,7 +65,7 @@ async def lost_roulette(ctx: Context, bot: MrFreeze, logger: Logger, db_name: st
         msg += "mod who's banished FROM Antarctica."
 
     else:
-        error = await mute_db.carry_out_banish(bot, db_name, ctx.author, logger, end_date)
+        error = await mute_db.carry_out_banish(bot, ctx.author, logger, end_date)
 
         if isinstance(error, discord.HTTPException):
             msg = f"While {mention} did fail and hurt themselves spectacularly in the "

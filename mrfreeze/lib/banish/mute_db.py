@@ -12,6 +12,7 @@ from discord import Guild
 from discord import Member
 from discord.ext.commands import Bot
 
+from mrfreeze.bot import MrFreeze
 from mrfreeze.lib.colors import CYAN
 from mrfreeze.lib.colors import CYAN_B
 from mrfreeze.lib.colors import GREEN
@@ -30,21 +31,22 @@ class BanishTuple(NamedTuple):
     until: datetime
 
 
-# Complete list of tables and their rows in this database.
-# (These are created via the banish cog)
-#
-# Primary key(s) is marked with an asterisk (*).
-# Mandatory but not primary keys are marked with a pling (!).
-# TABLE         ROWS        TYPE        FUNCTION
-# self.mdbname  id*         integer     User ID
-#               server*     integer     Server ID
-#               voluntary!  boolean     If this mute was self-inflicted or not
-#               until       date        The date when the user will be unbanned
-#                                       Leave empty if indefinite
+dbname = "mutes"
+dbtable = f"""CREATE TABLE IF NOT EXISTS {dbname} (
+    id          integer NOT NULL,
+    server      integer NOT NULL,
+    voluntary   boolean NOT NULL,
+    until       date,
+    CONSTRAINT  server_user PRIMARY KEY (id, server));"""
+
+
+def create_table(bot: MrFreeze) -> None:
+    """Create the mutes database if it doesn't exist."""
+    bot.db_create(bot, dbname, dbtable)
+
 
 async def carry_out_banish(
         bot: Bot,
-        mdbname: str,
         member: Member,
         logger: Logger,
         end_date: datetime) -> Union[None, Exception]:
@@ -65,14 +67,13 @@ async def carry_out_banish(
             result = e
 
     if not isinstance(result, Exception):
-        mdb_add(bot, mdbname, member, logger, end_date=end_date)
+        mdb_add(bot, member, logger, end_date=end_date)
 
     return result
 
 
 async def carry_out_unbanish(
         bot: Bot,
-        mdbname: str,
         member: Member,
         logger: Logger) -> Union[None, Exception]:
     """
@@ -92,14 +93,13 @@ async def carry_out_unbanish(
             result = e
 
     if not isinstance(result, Exception):
-        mdb_del(bot, mdbname, member, logger)
+        mdb_del(bot, member, logger)
 
     return result
 
 
 def mdb_add(
         bot: Bot,
-        mdbname: str,
         user: Member,
         logger: Logger,
         voluntary: bool = False,
@@ -114,11 +114,11 @@ def mdb_add(
     until = str()     # this string is filled in if called with an end_date
     duration = str()  # this string too
 
-    current_mute = mdb_fetch(bot, mdbname, user)
+    current_mute = mdb_fetch(bot, user)
     is_muted = len(current_mute) != 0
     if is_muted:
         # Always delete existing mutes
-        mdb_del(bot, mdbname, user, logger)
+        mdb_del(bot, user, logger)
 
     if is_muted and end_date is not None and prolong:
         old_until = current_mute[0].until
@@ -130,7 +130,7 @@ def mdb_add(
             except OverflowError:
                 end_date = datetime.max
 
-    with bot.db_connect(bot, mdbname) as conn:
+    with bot.db_connect(bot, dbname) as conn:
         c = conn.cursor()
         if end_date is not None:
             # Collect time info in string format for the log
@@ -144,7 +144,7 @@ def mdb_add(
             # Turn datetime object into string
             end_date = bot.db_time(end_date)
 
-            sql = f"INSERT INTO {mdbname}(id, server, voluntary, until) "
+            sql = f"INSERT INTO {dbname}(id, server, voluntary, until) "
             sql += "VALUES(?,?,?,?)"
 
             try:
@@ -153,7 +153,7 @@ def mdb_add(
                 error = e
 
         elif end_date is None:
-            sql = f"INSERT INTO {mdbname}(id, server, voluntary) VALUES(?,?,?)"
+            sql = f"INSERT INTO {dbname}(id, server, voluntary) VALUES(?,?,?)"
             try:
                 c.execute(sql, (uid, server, voluntary))
             except Exception as e:
@@ -172,23 +172,23 @@ def mdb_add(
         return False
 
 
-def mdb_del(bot: Bot, mdbname: str, user: Member, logger: Logger) -> bool:
+def mdb_del(bot: Bot, user: Member, logger: Logger) -> bool:
     """Remove a user from the mutes database."""
     uid = user.id
     server = user.guild.id
     servername = user.guild.name
     name = f"{user.name}#{user.discriminator}"
 
-    is_muted = len(mdb_fetch(bot, mdbname, user)) != 0
+    is_muted = len(mdb_fetch(bot, user)) != 0
     if not is_muted:
         log = f"{GREEN_B}Mutes DB:{CYAN} user already not in DB: "
         log += f"{CYAN_B}{name} @ {servername}{CYAN}.{RESET}"
         logger.info(log)
         return True
 
-    with bot.db_connect(bot, mdbname) as conn:
+    with bot.db_connect(bot, dbname) as conn:
         c = conn.cursor()
-        sql = f"DELETE FROM {mdbname} WHERE id = ? AND server = ?"
+        sql = f"DELETE FROM {dbname} WHERE id = ? AND server = ?"
 
         try:
             c.execute(sql, (uid, server))
@@ -203,7 +203,7 @@ def mdb_del(bot: Bot, mdbname: str, user: Member, logger: Logger) -> bool:
             return False
 
 
-def mdb_fetch(bot: Bot, mdbname: str, in_data: Union[Member, Guild]) -> List[BanishTuple]:
+def mdb_fetch(bot: Bot, in_data: Union[Member, Guild]) -> List[BanishTuple]:
     """
     Return user or server mute information.
 
@@ -217,17 +217,17 @@ def mdb_fetch(bot: Bot, mdbname: str, in_data: Union[Member, Guild]) -> List[Ban
         # This should never happen, no point in even logging it.
         raise TypeError(f"Expected discord.Member or discord.Guild, got {type(in_data)}")
 
-    with bot.db_connect(bot, mdbname) as conn:
+    with bot.db_connect(bot, dbname) as conn:
         c = conn.cursor()
         fetch_id = in_data.id
         if is_member:
             server = in_data.guild
-            sql = f' SELECT * FROM {mdbname} WHERE id = ? AND server = ? '
+            sql = f' SELECT * FROM {dbname} WHERE id = ? AND server = ? '
             c.execute(sql, (fetch_id, server.id))
 
         elif is_server:
             server = in_data
-            sql = f' SELECT * FROM {mdbname} WHERE server = ? '
+            sql = f' SELECT * FROM {dbname} WHERE server = ? '
             c.execute(sql, (fetch_id,))
 
         output = [
