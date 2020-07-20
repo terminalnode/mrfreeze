@@ -10,7 +10,7 @@ from typing import List
 
 from mrfreeze.database.tables.abc_table_base import ABCTableBase
 from mrfreeze.database.tables.freeze_mutes import FreezeMutes
-from mrfreeze.database.tables.inkcyclopedia import InkcyclopediaInks
+from mrfreeze.database.tables.inkcyclopedia_mutes import InkcyclopediaMutes
 from mrfreeze.database.tables.mute_channels import MuteChannels
 from mrfreeze.database.tables.mute_roles import MuteRoles
 from mrfreeze.database.tables.self_mute_times import SelfMuteTimes
@@ -28,7 +28,7 @@ class Settings:
         # Initialize the tables
         self.logger.info("Instantiating tables")
         self.freeze_mutes       = FreezeMutes(self.dbpath, self.logger)
-        self.inkcyclopedia      = InkcyclopediaInks(self.dbpath, self.logger)
+        self.inkcyclopedia      = InkcyclopediaMutes(self.dbpath, self.logger)
         self.mute_channels      = MuteChannels(self.dbpath, self.logger)
         self.mute_roles         = MuteRoles(self.dbpath, self.logger)
         self.self_mute_times    = SelfMuteTimes(self.dbpath, self.logger)
@@ -52,6 +52,10 @@ class Settings:
         # Freeze Mutes
         self.is_freeze_muted            = self.freeze_mutes.get
         self.toggle_freeze_mute         = self.freeze_mutes.toggle
+
+        # Inkcyclopedia Mutes
+        self.is_inkcyclopedia_muted     = self.inkcyclopedia.get
+        self.toggle_inkcyclopedia_mute  = self.inkcyclopedia.toggle
 
         # Mute Channels
         self.get_mute_channel           = self.mute_channels.get

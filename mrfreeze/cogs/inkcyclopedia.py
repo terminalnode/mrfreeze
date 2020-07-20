@@ -8,6 +8,8 @@ from typing import Set
 
 import discord
 from discord import Message
+from discord.ext.commands import Context
+from discord.ext.commands import command
 
 from mrfreeze.bot import MrFreeze
 from mrfreeze.cogs.cogbase import CogBase
@@ -78,10 +80,85 @@ class Inkcyclopedia(CogBase):
 
         return result
 
+    def get_mute_status(self, ctx: Context, is_muted: bool) -> str:
+        """Check if inkcyclopedia is enabled for this server."""
+        if is_muted:
+            msg = f"{ctx.author.mention} The inkcyclopedia feature has been "
+            msg += "**deactivated** for this server."
+        else:
+            msg = f"{ctx.author.mention} The inkcyclopedia feature is "
+            msg += "**active** for this server."
+
+        return msg
+
+    def get_changed_status(self, ctx: Context, before: bool, after: bool, want: bool) -> str:
+        """Print a message saying if the inkcyclopedia has been activated or deactivated."""
+        mention = ctx.author.mention
+
+        if before == want:
+            if want:
+                return f"{mention} The inkcyclopedia is already deactivated."
+            else:
+                return f"{mention} The inkcyclopedia is already active."
+
+        elif after != want:
+            msg = f"{mention} Something went wrong, I wasn't able to "
+            if want:
+                return msg + "deactivate the inkcyclopedia."
+            else:
+                return msg + "activate the inkcyclopedia."
+
+        else:
+            if after:
+                return f"{mention} The inkcyclopedia is now deactivated."
+            else:
+                return f"{mention} The inkcyclopedia is now activated."
+
+    @command(name="inkcyclopedia")
+    async def inkcyclopedia_command(self, ctx: Context, *args: str) -> None:
+        """Check or change inkcyclopedia mute status."""
+        is_owner = await ctx.bot.is_owner(ctx.author)
+        is_mod = ctx.author.guild_permissions.administrator
+        is_muted = bool(self.bot.settings.is_inkcyclopedia_muted(ctx.guild))
+        owner_or_mod = is_owner or is_mod
+        msg: Optional[str] = None
+
+        if len(args) == 0 or not owner_or_mod:
+            msg = self.get_mute_status(ctx, is_muted)
+
+        elif args[0].lower() == "on":
+            if is_muted:
+                self.bot.settings.toggle_inkcyclopedia_mute(ctx.guild)
+                is_muted_after = bool(self.bot.settings.is_inkcyclopedia_muted(ctx.guild))
+                msg = self.get_changed_status(ctx, is_muted, is_muted_after, False)
+            else:
+                msg = self.get_changed_status(ctx, is_muted, is_muted, False)
+
+        elif args[0].lower() == "off":
+            if is_muted:
+                msg = self.get_changed_status(ctx, is_muted, is_muted, True)
+            else:
+                self.bot.settings.toggle_inkcyclopedia_mute(ctx.guild)
+                is_muted_after = bool(self.bot.settings.is_inkcyclopedia_muted(ctx.guild))
+                msg = self.get_changed_status(ctx, is_muted, is_muted_after, True)
+
+        elif args[0].lower() == "toggle":
+            self.bot.settings.toggle_inkcyclopedia_mute(ctx.guild)
+            is_muted_after = bool(self.bot.settings.is_inkcyclopedia_muted(ctx.guild))
+            msg = self.get_changed_status(ctx, is_muted, is_muted_after, not is_muted)
+
+        else:
+            msg = self.get_mute_status(ctx, is_muted)
+
+        if msg:
+            await ctx.send(msg)
+
     @CogBase.listener()
     async def on_message(self, message: Message) -> None:
         """Read every message, detect requests for ink pictures."""
         if self.bot.listener_block_check(message):
+            return
+        elif self.bot.settings.is_inkcyclopedia_muted(message.guild):
             return
 
         matches: List[str] = self.bracketmatch.findall(message.content)
@@ -110,6 +187,6 @@ class Inkcyclopedia(CogBase):
             if ink.submitter:
                 image.set_footer(text=f"Submitted by: {ink.submitter}")
             else:
-                image.set_footer(text=f"Submitter unknown")
+                image.set_footer(text="Submitter unknown")
 
             await message.channel.send(embed=image)
