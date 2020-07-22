@@ -26,20 +26,24 @@ class ServerInfo(Cog):
     @command(name="serverinfo", aliases=["server"])
     async def server_info(self, ctx: Context) -> None:
         """Get an embed showing some server info."""
-        embed = Embed(color=0x00dee9)
-        embed.title = f"{ctx.guild.name} server information"
-        self.add_thumbnail(ctx, embed)
-        self.add_owner_field(ctx, embed)
-        self.add_region_field(ctx, embed)
-        self.add_system_channel_field(ctx, embed)
-        self.add_verification_level_field(ctx, embed)
-        self.add_custom_emoji_field(ctx, embed)
-        self.add_roles_field(ctx, embed)
-        self.add_freeze_features(ctx, embed)
-        self.add_channels_field(ctx, embed)
-        self.add_members_field(ctx, embed)
-        self.add_footer(ctx, embed)
-        await ctx.send(embed=embed)
+        if ctx.guild:
+            embed = Embed(color=0x00dee9)
+            embed.title = f"{ctx.guild.name} server information"
+            self.add_thumbnail(ctx, embed)
+            self.add_owner_field(ctx, embed)
+            self.add_region_field(ctx, embed)
+            self.add_system_channel_field(ctx, embed)
+            self.add_verification_level_field(ctx, embed)
+            self.add_custom_emoji_field(ctx, embed)
+            self.add_roles_field(ctx, embed)
+            self.add_freeze_features(ctx, embed)
+            self.add_channels_field(ctx, embed)
+            self.add_members_field(ctx, embed)
+            self.add_footer(ctx, embed)
+            await ctx.send(embed=embed)
+
+        else:
+            await ctx.send(f"{ctx.author.mention} Don't be silly.")
 
     def add_thumbnail(self, ctx: Context, embed: Embed) -> None:
         """Add server icon as thumbnail to embed, if there is one."""
@@ -109,9 +113,14 @@ class ServerInfo(Cog):
 
         # Check if inkbot is enabled
         if settings.is_inkcyclopedia_muted(ctx.guild):
-            features.append(f"{no} Inkbot")
+            features.append(f"{no} Inkcyclopedia")
         else:
-            features.append(f"{yes} Inkbot")
+            features.append(f"{yes} Inkcyclopedia")
+
+        if settings.is_tempconverter_muted(ctx.guild):
+            features.append(f"{no} Temperature converter")
+        else:
+            features.append(f"{yes} Temperature converter")
 
         feature_list = "\n".join(features)
         embed.add_field(name="MrFreeze features", value=feature_list)

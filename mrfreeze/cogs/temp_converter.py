@@ -7,6 +7,7 @@ from typing import Optional
 import discord
 from discord import Message
 from discord.ext.commands import Context
+from discord.ext.commands import command
 
 from mrfreeze.bot import MrFreeze
 from mrfreeze.cogs.cogbase import CogBase
@@ -139,10 +140,89 @@ class TemperatureConverter(CogBase):
 
         return True
 
+    def get_mute_status(self, ctx: Context, is_muted: bool) -> str:
+        """Check if tempconverter is enabled for this server."""
+        invocation = ctx.invoked_with
+
+        if is_muted:
+            msg = f"{ctx.author.mention} The {invocation} feature has been "
+            msg += "**deactivated** for this server."
+        else:
+            msg = f"{ctx.author.mention} The {invocation} feature is "
+            msg += "**active** for this server."
+
+        return msg
+
+    def get_changed_status(self, ctx: Context, before: bool, after: bool, want: bool) -> str:
+        """Print a message saying if the tempconverter has been activated or deactivated."""
+        mention = ctx.author.mention
+        invocation = ctx.invoked_with
+
+        if before == want:
+            if want:
+                return f"{mention} The {invocation} is already deactivated."
+            else:
+                return f"{mention} The {invocation} is already active."
+
+        elif after != want:
+            msg = f"{mention} Something went wrong, I wasn't able to "
+            if want:
+                return msg + "deactivate the {invocation}."
+            else:
+                return msg + "activate the {invocation}."
+
+        else:
+            if after:
+                return f"{mention} The {invocation} is now deactivated."
+            else:
+                return f"{mention} The {invocation} is now activated."
+
+    @command(name="tempconverter", aliases=[ "tempconversion", "temperatureconverter" ])
+    async def tempconverter_command(self, ctx: Context, *args: str) -> None:
+        """Check or change temperature converter mute status."""
+        is_owner = await ctx.bot.is_owner(ctx.author)
+        is_mod = ctx.author.guild_permissions.administrator
+        is_muted = bool(self.bot.settings.is_tempconverter_muted(ctx.guild))
+        owner_or_mod = is_owner or is_mod
+        msg: Optional[str] = None
+
+        if len(args) == 0 or not owner_or_mod:
+            msg = self.get_mute_status(ctx, is_muted)
+
+        elif args[0].lower() == "on":
+            if is_muted:
+                self.bot.settings.toggle_tempconverter_mute(ctx.guild)
+                is_muted_after = bool(self.bot.settings.is_tempconverter_muted(ctx.guild))
+                msg = self.get_changed_status(ctx, is_muted, is_muted_after, False)
+            else:
+                msg = self.get_changed_status(ctx, is_muted, is_muted, False)
+
+        elif args[0].lower() == "off":
+            if is_muted:
+                msg = self.get_changed_status(ctx, is_muted, is_muted, True)
+            else:
+                self.bot.settings.toggle_tempconverter_mute(ctx.guild)
+                is_muted_after = bool(self.bot.settings.is_tempconverter_muted(ctx.guild))
+                msg = self.get_changed_status(ctx, is_muted, is_muted_after, True)
+
+        elif args[0].lower() == "toggle":
+            self.bot.settings.toggle_tempconverter_mute(ctx.guild)
+            is_muted_after = bool(self.bot.settings.is_tempconverter_muted(ctx.guild))
+            msg = self.get_changed_status(ctx, is_muted, is_muted_after, not is_muted)
+
+        else:
+            msg = self.get_mute_status(ctx, is_muted)
+
+        if msg:
+            await ctx.send(msg)
+
     @CogBase.listener()
     async def on_message(self, message: Message) -> None:
         """Look through all messages received for temperature statements."""
         if message.author.bot or self.bot.listener_block_check(message):
+            return
+
+        if message.guild and self.bot.settings.is_tempconverter_muted(message.guild):
             return
 
         ctx = await self.bot.get_context(message)

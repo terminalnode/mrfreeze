@@ -14,6 +14,7 @@ from mrfreeze.database.tables.inkcyclopedia_mutes import InkcyclopediaMutes
 from mrfreeze.database.tables.mute_channels import MuteChannels
 from mrfreeze.database.tables.mute_roles import MuteRoles
 from mrfreeze.database.tables.self_mute_times import SelfMuteTimes
+from mrfreeze.database.tables.tempconverter_mutes import TempConverterMutes
 from mrfreeze.database.tables.trash_channels import TrashChannels
 
 
@@ -27,12 +28,13 @@ class Settings:
 
         # Initialize the tables
         self.logger.info("Instantiating tables")
-        self.freeze_mutes       = FreezeMutes(self.dbpath, self.logger)
-        self.inkcyclopedia      = InkcyclopediaMutes(self.dbpath, self.logger)
-        self.mute_channels      = MuteChannels(self.dbpath, self.logger)
-        self.mute_roles         = MuteRoles(self.dbpath, self.logger)
-        self.self_mute_times    = SelfMuteTimes(self.dbpath, self.logger)
-        self.trash_channels     = TrashChannels(self.dbpath, self.logger)
+        self.freeze_mutes = FreezeMutes(self.dbpath, self.logger)
+        self.inkcyclopedia = InkcyclopediaMutes(self.dbpath, self.logger)
+        self.mute_channels = MuteChannels(self.dbpath, self.logger)
+        self.mute_roles = MuteRoles(self.dbpath, self.logger)
+        self.self_mute_times = SelfMuteTimes(self.dbpath, self.logger)
+        self.tempconverter_mutes = TempConverterMutes(self.dbpath, self.logger)
+        self.trash_channels = TrashChannels(self.dbpath, self.logger)
         self.logger.info("All tables instantiated")
 
         # Add tables to self.tables
@@ -41,6 +43,7 @@ class Settings:
         self.tables.append(self.mute_channels)
         self.tables.append(self.mute_roles)
         self.tables.append(self.self_mute_times)
+        self.tables.append(self.tempconverter_mutes)
         self.tables.append(self.trash_channels)
 
         # Initialize all the tables
@@ -70,6 +73,10 @@ class Settings:
         # Self mute times
         self.get_self_mute_time         = self.self_mute_times.get
         self.set_self_mute_time         = self.self_mute_times.set_by_id
+
+        # TempConverterMutes Mutes
+        self.is_tempconverter_muted     = self.tempconverter_mutes.get
+        self.toggle_tempconverter_mute  = self.tempconverter_mutes.toggle
 
         # Trash Channels
         self.get_trash_channel          = self.trash_channels.get
