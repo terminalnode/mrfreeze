@@ -60,6 +60,7 @@ load_cogs = [
     # Functions directed towards regular users.
     "mrfreeze.cogs.user_cmds",
     "mrfreeze.cogs.about",
+    "mrfreeze.cogs.server_info",
 ]
 
 # Actual loading of cogs take place here.
