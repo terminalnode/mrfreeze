@@ -74,9 +74,15 @@ class ServerInfo(Cog):
 
     def add_custom_emoji_field(self, ctx: Context, embed: Embed) -> None:
         """Add custom emoji field to embed."""
-        emoji = ctx.guild.emojis
         emoji_limit = ctx.guild.emoji_limit
-        embed.add_field(name="Custom emoji", value=f"{len(emoji)}/{emoji_limit}")
+        emoji = ctx.guild.emojis
+        animated_emoji = len([ e for e in emoji if e.animated ])
+        static_emoji = len(emoji) - animated_emoji
+
+        text = f"Regular: {static_emoji}\n"
+        text += f"Animated: {animated_emoji}\n"
+        text += f"Max: {emoji_limit}"
+        embed.add_field(name="Custom emoji", value=text)
 
     def add_roles_field(self, ctx: Context, embed: Embed) -> None:
         """Add roles field to embed."""
@@ -118,9 +124,9 @@ class ServerInfo(Cog):
             features.append(f"{yes} Inkcyclopedia")
 
         if settings.is_tempconverter_muted(ctx.guild):
-            features.append(f"{no} Temperature converter")
+            features.append(f"{no} Temp conversion")
         else:
-            features.append(f"{yes} Temperature converter")
+            features.append(f"{yes} Temp conversion")
 
         feature_list = "\n".join(features)
         embed.add_field(name="MrFreeze features", value=feature_list)
