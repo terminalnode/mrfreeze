@@ -82,11 +82,13 @@ class Inkcyclopedia(CogBase):
 
     def get_mute_status(self, ctx: Context, is_muted: bool) -> str:
         """Check if inkcyclopedia is enabled for this server."""
+        invocation = ctx.invoked_with
+
         if is_muted:
-            msg = f"{ctx.author.mention} The inkcyclopedia feature has been "
+            msg = f"{ctx.author.mention} The {invocation} feature has been "
             msg += "**deactivated** for this server."
         else:
-            msg = f"{ctx.author.mention} The inkcyclopedia feature is "
+            msg = f"{ctx.author.mention} The {invocation} feature is "
             msg += "**active** for this server."
 
         return msg
@@ -94,27 +96,28 @@ class Inkcyclopedia(CogBase):
     def get_changed_status(self, ctx: Context, before: bool, after: bool, want: bool) -> str:
         """Print a message saying if the inkcyclopedia has been activated or deactivated."""
         mention = ctx.author.mention
+        invocation = ctx.invoked_with
 
         if before == want:
             if want:
-                return f"{mention} The inkcyclopedia is already deactivated."
+                return f"{mention} The {invocation} is already deactivated."
             else:
-                return f"{mention} The inkcyclopedia is already active."
+                return f"{mention} The {invocation} is already active."
 
         elif after != want:
             msg = f"{mention} Something went wrong, I wasn't able to "
             if want:
-                return msg + "deactivate the inkcyclopedia."
+                return msg + "deactivate the {invocation}."
             else:
-                return msg + "activate the inkcyclopedia."
+                return msg + "activate the {invocation}."
 
         else:
             if after:
-                return f"{mention} The inkcyclopedia is now deactivated."
+                return f"{mention} The {invocation} is now deactivated."
             else:
-                return f"{mention} The inkcyclopedia is now activated."
+                return f"{mention} The {invocation} is now activated."
 
-    @command(name="inkcyclopedia")
+    @command(name="inkcyclopedia", aliases=[ "inkbot", "inkybot" ])
     async def inkcyclopedia_command(self, ctx: Context, *args: str) -> None:
         """Check or change inkcyclopedia mute status."""
         is_owner = await ctx.bot.is_owner(ctx.author)
