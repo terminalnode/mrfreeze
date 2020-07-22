@@ -161,7 +161,7 @@ class Inkcyclopedia(CogBase):
         """Read every message, detect requests for ink pictures."""
         if self.bot.listener_block_check(message):
             return
-        elif self.bot.settings.is_inkcyclopedia_muted(message.guild):
+        elif message.guild and self.bot.settings.is_inkcyclopedia_muted(message.guild):
             return
 
         matches: List[str] = self.bracketmatch.findall(message.content)

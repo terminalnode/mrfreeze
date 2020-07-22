@@ -3,11 +3,12 @@ import logging
 
 from discord import Message
 
-from mrfreeze.lib import colors
+from mrfreeze.bot import MrFreeze
 from mrfreeze.cogs.cogbase import CogBase
+from mrfreeze.lib import colors
 
 
-def setup(bot) -> None:
+def setup(bot: MrFreeze) -> None:
     """Add the cog to the bot."""
     bot.add_cog(CommandLogger(bot))
 
@@ -15,7 +16,7 @@ def setup(bot) -> None:
 class CommandLogger(CogBase):
     """Cog for managing how the bot logs commands."""
 
-    def __init__(self, bot) -> None:
+    def __init__(self, bot: MrFreeze) -> None:
         """Initialize the cog."""
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -31,9 +32,14 @@ class CommandLogger(CogBase):
             author = message.author
             name = f"{colors.YELLOW}{author.name}#{author.discriminator}"
             command = f"{colors.CYAN_B}{ctx.prefix}{ctx.invoked_with}"
-            guild_name = f"{colors.MAGENTA}{message.guild.name}"
-            channel_name = f"{colors.GREEN}#{message.channel.name}"
+
+            if ctx.guild:
+                channel_name = f"{colors.GREEN}#{message.channel.name}"
+                guild_name = f"{colors.MAGENTA}{message.guild.name}"
+                guild_channel = f"{channel_name}{colors.CYAN} @ {guild_name}"
+            else:
+                guild_channel = f"{colors.MAGENTA}DMs"
 
             msg = f"{name} {colors.CYAN}used {command}{colors.CYAN} "
-            msg += f"in {channel_name}{colors.CYAN} @ {guild_name}{colors.RESET}"
+            msg += f"in {guild_channel}{colors.RESET}"
             self.logger.info(msg)

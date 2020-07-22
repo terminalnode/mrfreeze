@@ -93,7 +93,9 @@ class MrFreeze(commands.Bot):
         """Block commands form executing if MrFreeze is muted in a certain server."""
         command = ctx.command.name
 
-        if self.settings.is_freeze_muted(ctx.guild) and command != "freezemute":
+        if not ctx.guild:
+            return True
+        elif self.settings.is_freeze_muted(ctx.guild) and command != "freezemute":
             raise MuteCheckFailure()
 
         return True
