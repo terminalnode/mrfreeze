@@ -91,18 +91,17 @@ class ParsedTemperature:
 
 # Space or ° mandatory for kelvin to avoid
 # collision with k as in thousand.
-numbers = r"(?:(?:\s|^)-)?\d+(?:[,.]\d+)? ?"
+numbers = r"\b-?[1-9]\d*(?:[,.]\d+)? ?"
 celsius = r"°?(?:c|cel|celcius|celsius|civili[sz]ed units?)"
 fahrenheit = r"°?(?:fah|fahrenheit|freedom units?)"
-degrees = r"°?(?:deg|degrees)"
 kelvin = r"(?:k|kelvin)"
 rankine = r"°?(?:r|rankine)"
 statement_regex = f"({numbers})(?:({celsius})|({fahrenheit})"
-statement_regex += fr"|([ °]{kelvin})|({rankine})|({degrees}))(?:\s|$)"
+statement_regex += fr"|([ °]{kelvin})|({rankine}))(?:\s|$)"
 
 # Regex for finding forced conversions
 force_convert_begin = fr"(?:(?:{numbers}) ?(?:{celsius}|{fahrenheit}|"
-force_convert_begin += fr"{degrees}|[ °]{kelvin}|{rankine})) (?:for|in|as"
+force_convert_begin += fr"[ °]{kelvin}|{rankine})) (?:for|in|as"
 force_convert_begin += r"|(?:convert )?to|convert)"
 find_force_convert = fr"{force_convert_begin} (?:({celsius})|({fahrenheit})"
 find_force_convert += fr"|(°?{kelvin})|({rankine}))(?:\s|$)"
@@ -302,28 +301,8 @@ class TemperatureConverter(CogBase):
             origin = TempUnit.F
         elif statement[3]:
             origin = TempUnit.K
-        elif statement[4]:
+        else:  # Has to be rankine
             origin = TempUnit.R
-        else:  # Has to be "degrees", needs to be converted into real unit
-            if ctx.guild is None:
-                # Not DMs
-                roles = ctx.author.roles
-                if discord.utils.get(roles, name="Celsius"):
-                    origin = TempUnit.C
-                elif discord.utils.get(roles, name="Fahrenheit"):
-                    origin = TempUnit.F
-                elif discord.utils.get(roles, name="Canada"):
-                    origin = TempUnit.C
-                elif discord.utils.get(roles, name="Mexico"):
-                    origin = TempUnit.C
-                elif discord.utils.get(roles, name="North America"):
-                    origin = TempUnit.F
-                else:
-                    # Default is celsius
-                    origin = TempUnit.C
-            else:
-                # DMs
-                origin = TempUnit.C
 
         # Determine destination unit
         if conversion_match:
