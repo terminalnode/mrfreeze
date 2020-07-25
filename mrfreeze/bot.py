@@ -31,7 +31,6 @@ from mrfreeze.database.settings import Settings
 from mrfreeze.lib import colors
 from mrfreeze.lib import dbfunctions
 from mrfreeze.lib import greeting
-from mrfreeze.lib import server_settings
 from mrfreeze.lib import time
 from mrfreeze.lib.checks import MuteCheckFailure
 
@@ -66,9 +65,6 @@ class MrFreeze(commands.Bot):
         self.logger.debug("Linking imported functions as own methods")
         self.extract_time = time.extract_time
         self.parse_timedelta = time.parse_timedelta
-        self.read_server_setting = server_settings.read_server_setting
-        self.write_server_setting = server_settings.write_server_setting
-        self.create_server_settings = server_settings.create_server_settings
         self.db_connect = dbfunctions.db_connect
         self.db_create = dbfunctions.db_create
         self.db_time = dbfunctions.db_time

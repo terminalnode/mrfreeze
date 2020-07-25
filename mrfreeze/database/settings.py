@@ -12,6 +12,7 @@ from mrfreeze.database.tables.abc_table_base import ABCTableBase
 from mrfreeze.database.tables.freeze_mutes import FreezeMutes
 from mrfreeze.database.tables.inkcyclopedia_mutes import InkcyclopediaMutes
 from mrfreeze.database.tables.mute_channels import MuteChannels
+from mrfreeze.database.tables.mute_interval import MuteInterval
 from mrfreeze.database.tables.mute_roles import MuteRoles
 from mrfreeze.database.tables.self_mute_times import SelfMuteTimes
 from mrfreeze.database.tables.tempconverter_mutes import TempConverterMutes
@@ -28,6 +29,7 @@ class Settings:
 
         # Initialize the tables
         self.logger.info("Instantiating tables")
+        self.mute_interval = MuteInterval(self.dbpath, self.logger)
         self.freeze_mutes = FreezeMutes(self.dbpath, self.logger)
         self.inkcyclopedia = InkcyclopediaMutes(self.dbpath, self.logger)
         self.mute_channels = MuteChannels(self.dbpath, self.logger)
@@ -38,6 +40,7 @@ class Settings:
         self.logger.info("All tables instantiated")
 
         # Add tables to self.tables
+        self.tables.append(self.mute_interval)
         self.tables.append(self.freeze_mutes)
         self.tables.append(self.inkcyclopedia)
         self.tables.append(self.mute_channels)
@@ -52,6 +55,10 @@ class Settings:
         self.logger.info("All tables initialized")
 
         # Link all the methods
+        # Mute Interval
+        self.get_mute_interval          = self.mute_interval.get
+        self.set_mute_interval          = self.mute_interval.set_by_id
+
         # Freeze Mutes
         self.is_freeze_muted            = self.freeze_mutes.get
         self.toggle_freeze_mute         = self.freeze_mutes.toggle

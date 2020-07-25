@@ -82,17 +82,10 @@ class BanishAndRegion(Cog):
         self.bot = bot
         self.regions: Dict[int, Dict[str, Optional[int]]] = dict()
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.coginfo = CogInfo(self)
-
-        # Server setting names
-        # Mute interval governs how often to check for unmutes.
-        self.mute_interval_name = 'mute_interval'
         self.default_mute_interval = 5
-        self.mute_interval_dict: Dict[int, int] = dict()
-
-        # Self mute interval governs how long to banish
-        # unauthorized uses of !mute/!banish etc
         self.default_self_mute_time = 20
+
+        self.coginfo = CogInfo(self)
 
         mute_db.create_table(self.bot)
 
@@ -147,13 +140,6 @@ class BanishAndRegion(Cog):
         unbanish and indexing all the servers' regional roles.
         """
         for server in self.bot.guilds:
-            # Set intervals in which to check mutes
-            mute_interval = self.bot.read_server_setting(self.bot, server, self.mute_interval_name)
-            if mute_interval and mute_interval.isdigit():
-                self.mute_interval_dict[server.id] = int(mute_interval)
-            else:
-                self.mute_interval_dict[server.id] = self.default_mute_interval
-
             # Add unbanish loop to bot
             self.bot.add_bg_task(self.unbanish_loop(server), f'unbanish@{server.id}')
 
@@ -169,7 +155,13 @@ class BanishAndRegion(Cog):
     async def unbanish_loop(self, server: Guild) -> None:
         """Check for people to unbanish every self.banish_interval seconds."""
         while not self.bot.is_closed():
-            await asyncio.sleep(self.mute_interval_dict[server.id])
+            mute_interval = self.bot.settings.get_mute_interval(server)
+            if not mute_interval:
+                interval = self.default_mute_interval
+            else:
+                interval = mute_interval
+
+            await asyncio.sleep(interval)
             self.logger.debug(f"Running unbanish loop for {server.name}.")
 
             current_time = datetime.datetime.now()
@@ -252,6 +244,7 @@ class BanishAndRegion(Cog):
     async def _banishinterval(self, ctx: Context, *args: str) -> None:
         author = ctx.author.mention
         server = ctx.guild
+        current = self.bot.settings.get_mute_interval(server)
         interval = None
 
         # Look for first number in args and use as interval time.
@@ -264,7 +257,7 @@ class BanishAndRegion(Cog):
         if interval is None:
             reply = f"{author} You didn't specify a valid interval. Please try again."
 
-        elif interval == self.mute_interval_dict[server.id]:
+        elif interval == current:
             reply = f"{author} The interval for this server is already set to {interval}."
 
         elif interval < 5:
@@ -272,21 +265,15 @@ class BanishAndRegion(Cog):
             reply += "like that. Minimum interval is 5 seconds."
 
         else:
-            oldinterval = self.mute_interval_dict[server.id]
-            self.mute_interval_dict[server.id] = interval
-            setting_saved = self.bot.write_server_setting(
-                self.bot,
-                server,
-                self.mute_interval_name, str(interval)
-            )
+            setting_saved = self.bot.settings.set_mute_interval(server, interval)
 
             if setting_saved:
-                reply = f"{author} The interval has been changed from {oldinterval} to "
+                reply = f"{author} The interval has been changed from {current} to "
                 reply += f"{interval} seconds."
             else:
-                reply = f"{author} The interval has been changed from {oldinterval} to "
+                reply = f"{author} The interval has been changed from {current} to "
                 reply += f"{interval} seconds, *BUT* for some reason I was unable to save "
-                reply += f"this setting, so it will be reset to {oldinterval} once I restart."
+                reply += f"this setting, so it will be reset to {current} once I restart."
 
         if reply is not None:
             await ctx.send(reply)
