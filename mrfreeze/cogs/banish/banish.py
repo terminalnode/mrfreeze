@@ -19,6 +19,7 @@ from typing import Optional
 import discord
 from discord import Guild
 from discord.ext.commands import CheckFailure
+from discord.ext.commands import Cog
 from discord.ext.commands import Context
 from discord.ext.commands import command
 
@@ -26,10 +27,10 @@ from mrfreeze.bot import MrFreeze
 from mrfreeze.cogs.banish.enums import MuteStr
 from mrfreeze.cogs.banish.enums import MuteType
 from mrfreeze.cogs.banish.templates import templates
-from mrfreeze.cogs.cogbase import CogBase
 from mrfreeze.cogs.coginfo import CogInfo
 from mrfreeze.lib import checks
 from mrfreeze.lib import colors
+from mrfreeze.lib import default
 from mrfreeze.lib import region
 from mrfreeze.lib.banish import mute_db
 from mrfreeze.lib.banish import templates as banish_templates
@@ -74,7 +75,7 @@ def setup(bot: MrFreeze) -> None:
     bot.add_cog(BanishAndRegion(bot))
 
 
-class BanishAndRegion(CogBase):
+class BanishAndRegion(Cog):
     """Good mod! Read the manual! Or if you're not mod - sod off."""
 
     def __init__(self, bot: MrFreeze) -> None:
@@ -137,7 +138,7 @@ class BanishAndRegion(CogBase):
         """
         return min(candidates, key=lambda k: self.word_distance(k, input))
 
-    @CogBase.listener()
+    @Cog.listener()
     async def on_ready(self) -> None:
         """
         Once ready, do some setup for all servers.
@@ -233,7 +234,7 @@ class BanishAndRegion(CogBase):
 
             # Time for some great regrets
             if len(unmuted) > 0:
-                unmuted_str = self.mentions_list(unmuted)
+                unmuted_str = default.mentions_list(unmuted)
                 msg = None
 
                 if len(unmuted_str) == 1:
@@ -473,8 +474,8 @@ class BanishAndRegion(CogBase):
         # other_exception = True
 
         # Turn successes, fails and exceptions into strings
-        success_str = self.mentions_list(success_list)
-        fails_str = self.mentions_list(fails_list)
+        success_str = default.mentions_list(success_list)
+        fails_str = default.mentions_list(fails_list)
         errors_string = str()
 
         if http_exception and forbidden_exception and other_exception:
@@ -546,7 +547,7 @@ class BanishAndRegion(CogBase):
         selfmute = (len(mentions) == 1 and author in mentions)
         mix      = (not selfmute and author in mentions)
         user     = (not selfmute and not mix and len(mentions) > 0)
-        fails    = self.mentions_list([ mention for mention in mentions if mention != author ])
+        fails    = default.mentions_list([ mention for mention in mentions if mention != author ])
 
         if none:
             template = MuteStr.USER_NONE

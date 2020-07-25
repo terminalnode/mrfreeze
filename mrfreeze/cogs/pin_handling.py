@@ -7,30 +7,32 @@ from datetime import datetime
 from typing import Dict, Iterable, List, Optional
 
 import discord
-from discord import Message, MessageType, TextChannel
+from discord import Message
+from discord import MessageType
+from discord import TextChannel
 from discord.abc import GuildChannel
-from discord.ext.commands.bot import Bot
+from discord.ext.commands import Cog
 
-from mrfreeze.cogs.cogbase import CogBase
+from mrfreeze.bot import MrFreeze
 from mrfreeze.lib import colors
 
 
-def setup(bot: Bot) -> None:
+def setup(bot: MrFreeze) -> None:
     """Add the cog to the bot."""
     bot.add_cog(PinHandler(bot))
 
 
-class PinHandler(CogBase):
+class PinHandler(Cog):
     """Post the content of a message that was just pinned to chat."""
 
-    def __init__(self, bot: Bot) -> None:
+    def __init__(self, bot: MrFreeze) -> None:
         """Initialize the PinHandler cog."""
         self.bot = bot
         self.pinsDict: Optional[Dict[int, int]] = None
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.info("PinHandler initialized")
 
-    @CogBase.listener()
+    @Cog.listener()
     async def on_ready(self) -> None:
         """When ready, make a list of the number of pins in all channels."""
         # Type declarations
@@ -73,7 +75,7 @@ class PinHandler(CogBase):
         self.pinsDict = pinsDict
         self.logger.info(f"{colors.CYAN_B}PinsDict all done!{colors.RESET}")
 
-    @CogBase.listener()
+    @Cog.listener()
     async def on_guild_channel_pins_update(
             self,
             channel: TextChannel,

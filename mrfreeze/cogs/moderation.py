@@ -13,13 +13,14 @@ from discord import Embed
 from discord import Message
 from discord import Role
 from discord import TextChannel
+from discord.ext.commands import Cog
 from discord.ext.commands import Context
 from discord.ext.commands import check
 from discord.ext.commands import command
 
 from mrfreeze.bot import MrFreeze
-from mrfreeze.cogs.cogbase import CogBase
 from mrfreeze.lib import checks
+from mrfreeze.lib import default
 from mrfreeze.lib.colors import CYAN
 from mrfreeze.lib.colors import CYAN_B
 from mrfreeze.lib.colors import GREEN_B
@@ -35,7 +36,7 @@ def setup(bot: MrFreeze) -> None:
     bot.add_cog(Moderation(bot))
 
 
-class Moderation(CogBase):
+class Moderation(Cog):
     """
     Cog for commands pertaining to moderation.
 
@@ -286,8 +287,8 @@ class Moderation(CogBase):
                 fail_list.append(victim)
 
         # And now we compile a response.
-        ment_success = self.mentions_list(success_list)
-        ment_fail = self.mentions_list(fail_list)
+        ment_success = default.mentions_list(success_list)
+        ment_fail = default.mentions_list(fail_list)
 
         # Error list:
         if forbidden_error and not http_error:
@@ -326,14 +327,14 @@ class Moderation(CogBase):
             # Mixed results
             error_str = error_str.lower().replace('.', '').replace('http', 'HTTP')
             replystr  = f"{ctx.author.mention} My powers are disapating, due to {error_str} "
-            replystr += f"I wasn't able to ban all of the users requested."
+            replystr += "I wasn't able to ban all of the users requested."
             replystr += f"\nBanned: {ment_success}\nNot banned: {ment_fail}"
 
         elif (len(success_list) == 0) and (len(fail_list) == 1):
             # Singular fail
             error_str = error_str.lower().replace('.', '').replace('http', 'HTTP')
             replystr  = f"{ctx.author.mention} The smuddy little smud {ment_fail}... will "
-            replystr += f"actually keep bothering us. I wasn't able to ban them due "
+            replystr += "actually keep bothering us. I wasn't able to ban them due "
             replystr += f"to {error_str}."
 
         elif (len(success_list) == 0) and (len(fail_list) > 1):
@@ -423,8 +424,8 @@ class Moderation(CogBase):
             error_str = 'unknown error'
 
         # Now all we need is a reply string.
-        ment_success = self.mentions_list(success_list)
-        ment_fail = self.mentions_list(fail_list)
+        ment_success = default.mentions_list(success_list)
+        ment_fail = default.mentions_list(fail_list)
 
         if showbans:
             # This is just a shortcut to invoke the listban command.
@@ -542,7 +543,7 @@ class Moderation(CogBase):
 
         # If they tried to kick a mod christmas is cancelled.
         mods_list = [ user for user in mentions if user.guild_permissions.administrator ]
-        ment_mods = self.mentions_list(mods_list)
+        ment_mods = default.mentions_list(mods_list)
 
         tried_to_kick_mod = False
         if len(mods_list) > 0:
@@ -586,8 +587,8 @@ class Moderation(CogBase):
 
         # This will convert the lists into mentions suitable for text display:
         # user1, user2 and user 3
-        ment_success = self.mentions_list(success_list)
-        ment_fail = self.mentions_list(fail_list)
+        ment_success = default.mentions_list(success_list)
+        ment_fail = default.mentions_list(fail_list)
 
         # Preparation of replystrings.
         # Errors are added further down.

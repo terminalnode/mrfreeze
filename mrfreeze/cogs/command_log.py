@@ -2,9 +2,9 @@
 import logging
 
 from discord import Message
+from discord.ext.commands import Cog
 
 from mrfreeze.bot import MrFreeze
-from mrfreeze.cogs.cogbase import CogBase
 from mrfreeze.lib import colors
 
 
@@ -13,7 +13,7 @@ def setup(bot: MrFreeze) -> None:
     bot.add_cog(CommandLogger(bot))
 
 
-class CommandLogger(CogBase):
+class CommandLogger(Cog):
     """Cog for managing how the bot logs commands."""
 
     def __init__(self, bot: MrFreeze) -> None:
@@ -21,7 +21,7 @@ class CommandLogger(CogBase):
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)
 
-    @CogBase.listener()
+    @Cog.listener()
     async def on_message(self, message: Message) -> None:
         """Check if a message is a command, and log if it is."""
         if message.author.bot:

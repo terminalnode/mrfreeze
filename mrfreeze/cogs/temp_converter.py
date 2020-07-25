@@ -6,11 +6,11 @@ from typing import Optional
 
 import discord
 from discord import Message
+from discord.ext.commands import Cog
 from discord.ext.commands import Context
 from discord.ext.commands import command
 
 from mrfreeze.bot import MrFreeze
-from mrfreeze.cogs.cogbase import CogBase
 
 
 class TempUnit(Enum):
@@ -112,7 +112,7 @@ def setup(bot: MrFreeze) -> None:
     bot.add_cog(TemperatureConverter(bot))
 
 
-class TemperatureConverter(CogBase):
+class TemperatureConverter(Cog):
     """Listener that detects and converts temperature statements."""
 
     def __init__(self, bot: MrFreeze) -> None:
@@ -215,7 +215,7 @@ class TemperatureConverter(CogBase):
         if msg:
             await ctx.send(msg)
 
-    @CogBase.listener()
+    @Cog.listener()
     async def on_message(self, message: Message) -> None:
         """Look through all messages received for temperature statements."""
         if message.author.bot or self.bot.listener_block_check(message):

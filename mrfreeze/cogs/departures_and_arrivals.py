@@ -1,24 +1,29 @@
+"""Cog for logging when users join or leave a server."""
 from typing import List
 
 import discord
-from discord import Embed, Member, TextChannel
+from discord import Embed
+from discord import Member
+from discord import TextChannel
+from discord.ext.commands import Cog
 
 from mrfreeze.bot import MrFreeze
-from mrfreeze.cogs.cogbase import CogBase
 
 
-def setup(bot):
+def setup(bot: MrFreeze) -> None:
     """Add the cog to the bot."""
     bot.add_cog(DeparturesAndArrivals(bot))
 
 
-class DeparturesAndArrivals(CogBase):
+class DeparturesAndArrivals(Cog):
     """Manages how the bot acts when a member leaves a server."""
-    def __init__(self, bot: MrFreeze):
+
+    def __init__(self, bot: MrFreeze) -> None:
         self.bot = bot
 
-    @CogBase.listener()
-    async def on_member_remove(self, member: Member):
+    @Cog.listener()
+    async def on_member_remove(self, member: Member) -> None:
+        """Log when a member leaves the chat."""
         if self.bot.listener_block_check(member):
             return
 
@@ -29,18 +34,16 @@ class DeparturesAndArrivals(CogBase):
 
         embed = Embed(color=0x00dee9)
         embed.set_thumbnail(url=member.avatar_url_as(static_format="png"))
-        embed.add_field(
-            name=f"{username} has left the server! :sob:",
-            value=(
-                f"{mention} is a smudgerous trech " +
-                f"who's turned their back on {member.guild.name}.\n\n" +
-                f"We're now down to {len(member.guild.members)} members."
-            )
-        )
+
+        embed_text = f"{mention} is a smudgerous trech who's turned their back on "
+        embed_text += f"{member.guild.name}.\n\n"
+        embed_text += f"We're now down to {len(member.guild.members)} members."
+        embed.add_field(name=f"{username} has left the server! :sob:", value=embed_text)
         await mod_channel.send(embed=embed)
 
-    @CogBase.listener()
-    async def on_member_join(self, member: Member):
+    @Cog.listener()
+    async def on_member_join(self, member: Member) -> None:
+        """Log when a member joins the chat."""
         if self.bot.listener_block_check(member):
             return
 

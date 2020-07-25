@@ -53,7 +53,6 @@ load_cogs = [
     "mrfreeze.cogs.pin_handling",
 
     # Mostly for owner/mods
-    "mrfreeze.cogs.maintenance",
     "mrfreeze.cogs.moderation",
     "mrfreeze.cogs.banish.banish",
 

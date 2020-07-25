@@ -8,11 +8,11 @@ from typing import Set
 
 import discord
 from discord import Message
+from discord.ext.commands import Cog
 from discord.ext.commands import Context
 from discord.ext.commands import command
 
 from mrfreeze.bot import MrFreeze
-from mrfreeze.cogs.cogbase import CogBase
 
 import requests
 
@@ -41,7 +41,7 @@ class Ink:
         self.review = None
 
 
-class Inkcyclopedia(CogBase):
+class Inkcyclopedia(Cog):
     """Type an ink inside {curly brackets} and I'll tell you what it looks like."""
 
     def __init__(self, bot: MrFreeze) -> None:
@@ -156,7 +156,7 @@ class Inkcyclopedia(CogBase):
         if msg:
             await ctx.send(msg)
 
-    @CogBase.listener()
+    @Cog.listener()
     async def on_message(self, message: Message) -> None:
         """Read every message, detect requests for ink pictures."""
         if self.bot.listener_block_check(message):

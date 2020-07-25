@@ -5,10 +5,10 @@ from typing import List
 import discord
 from discord import Embed
 from discord import File
+from discord.ext.commands import Cog
 from discord.ext.commands import Context
 
 from mrfreeze.bot import MrFreeze
-from mrfreeze.cogs.cogbase import CogBase
 
 
 def setup(bot: MrFreeze) -> None:
@@ -22,7 +22,7 @@ getfreeze_aliases: List[str] = [
     "getfrozen", "getmrfreeze", "freezemeup", "freezeme"]
 
 
-class About(CogBase):
+class About(Cog):
     """Use these commands to unlock my deepest, darkest inner secrets."""
 
     def __init__(self, bot: MrFreeze) -> None:

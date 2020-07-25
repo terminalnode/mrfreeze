@@ -4,29 +4,29 @@ import random
 
 import discord
 from discord.ext.commands import BotMissingPermissions
+from discord.ext.commands import Cog
+from discord.ext.commands import Context
 from discord.ext.commands import bot_has_permissions
 from discord.ext.commands import command
-from discord.ext.commands.bot import Bot
-from discord.ext.commands.bot import Context
 
-from mrfreeze.cogs.cogbase import CogBase
+from mrfreeze.bot import MrFreeze
 from mrfreeze.lib import activity
 from mrfreeze.lib import vote
 
 
-def setup(bot: Bot) -> None:
+def setup(bot: MrFreeze) -> None:
     """Add the cog to the bot."""
     bot.add_cog(UserCommands(bot))
 
 
-class UserCommands(CogBase):
+class UserCommands(Cog):
     """
     These are the fun commands, everything else is boring and lame.
 
     Frankly there's no reason you should pay attention to anything that's not on this page.
     """
 
-    def __init__(self, bot: Bot) -> None:
+    def __init__(self, bot: MrFreeze) -> None:
         self.bot = bot
 
     @command(name="vote", aliases=["poll"])
