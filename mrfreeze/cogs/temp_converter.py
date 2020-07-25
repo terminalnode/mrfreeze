@@ -91,7 +91,7 @@ class ParsedTemperature:
 
 # Space or ° mandatory for kelvin to avoid
 # collision with k as in thousand.
-numbers = r"\b-?[1-9]\d*(?:[,.]\d+)? ?"
+numbers = r"(?:^|\s)-?(?:[1-9]\d+|\d)(?:[,.]\d+)? ?"
 celsius = r"°?(?:c|cel|celcius|celsius|civili[sz]ed units?)"
 fahrenheit = r"°?(?:fah|fahrenheit|freedom units?)"
 kelvin = r"(?:k|kelvin)"
