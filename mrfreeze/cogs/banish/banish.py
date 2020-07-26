@@ -8,7 +8,6 @@ they both use the antarctica mechanics.
 Therefor they're both in a cog separate from everything else.
 """
 
-import asyncio
 import datetime
 import logging
 from typing import Dict
@@ -28,13 +27,13 @@ from mrfreeze.cogs.banish.enums import MuteType
 from mrfreeze.cogs.banish.templates import templates
 from mrfreeze.cogs.coginfo import CogInfo
 from mrfreeze.lib import checks
-from mrfreeze.lib import colors
 from mrfreeze.lib import default
 from mrfreeze.lib import region
 from mrfreeze.lib.banish import mute_db
 from mrfreeze.lib.banish import templates as banish_templates
 from mrfreeze.lib.banish import time_settings
 from mrfreeze.lib.banish.roulette import roulette
+from mrfreeze.lib.banish.unbanish import unbanish_loop
 
 mute_templates: banish_templates.TemplateEngine
 mute_command: str
@@ -112,7 +111,7 @@ class BanishAndRegion(Cog):
         """
         for server in self.bot.guilds:
             # Add unbanish loop to bot
-            self.bot.add_bg_task(self.unbanish_loop(server), f'unbanish@{server.id}')
+            self.bot.add_bg_task(unbanish_loop(server, self.coginfo), f'unbanish@{server.id}')
 
             # Construct region dict
             self.regions[server.id] = dict()
@@ -122,93 +121,6 @@ class BanishAndRegion(Cog):
                     self.regions[server.id][region_name] = region_role.id
                 else:
                     self.regions[server.id][region_name] = None
-
-    async def unbanish_loop(self, server: Guild) -> None:
-        """Check for people to unbanish every self.banish_interval seconds."""
-        while not self.bot.is_closed():
-            mute_interval = self.bot.settings.get_mute_interval(server)
-            if not mute_interval:
-                interval = self.default_mute_interval
-            else:
-                interval = mute_interval
-
-            await asyncio.sleep(interval)
-            self.logger.debug(f"Running unbanish loop for {server.name}.")
-
-            current_time = datetime.datetime.now()
-            server_mutes = mute_db.mdb_fetch(self.bot, server)
-            self.logger.debug(f"There are {len(server_mutes)} mutes total in {server.name}.")
-            server_mutes = [ i for i in server_mutes if i.until is not None ]
-            self.logger.debug(f"There are {len(server_mutes)} timed mutes in {server.name}.")
-
-            mute_role = await self.bot.get_mute_role(server)
-            self.logger.debug(f"Mute role in {server.name}: {mute_role}")
-            mute_channel = await self.bot.get_mute_channel(server, silent=True)
-            self.logger.debug(f"Mute channel in {server.name}: {mute_channel}")
-            unmuted = list()
-
-            for mute in server_mutes:
-                self.logger.debug(f"Checking if {mute} is due for unbanish.")
-                if mute.until < current_time:
-                    self.logger.debug(f"{mute} is due for unbanish!")
-                    # Need to refresh the member to get their latest roles
-                    try:
-                        member = await server.fetch_member(mute.member.id)
-                    except Exception as e:
-                        self.logger.error(f"Failed to refresh muted member: {e}")
-                        continue  # Will try again next unbanish loop
-
-                    self.logger.debug(f"Refreshed {member}, they have {len(member.roles)} roles.")
-
-                    # Calculate how late we were in unbanishing
-                    diff = self.bot.parse_timedelta(current_time - mute.until)
-                    if diff == "":
-                        diff = "now"
-                    else:
-                        diff = f"{diff} ago"
-
-                    # Remove from database
-                    mute_db.mdb_del(self.bot, member, self.logger)
-
-                    if mute_role in member.roles:
-                        self.logger.debug(f"{member} has the mute role! Removing it.")
-                        try:
-                            await member.remove_roles(mute_role)
-                            self.logger.debug(f"{member} should no longer have the mute role.")
-                            # Members are only considered unmuted if they had the antarctica role
-                            unmuted.append(member)
-
-                            log = f"Auto-unmuted {colors.CYAN_B}{member.name}#"
-                            log += f"{member.discriminator} @ {server.name}."
-                            log += f"{colors.YELLOW} (due {diff}){colors.RESET}"
-                            self.logger.info(log)
-
-                        except Exception as e:
-                            log = f"Failed to remove mute role of {colors.YELLOW}"
-                            log += f"{member.name}#{member.discriminator}"
-                            log += f"{colors.CYAN_B} @ {colors.MAGENTA} {server.name}:"
-                            log += f"\n{colors.RED}==> {colors.RESET}{e}"
-                            self.logger.error(log)
-                    else:
-                        log = f"User {colors.YELLOW}{member.name}#{member.discriminator}"
-                        log += f"{colors.CYAN_B} @ {colors.MAGENTA} {server.name}{colors.CYAN} "
-                        log += f"due for unmute but does not have a mute role!{colors.RESET}"
-                        self.logger.warning(log)
-
-            # Time for some great regrets
-            if len(unmuted) > 0:
-                unmuted_str = default.mentions_list(unmuted)
-                msg = None
-
-                if len(unmuted_str) == 1:
-                    msg = "It's with great regret that I must inform you all that "
-                    msg += f"{unmuted_str}'s exile has come to an end."
-                else:
-                    msg = "It's with great regret that I must inform you all that the exile of "
-                    msg += f"{unmuted_str} has come to an end."
-
-                if msg is not None:
-                    await mute_channel.send(msg)
 
     @command(name=banish_interval_command, aliases=banish_interval_aliases)
     @discord.ext.commands.check(checks.is_owner_or_mod)

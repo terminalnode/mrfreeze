@@ -22,6 +22,7 @@ import discord
 from discord import Guild
 from discord import Member
 from discord import Message
+from discord import Role
 from discord import TextChannel
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -195,7 +196,7 @@ class MrFreeze(commands.Bot):
                 self.logger.info(f"{server.name} has no designated mute channel")
             return server.system_channel
 
-    async def get_mute_role(self, guild: Guild) -> Optional[TextChannel]:
+    async def get_mute_role(self, guild: Guild) -> Optional[Role]:
         """
         Get the server's mute role.
 
