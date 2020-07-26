@@ -12,7 +12,6 @@ import asyncio
 import datetime
 import logging
 from typing import Dict
-from typing import Iterable
 from typing import List
 from typing import Optional
 
@@ -34,8 +33,8 @@ from mrfreeze.lib import default
 from mrfreeze.lib import region
 from mrfreeze.lib.banish import mute_db
 from mrfreeze.lib.banish import templates as banish_templates
+from mrfreeze.lib.banish import time_settings
 from mrfreeze.lib.banish.roulette import roulette
-from mrfreeze.lib.banish.time_settings import set_self_mute
 
 mute_templates: banish_templates.TemplateEngine
 mute_command: str
@@ -102,34 +101,6 @@ class BanishAndRegion(Cog):
             return server_smt
         else:
             return self.default_self_mute_time
-
-    def word_distance(self, a: str, b: str) -> int:
-        """Get the word distance between two words."""
-        arr = [ [ 0 for x in range(len(b)) ] for y in range(len(a)) ]
-        for x in range(0, len(a)):
-            arr[x][0] = x
-        for x in range(0, len(b)):
-            arr[0][x] = x
-        for row in range(1, len(a)):
-            for col in range(1, len(b)):
-                if a[row] == b[col]:
-                    cost = 0
-                else:
-                    cost = 1
-        arr[row][col] = min(
-            1 + arr[row - 1][col],
-            1 + arr[row][col - 1],
-            cost + arr[row - 1][col - 1])
-
-        return arr[len(a) - 1][len(b) - 1]
-
-    def get_closest_match(self, candidates: Iterable[str], input: str) -> str:
-        """
-        Get the closest matching string from a list of candidates.
-
-        This method acts as a wrapper for word distance.
-        """
-        return min(candidates, key=lambda k: self.word_distance(k, input))
 
     @Cog.listener()
     async def on_ready(self) -> None:
@@ -241,47 +212,13 @@ class BanishAndRegion(Cog):
 
     @command(name=banish_interval_command, aliases=banish_interval_aliases)
     @discord.ext.commands.check(checks.is_owner_or_mod)
-    async def _banishinterval(self, ctx: Context, *args: str) -> None:
-        author = ctx.author.mention
-        server = ctx.guild
-        current = self.bot.settings.get_mute_interval(server)
-        interval = None
-
-        # Look for first number in args and use as interval time.
-        for arg in args:
-            if arg.isdigit():
-                interval = int(arg)
-                break
-
-        reply = None
-        if interval is None:
-            reply = f"{author} You didn't specify a valid interval. Please try again."
-
-        elif interval == current:
-            reply = f"{author} The interval for this server is already set to {interval}."
-
-        elif interval < 5:
-            reply = f"{author} You greedy little smud you, trying to steal my CPU cycles "
-            reply += "like that. Minimum interval is 5 seconds."
-
-        else:
-            setting_saved = self.bot.settings.set_mute_interval(server, interval)
-
-            if setting_saved:
-                reply = f"{author} The interval has been changed from {current} to "
-                reply += f"{interval} seconds."
-            else:
-                reply = f"{author} The interval has been changed from {current} to "
-                reply += f"{interval} seconds, *BUT* for some reason I was unable to save "
-                reply += f"this setting, so it will be reset to {current} once I restart."
-
-        if reply is not None:
-            await ctx.send(reply)
+    async def _banishinterval(self, ctx: Context, interval: Optional[int]) -> None:
+        await time_settings.set_banish_interval(ctx, self.bot, interval)
 
     @command(name=selfmute_command, aliases=selfmute_aliases)
     @discord.ext.commands.check(checks.is_owner_or_mod)
-    async def _selfmutetime(self, ctx: Context, number: Optional[int], *args: str) -> None:
-        await set_self_mute(ctx, self.bot, number)
+    async def _selfmutetime(self, ctx: Context, number: Optional[int]) -> None:
+        await time_settings.set_self_mute(ctx, self.bot, number)
 
     @command(name=mute_command, aliases=mute_command_aliases)
     @discord.ext.commands.check(checks.is_mod)
@@ -590,24 +527,20 @@ class BanishAndRegion(Cog):
 
         else:
             until = banish_list[0].until
-            left: str
             now = datetime.datetime.now()
 
             if until and until < now:
                 msg = f"{mention} You're due for unbanishment. Hold on a sec."
 
             else:
-                if until:
-                    left = self.bot.parse_timedelta(until - now)
-                else:
-                    left = "an eternity"
+                left = self.bot.parse_timedelta(until - now) if until else "an eternity"
                 msg = f"{mention} You have about **{left}** left to go."
 
         if msg:
             await ctx.send(msg)
 
     @command(name="roulette")
-    async def roulette(self, ctx: Context, *args: str) -> None:
+    async def roulette(self, ctx: Context) -> None:
         """Roll the dice and test your luck, banish or nothing."""
         await roulette(ctx, self.coginfo)
 
