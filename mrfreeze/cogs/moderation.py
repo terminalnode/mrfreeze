@@ -630,7 +630,7 @@ class Moderation(Cog):
         elif len(mentions) == 0:
             # Singular and plural don't matter here.
             replystr  = f"{ctx.author.mention} You forgot to mention anyone "
-            replystr += "you doofus. Who exactly am I meant to {verb}??"
+            replystr += f"you doofus. Who exactly am I meant to {verb}??"
 
         # Now we're adding in the error codes if there are any.
         if forbidden_error and http_error:
