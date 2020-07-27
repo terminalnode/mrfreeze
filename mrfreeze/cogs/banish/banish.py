@@ -15,7 +15,6 @@ from typing import List
 from typing import Optional
 
 import discord
-from discord import Guild
 from discord.ext.commands import CheckFailure
 from discord.ext.commands import Cog
 from discord.ext.commands import Context
@@ -87,20 +86,6 @@ class BanishAndRegion(Cog):
 
         mute_db.create_table(self.bot)
 
-    def get_self_mute_time(self, server: Guild, return_none: bool = False) -> Optional[int]:
-        """
-        Return the default self-mute time for the server.
-
-        If the server lacks its own self-mute time, the default is returned instead.
-        """
-        server_smt: Optional[int]
-        server_smt = self.bot.get_self_mute_time(server)
-
-        if server_smt or return_none:
-            return server_smt
-        else:
-            return self.default_self_mute_time
-
     @Cog.listener()
     async def on_ready(self) -> None:
         """
@@ -133,7 +118,7 @@ class BanishAndRegion(Cog):
         await time_settings.set_self_mute(ctx, self.bot, number)
 
     @command(name=mute_command, aliases=mute_command_aliases)
-    @discord.ext.commands.check(checks.is_mod)
+    @discord.ext.commands.check(checks.is_mod_silent)
     async def _banish(self, ctx: Context, *args: str) -> None:
         """Mute one or more users (can only be invoked by mods)."""
         # Lists where we will store our results
@@ -394,10 +379,7 @@ class BanishAndRegion(Cog):
         elif mix:
             template = MuteStr.USER_MIXED
 
-        self_mute_time: Optional[int] = self.get_self_mute_time(server)
-        if not (self_mute_time):
-            self_mute_time = self.default_self_mute_time
-
+        self_mute_time: int = self.bot.get_self_mute_time(server) or self.default_self_mute_time
         duration = datetime.timedelta(minutes = float(self_mute_time))
         end_date = datetime.datetime.now() + duration
         duration = self.bot.parse_timedelta(duration)

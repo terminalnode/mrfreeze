@@ -45,6 +45,16 @@ async def is_owner(ctx: Context) -> bool:
     return is_owner
 
 
+async def is_owner_silent(ctx: Context) -> bool:
+    """
+    Check if author is the bot owner; silent version.
+
+    Call with:
+    @commands.check(checks.is_owner_silent)
+    """
+    return await ctx.bot.is_owner(ctx.author)
+
+
 async def is_mod(caller: Union[Context, Member]) -> bool:
     """
     Check if the author is a mod.
@@ -60,22 +70,42 @@ async def is_mod(caller: Union[Context, Member]) -> bool:
     member_call = isinstance(caller, discord.member.Member)
 
     if member_call:
-        # caller is a member object
         mod_status = caller.guild_permissions.administrator
 
     else:
+        mod_status = caller.author.guild_permissions.administrator
+
         # caller is a context object
         if caller.guild is None:
-            await caller.send(
-                f"Don't you try to sneak into my DMs and mod me!")
+            await caller.send("Don't you try to sneak into my DMs and mod me!")
             return False
 
-        mod_status = caller.author.guild_permissions.administrator
         if not mod_status:
             msg = f"{caller.author.mention} Only mods are allowed to use that command."
             await caller.send(msg)
 
     return mod_status
+
+
+async def is_mod_silent(caller: Union[Context, Member]) -> bool:
+    """
+    Check if the author is a mod.
+
+    This check will never return a message and as such is also
+    suitable for uses other than as a function decorator. It works
+    both with Member objects and context objects.
+
+    Call with:
+    @commands.check(checks.is_mod_silent)
+    """
+    if caller.guild is None:
+        return False
+
+    elif isinstance(caller, Member):
+        return caller.guild_permissions.administrator
+
+    else:
+        return caller.author.guild_permissions.administrator
 
 
 async def always_allow(ctx: Context) -> bool:
