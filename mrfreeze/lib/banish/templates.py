@@ -2,12 +2,14 @@
 
 import itertools
 from enum import Enum
+from enum import auto
 from string import Template
 from typing import Any
 from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import MutableMapping
+from typing import Optional
 
 import toml
 
@@ -30,7 +32,7 @@ class MissingTemplateException(Exception):
     """Exception used when one or more of the templates are missing.."""
 
 
-class MuteResponse(Enum):
+class MuteResponseType(Enum):
     """Various categories of !mute attempts/results."""
 
     FREEZE          = "freeze"          # Tried muting: MrFreeze
@@ -65,20 +67,57 @@ class MuteResponse(Enum):
     TIMESTAMP       = "timestamp"       # The time stamp for the end of the message
 
 
+class MuteCommandType(Enum):
+    """Various categories of !mute commands (undo, micro, mega, etc)."""
+
+    MAIN    = auto()
+    UNDO    = auto()
+    MICRO   = auto()
+    SUPER   = auto()
+    MEGA    = auto()
+
+
 class BanishTemplate:
     """Class for holding a single template."""
 
     data: MutableMapping[str, Any]
     filename: str
     names: List[str]
-    templates: Dict[MuteResponse, Template]
+    names_main: List[str]
+    names_undo: List[str]
+    names_micro: List[str]
+    names_super: List[str]
+    names_mega: List[str]
+    templates: Dict[MuteResponseType, Template]
 
-    def __init__(self, file: str) -> None:
-        print(f"Hello, {file} here!")
+    def __init__(self, file: str, others: List["BanishTemplate"]) -> None:
         self.data = toml.load(f"config/banish_templates/{file}")
         self.filename = file
-        self.names = list()
-        self.templates = dict()
+        self.parse_names(others)
+        self.parse_templates()
+
+    def get_command_type(self, invocation: str) -> Optional[MuteCommandType]:
+        """Return the appropriate MuteCommandType based on invocation used."""
+        if invocation in self.names_main:
+            return MuteCommandType.MAIN
+
+        elif invocation in self.names_undo:
+            return MuteCommandType.UNDO
+
+        elif invocation in self.names_micro:
+            return MuteCommandType.MICRO
+
+        elif invocation in self.names_super:
+            return MuteCommandType.SUPER
+
+        elif invocation in self.names_mega:
+            return MuteCommandType.MEGA
+
+        return None
+
+    def get_template(self, mute_response: MuteResponseType) -> Optional[Template]:
+        """Return the appropriate template."""
+        return self.templates[mute_response]
 
     def has_name(self, name: str) -> bool:
         """Check if this template has this name."""
@@ -96,20 +135,19 @@ class BanishTemplate:
         if not names:
             raise MissingNameException(f"{self.filename} is missing names section.")
 
-        main_name = self.strip_iterable(names.get("main"))
-        undo_name = self.strip_iterable(names.get("undo"))
-        micro_name = self.strip_iterable(names.get("micro"))
-        super_name = self.strip_iterable(names.get("super"))
-        mega_name = self.strip_iterable(names.get("mega"))
+        self.names_main = self.strip_list(names.get("main"))
+        self.names_undo = self.strip_list(names.get("undo"))
+        self.names_micro = self.strip_list(names.get("micro"))
+        self.names_super = self.strip_list(names.get("super"))
+        self.names_mega = self.strip_list(names.get("mega"))
 
-        if not main_name:
+        if not self.names_main:
             raise MissingNameException(f"{self.filename} is missing names => main")
-        elif not undo_name:
+        elif not self.names_undo:
             raise MissingNameException(f"{self.filename} is missing names => undo")
 
-        unflattened_aliases = [ main_name, undo_name ]
-        unflattened_aliases += [ name for name in [ micro_name, super_name, mega_name ] if name ]
-        self.names = list(itertools.chain.from_iterable(unflattened_aliases))
+        self.names = self.names_main + self.names_undo
+        self.names += self.names_micro + self.names_super + self.names_mega
 
         # Check for duplicates
         for other in others:
@@ -124,11 +162,13 @@ class BanishTemplate:
     def parse_templates(self) -> None:
         """Read this template's template strings from data."""
         templates = self.data.get("templates")
+        self.templates = dict()
+
         if not templates:
             error = f"{self.filename} is missing templates section."
             raise MissingTemplateException(error)
 
-        for template in MuteResponse:
+        for template in MuteResponseType:
             template_string = templates.get(template.value)
             if not template_string:
                 error = f"{self.filename} is missing template: {template.value}"
@@ -136,12 +176,15 @@ class BanishTemplate:
 
             self.templates[template] = Template(template_string)
 
-    def strip_iterable(self, iterable: Iterable) -> Iterable:
+    def strip_list(self, input: List) -> List:
         """Remove all empty strings from an iterable."""
-        if iterable:
-            return [ i for i in iterable if isinstance(i, str) and i ]
+        if input:
+            return [ i for i in input if isinstance(i, str) and i ]
         else:
-            return iterable
+            return input
+
+    def __repr__(self) -> str:
+        return f"<BanishTemplate {self.filename}>"
 
 
 class TemplateEngine:
@@ -153,14 +196,32 @@ class TemplateEngine:
         self.templates = list()
 
         for file in files:
-            print(file)
-            new_template = BanishTemplate(file)
+            new_template = BanishTemplate(file, self.templates)
             new_template.parse_names(self.templates)
             self.templates.append(new_template)
-
-        print(f"Loaded {len(self.templates)}!")
 
     def get_aliases(self) -> List[str]:
         """Get a list of all command names."""
         name_lists = [ template.names for template in self.templates ]
         return list(itertools.chain.from_iterable(name_lists))
+
+    def get_banish_template(self, invocation: str) -> Optional[BanishTemplate]:
+        """Return the appropriate templates based on invocation used."""
+        for template in self.templates:
+            if template.has_name(invocation):
+                return template
+        return None
+
+    def get_command_type(self, invocation: str) -> Optional[MuteCommandType]:
+        """Return the appropriate MuteCommandType based on invocation used."""
+        template = self.get_banish_template(invocation)
+        if template:
+            return template.get_command_type(invocation)
+        return None
+
+    def get_template(self, invocation: str, mute_response: MuteResponseType) -> Optional[Template]:
+        """Return the appropriate template."""
+        banish_template = self.get_banish_template(invocation)
+        if banish_template:
+            return banish_template.get_template(mute_response)
+        return None

@@ -32,6 +32,7 @@ from mrfreeze.lib.banish import mute_db
 from mrfreeze.lib.banish import templates as banish_templates
 from mrfreeze.lib.banish import time_settings
 from mrfreeze.lib.banish.roulette import roulette
+from mrfreeze.lib.banish.templates import MuteResponseType
 from mrfreeze.lib.banish.unbanish import unbanish_loop
 
 mute_templates: banish_templates.TemplateEngine
@@ -354,16 +355,6 @@ class BanishAndRegion(Cog):
         author = ctx.author
         server = ctx.guild
 
-        invocation = ctx.invoked_with
-        if invocation == "banish":
-            invocation = MuteType.BANISH
-        elif invocation in banish_aliases:
-            invocation = MuteType.BANISH
-        elif invocation in hogtie_aliases:
-            invocation = MuteType.HOGTIE
-        elif invocation in mute_aliases:
-            invocation = MuteType.MUTE
-
         none     = (len(mentions) == 0)
         selfmute = (len(mentions) == 1 and author in mentions)
         mix      = (not selfmute and author in mentions)
@@ -371,13 +362,13 @@ class BanishAndRegion(Cog):
         fails    = default.mentions_list([ mention for mention in mentions if mention != author ])
 
         if none:
-            template = MuteStr.USER_NONE
+            template = MuteResponseType.USER_NONE
         elif selfmute:
-            template = MuteStr.USER_SELF
+            template = MuteResponseType.USER_SELF
         elif user:
-            template = MuteStr.USER_USER
+            template = MuteResponseType.USER_USER
         elif mix:
-            template = MuteStr.USER_MIXED
+            template = MuteResponseType.USER_MIXED
 
         self_mute_time: int = self.bot.get_self_mute_time(server) or self.default_self_mute_time
         duration = datetime.timedelta(minutes = float(self_mute_time))
@@ -400,13 +391,21 @@ class BanishAndRegion(Cog):
                 error_msg = "**an HTTP exception**"
             else:
                 error_msg = "**an unknown error**"
-            template = MuteStr.USER_FAIL
+            template = MuteResponseType.USER_FAIL
 
-        reply = templates[invocation][template].substitute(
-            author=author.mention, fails=fails, errors=error_msg, timestamp=duration
-        )
-
-        await ctx.send(reply)
+        banish_template = template_engine.get_template(ctx.invoked_with, template)
+        if banish_template:
+            reply = banish_template.substitute(
+                author=author.mention,
+                fails=fails,
+                errors=error_msg,
+                timestamp=duration
+            )
+            await ctx.send(reply)
+        else:
+            reply = "I couldn't find an appropriate response, but anyway... you're not "
+            reply += f"allowed to do that! Bad {ctx.author.mention}!"
+            await ctx.send(reply)
 
     @command(name=banishtime_command, aliases=banishtime_aliases)
     async def banishtime(self, ctx: Context) -> None:
