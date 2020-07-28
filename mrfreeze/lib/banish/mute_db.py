@@ -49,7 +49,7 @@ async def carry_out_banish(
         bot: Bot,
         member: Member,
         logger: Logger,
-        end_date: datetime) -> Union[None, Exception]:
+        end_date: Optional[datetime]) -> Union[None, Exception]:
     """
     Add the antarctica role to a user, then add them to the db.
 
