@@ -1,6 +1,6 @@
 """Module for handling the banish command."""
 import datetime
-from logging import Logger
+import logging
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -18,6 +18,8 @@ from mrfreeze.lib.banish import mute_db
 from mrfreeze.lib.banish.templates import MuteCommandType
 from mrfreeze.lib.banish.templates import MuteResponseType
 from mrfreeze.lib.banish.templates import TemplateEngine
+
+logger = logging.getLogger("BanishCommandModule")
 
 
 async def run_command(
@@ -48,17 +50,54 @@ async def banish(
     # Parse targetted users
     bot_mentioned = bot.user in ctx.message.mentions
     self_mentioned = ctx.author in ctx.message.mentions
-    mentions = [ u for u in ctx.message.mentions if u != bot.user ]
-    target_mods = [ u for u in mentions if u.guild_permissions.administrator ]
-    target_users = [ u for u in mentions if not u.guild_permissions.administrator ]
+    mentions = ctx.message.mentions
+    mods = [ u for u in mentions if u.guild_permissions.administrator and u != bot.user ]
+    users = [ u for u in mentions if not u.guild_permissions.administrator and u != bot.user ]
 
-    if bot_mentioned or self_mentioned or target_mods:
+    if bot_mentioned or self_mentioned or mods:
         # Illegal banish, prepare silly response.
-        pass
+        if bot_mentioned and len(mentions) == 1:
+            logger.debug("Setting template to MuteResponseType.FREEZE")
+            template = MuteResponseType.FREEZE
+            fails_list = [ bot.user ]
+        elif bot_mentioned and self_mentioned and len(mentions) == 2:
+            logger.debug("Setting template to MuteResponseType.FREEZE_SELF")
+            template = MuteResponseType.FREEZE_SELF
+            fails_list = [ bot.user, ctx.author ]
+        elif bot_mentioned:
+            logger.debug("Setting template to MuteResponseType.FREEZE_OTHERS")
+            template = MuteResponseType.FREEZE_OTHERS
+            fails_list = mods + users
+        elif self_mentioned and len(mentions) == 1:
+            logger.debug("Setting template to MuteResponseType.SELF")
+            template = MuteResponseType.SELF
+            fails_list = mods
+        elif mods and len(mentions) == 1:
+            logger.debug("Setting template to MuteResponseType.MOD")
+            template = MuteResponseType.MOD
+            fails_list = mods
+        elif mods:
+            logger.debug("Setting template to MuteResponseType.MODS")
+            template = MuteResponseType.MODS
+            fails_list = mods
+        else:
+            logger.warn("Setting template to MuteResponseType.INVALID")
+            logger.warn(f"bot_mentioned={bot_mentioned}, self_mentioned={self_mentioned}")
+            logger.warn(f"{len(mentions)} mentions={mentions}")
+            logger.warn(f"{len(mods)} mods={mods}")
+            logger.warn(f"{len(users)} users={users}")
+            template = MuteResponseType.INVALID
+            fails_list = mentions
+
+        banish_template = template_engine.get_template(ctx.invoked_with, template)
+        mention_fails = default.mentions_list(fails_list)
+        if banish_template:
+            msg = banish_template.substitute(author=ctx.author.mention, fails=mention_fails)
+            await ctx.send(msg)
 
     else:
         # Legal banish, attempt banish.
-        msg = await attempt_banish(ctx, coginfo, template_engine, target_users, args)
+        msg = await attempt_banish(ctx, coginfo, template_engine, users, args)
         await ctx.send(msg)
 
 
@@ -70,9 +109,8 @@ async def attempt_banish(
     args: Tuple[str, ...]
 ) -> str:
     """Attempt to carry banish some people, then return an appropriate response."""
-    if coginfo.bot and coginfo.logger:
+    if coginfo.bot:
         bot: MrFreeze = coginfo.bot
-        logger: Logger = coginfo.logger
 
     success_list: List[Member] = list()
     fails_list: List[Member] = list()
@@ -99,38 +137,14 @@ async def attempt_banish(
         fails_string = default.mentions_list(fails_list)
         error_string = get_error_string(http_exception, forbidden_exception, other_exception)
 
-    successes   = len(success_list)
-    no_success  = (successes == 0)
-    single      = (successes == 1)
-    multi       = (successes > 1)
-    failures    = len(fails_list)
-    no_fails    = (failures == 0)
-    fail        = (failures == 1)
-    fails       = (failures > 1)
-
-    if single and no_fails:
-        template = MuteResponseType.SINGLE
-    elif multi and no_fails:
-        template = MuteResponseType.MULTI
-    elif fail and no_success:
-        template = MuteResponseType.FAIL
-    elif fails and no_success:
-        template = MuteResponseType.FAILS
-    elif single and fail:
-        template = MuteResponseType.SINGLE_FAIL
-    elif single and fails:
-        template = MuteResponseType.SINGLE_FAILS
-    elif multi and fail:
-        template = MuteResponseType.MULTI_FAIL
-    elif multi and fails:
-        template = MuteResponseType.MULTI_FAILS
-    else:
-        template = MuteResponseType.INVALID
+    template = get_mute_response_type(success_list, fails_list)
+    logger.debug(f"attempt_banish(): Setting template to {template}")
 
     timestamp_template = template_engine.get_template(ctx.invoked_with, MuteResponseType.TIMESTAMP)
     if timestamp_template:
         timestamp = timestamp_template.substitute(duration=time.parse_timedelta(duration))
     else:
+        logger.warn(f"template_engine.get_template({ctx.invoked_with}, TIMESTAMP) returned None!")
         timestamp = ""
 
     response_template = template_engine.get_template(ctx.invoked_with, template)
@@ -145,6 +159,37 @@ async def attempt_banish(
         return f"{ctx.author.mention} {response}"
     else:
         return f"{ctx.author.mention} Something went wrong, I'm literally at a loss for words."
+
+
+def get_mute_response_type(muted: List[Member], failed: List[Member]) -> MuteResponseType:
+    """Get lists of successes and fails, return appropriate MuteResponseType."""
+    successes   = len(muted)
+    no_success  = (successes == 0)
+    single      = (successes == 1)
+    multi       = (successes > 1)
+    failures    = len(failed)
+    no_fails    = (failures == 0)
+    fail        = (failures == 1)
+    fails       = (failures > 1)
+
+    if single and no_fails:
+        return MuteResponseType.SINGLE
+    elif multi and no_fails:
+        return MuteResponseType.MULTI
+    elif fail and no_success:
+        return MuteResponseType.FAIL
+    elif fails and no_success:
+        return MuteResponseType.FAILS
+    elif single and fail:
+        return MuteResponseType.SINGLE_FAIL
+    elif single and fails:
+        return MuteResponseType.SINGLE_FAILS
+    elif multi and fail:
+        return MuteResponseType.MULTI_FAIL
+    elif multi and fails:
+        return MuteResponseType.MULTI_FAILS
+
+    return MuteResponseType.INVALID
 
 
 def get_error_string(http: bool, forbidden: bool, other: bool) -> str:
@@ -198,6 +243,5 @@ def get_unbanish_duration(
 
 async def unbanish(ctx: Context, coginfo: CogInfo, template_engine: TemplateEngine) -> None:
     """Undo one or more banishes."""
-    if coginfo.logger:
-        coginfo.logger.info("Hello, this is unbanish method. I'm not done yet.")
+    logger.info("Hello, this is unbanish method. I'm not done yet.")
     await ctx.send("Unbanish is not done yet, thanks for flying with MrFreeze Airlines.")

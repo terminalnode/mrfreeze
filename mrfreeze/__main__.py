@@ -29,7 +29,7 @@ logging.basicConfig(level  = logging.WARN,
 logging_modules = [
     "mrfreeze", "CommandLogger", "Inkcyclopedia", "MrFreeze",
     "PinHandler", "Settings", "Moderation", "ErrorHandler",
-    "BanishAndRegion"
+    "BanishAndRegion", "BanishCommandModule"
 ]
 for logging_module in logging_modules:
     logging.getLogger(logging_module).setLevel(logging.INFO)
