@@ -30,7 +30,8 @@ async def run_command(
 ) -> None:
     """Interpret the command and delegate task to the appropriate sub-function."""
     if template_engine.get_command_type(ctx.invoked_with) == MuteCommandType.UNDO:
-        await unbanish(ctx, coginfo, template_engine)
+        msg = await attempt_unbanish(ctx, coginfo, template_engine)
+        await ctx.send(msg)
     else:
         await banish(ctx, coginfo, template_engine, args)
 
@@ -101,6 +102,60 @@ async def banish(
         await ctx.send(msg)
 
 
+async def attempt_unbanish(
+    ctx: Context,
+    coginfo: CogInfo,
+    template_engine: TemplateEngine
+) -> str:
+    """Undo one or more banishes."""
+    if coginfo.bot:
+        bot: MrFreeze = coginfo.bot
+
+    mentions = ctx.message.mentions
+    victims = [ u for u in mentions if not u.guild_permissions.administrator and u != bot.user ]
+    success_list: List[Member] = list()
+    fails_list: List[Member] = list()
+    success_string = ""
+    fails_string = ""
+    error_string = ""
+    http_exception = False
+    forbidden_exception = False
+    other_exception = False
+
+    for victim in victims:
+        error = await mute_db.carry_out_unbanish(bot, victim, logger)
+        if isinstance(error, Exception):
+            fails_list.append(victim)
+            if isinstance(error, discord.HTTPException):
+                http_exception = True
+            elif isinstance(error, discord.Forbidden):
+                forbidden_exception = True
+            else:
+                other_exception = True
+
+        else:
+            success_list.append(victim)
+
+        success_string = default.mentions_list(success_list)
+        fails_string = default.mentions_list(fails_list)
+        error_string = get_error_string(http_exception, forbidden_exception, other_exception)
+
+    template = get_mute_response_type(success_list, fails_list, undo=True)
+    logger.debug(f"attempt_banish(): Setting template to {template}")
+
+    response_template = template_engine.get_template(ctx.invoked_with, template)
+    if response_template:
+        response = response_template.substitute(
+            author=ctx.author.mention,
+            victims=success_string,
+            fails=fails_string,
+            errors=error_string,
+        )
+        return f"{ctx.author.mention} {response}"
+    else:
+        return f"{ctx.author.mention} Something went wrong, I'm literally at a loss for words."
+
+
 async def attempt_banish(
     ctx: Context,
     coginfo: CogInfo,
@@ -114,6 +169,9 @@ async def attempt_banish(
 
     success_list: List[Member] = list()
     fails_list: List[Member] = list()
+    success_string = ""
+    fails_string = ""
+    error_string = ""
     http_exception = False
     forbidden_exception = False
     other_exception = False
@@ -161,7 +219,11 @@ async def attempt_banish(
         return f"{ctx.author.mention} Something went wrong, I'm literally at a loss for words."
 
 
-def get_mute_response_type(muted: List[Member], failed: List[Member]) -> MuteResponseType:
+def get_mute_response_type(
+    muted: List[Member],
+    failed: List[Member],
+    undo: bool = False
+) -> MuteResponseType:
     """Get lists of successes and fails, return appropriate MuteResponseType."""
     successes   = len(muted)
     no_success  = (successes == 0)
@@ -173,21 +235,21 @@ def get_mute_response_type(muted: List[Member], failed: List[Member]) -> MuteRes
     fails       = (failures > 1)
 
     if single and no_fails:
-        return MuteResponseType.SINGLE
+        return MuteResponseType.UNSINGLE if undo else MuteResponseType.SINGLE
     elif multi and no_fails:
-        return MuteResponseType.MULTI
+        return MuteResponseType.UNMULTI if undo else MuteResponseType.MULTI
     elif fail and no_success:
-        return MuteResponseType.FAIL
+        return MuteResponseType.UNFAIL if undo else MuteResponseType.FAIL
     elif fails and no_success:
-        return MuteResponseType.FAILS
+        return MuteResponseType.UNFAILS if undo else MuteResponseType.FAILS
     elif single and fail:
-        return MuteResponseType.SINGLE_FAIL
+        return MuteResponseType.UNSINGLE_FAIL if undo else MuteResponseType.SINGLE_FAIL
     elif single and fails:
-        return MuteResponseType.SINGLE_FAILS
+        return MuteResponseType.UNSINGLE_FAILS if undo else MuteResponseType.SINGLE_FAILS
     elif multi and fail:
-        return MuteResponseType.MULTI_FAIL
+        return MuteResponseType.UNMULTI_FAIL if undo else MuteResponseType.MULTI_FAIL
     elif multi and fails:
-        return MuteResponseType.MULTI_FAILS
+        return MuteResponseType.UNMULTI_FAILS if undo else MuteResponseType.MULTI_FAILS
 
     return MuteResponseType.INVALID
 
@@ -239,9 +301,3 @@ def get_unbanish_duration(
             duration = end_date - current_time
 
     return duration, end_date
-
-
-async def unbanish(ctx: Context, coginfo: CogInfo, template_engine: TemplateEngine) -> None:
-    """Undo one or more banishes."""
-    logger.info("Hello, this is unbanish method. I'm not done yet.")
-    await ctx.send("Unbanish is not done yet, thanks for flying with MrFreeze Airlines.")
