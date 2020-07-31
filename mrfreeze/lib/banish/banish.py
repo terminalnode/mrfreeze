@@ -20,6 +20,11 @@ from mrfreeze.lib.banish.templates import MuteResponseType
 from mrfreeze.lib.banish.templates import TemplateEngine
 
 logger = logging.getLogger("BanishCommandModule")
+forever_words = [
+    "forever",
+    "indefinite", "indefinitely",
+    "eternity", "eternally"
+]
 
 
 async def run_command(
@@ -281,23 +286,26 @@ def get_unbanish_duration(
     duration, end_date = time.extract_time(args)
 
     if duration is None:
-        command_type = template_engine.get_command_type(ctx.invoked_with)
-        current_time = datetime.datetime.now()
+        forever = any([ arg.lower() in forever_words for arg in args ])
 
-        try:
-            if command_type == MuteCommandType.MICRO:
-                duration = datetime.timedelta(seconds=10)
-            elif command_type == MuteCommandType.SUPER:
-                duration = datetime.timedelta(weeks=1)
-            elif command_type == MuteCommandType.MEGA:
-                duration = datetime.timedelta(days=365)
-            else:
-                duration = datetime.timedelta(minutes=5)
+        if not forever:
+            command_type = template_engine.get_command_type(ctx.invoked_with)
+            current_time = datetime.datetime.now()
 
-            end_date = current_time + duration
+            try:
+                if command_type == MuteCommandType.MICRO:
+                    duration = datetime.timedelta(seconds=10)
+                elif command_type == MuteCommandType.SUPER:
+                    duration = datetime.timedelta(weeks=1)
+                elif command_type == MuteCommandType.MEGA:
+                    duration = datetime.timedelta(days=365)
+                else:
+                    duration = datetime.timedelta(minutes=5)
 
-        except OverflowError:
-            end_date = datetime.datetime.max
-            duration = end_date - current_time
+                end_date = current_time + duration
+
+            except OverflowError:
+                end_date = datetime.datetime.max
+                duration = end_date - current_time
 
     return duration, end_date
