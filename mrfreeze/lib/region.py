@@ -69,7 +69,7 @@ async def region_antarctica(ctx: Context, cog: CogInfo, args: Tuple[str, ...]) -
     """
     Analyze arguments to see if user tried to set region to Antarctica.
 
-    If they did, the method will return True, banish them and send some snarky repyl.
+    If they did, the method will return True, banish them and send some snarky reply.
     Otherwise it returns False.
     """
     if cog.bot and cog.logger:
@@ -89,11 +89,18 @@ async def region_antarctica(ctx: Context, cog: CogInfo, args: Tuple[str, ...]) -
     if not said_antarctica:
         return False
 
+    # Check if the user is on an indefinite banish.
+    mute_status = mute_db.mdb_fetch(bot, ctx.author)
+    indefinite_mute = mute_status and not mute_status[0].until
+
     # User confirmed to have tried to set region to Antarctica
     # Initiating punishment
     reply = f"{ctx.author.mention} is a filthy *LIAR* claiming to live in Antarctica. "
 
-    if spelling == "antarctica":
+    if indefinite_mute:
+        reply += "Which they're currently stuck in, FOREVER!"
+
+    elif spelling == "antarctica":
         duration = datetime.timedelta(minutes = 10)
         end_date = datetime.datetime.now() + duration
         duration = bot.parse_timedelta(duration)
@@ -109,16 +116,17 @@ async def region_antarctica(ctx: Context, cog: CogInfo, args: Tuple[str, ...]) -
         reply += "ought to teach them some manners!"
 
     # Carry out the banish with resulting end date
-    error = await mute_db.carry_out_banish(
-        bot,
-        ctx.author,
-        logger,
-        end_date
-    )
-    if isinstance(error, Exception):
-        reply = f"{ctx.author.mention} is a filthy *LIAR* claiming to live in Antarctica. "
-        reply += "Unfortunately there doesn't seem to be much I can do about that. Not sure "
-        reply += "why. Some kind of system malfunction or whatever."
+    if not indefinite_mute:
+        error = await mute_db.carry_out_banish(
+            bot,
+            ctx.author,
+            logger,
+            end_date
+        )
+        if isinstance(error, Exception):
+            reply = f"{ctx.author.mention} is a filthy *LIAR* claiming to live in Antarctica. "
+            reply += "Unfortunately there doesn't seem to be much I can do about that. Not sure "
+            reply += "why. Some kind of system malfunction or whatever."
 
     await ctx.send(reply)
     return True
