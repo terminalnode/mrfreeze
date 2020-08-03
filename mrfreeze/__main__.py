@@ -29,7 +29,8 @@ logging.basicConfig(level  = logging.WARN,
 logging_modules = [
     "mrfreeze", "CommandLogger", "Inkcyclopedia", "MrFreeze",
     "PinHandler", "Settings", "Moderation", "ErrorHandler",
-    "BanishAndRegion", "BanishCommandModule", "LogLevel"
+    "BanishAndRegion", "BanishCommandModule", "LogLevel",
+    "DevTools"
 ]
 for logging_module in logging_modules:
     logging.getLogger(logging_module).setLevel(logging.INFO)
@@ -56,6 +57,7 @@ load_cogs = [
     "mrfreeze.cogs.moderation",
     "mrfreeze.cogs.banish.banish",
     "mrfreeze.cogs.loglevel",
+    "mrfreeze.cogs.devtools",
 
     # Functions directed towards regular users.
     "mrfreeze.cogs.user_cmds",
