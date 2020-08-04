@@ -9,6 +9,7 @@ from discord.ext.commands import Cog
 from discord.ext.commands import Context
 
 from mrfreeze.bot import MrFreeze
+from mrfreeze.lib import server_info
 
 
 def setup(bot: MrFreeze) -> None:
@@ -28,6 +29,11 @@ class About(Cog):
     def __init__(self, bot: MrFreeze) -> None:
         """Initialize the About cog."""
         self.bot = bot
+
+    @discord.ext.commands.command(name="serverinfo", aliases=[ "server" ])
+    async def server(self, ctx: Context) -> None:
+        """Display information about the server."""
+        await server_info.run(ctx)
 
     @discord.ext.commands.command(name="wiki", aliases=[ "readme", "commands" ])
     async def readme(self, ctx: Context) -> None:
