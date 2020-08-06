@@ -5,7 +5,7 @@ import logging
 from mrfreeze.database.tables.abc_table_dict import ABCTableDict
 
 
-class MuteRoles(ABCTableDict):
+class MuteRoles(ABCTableDict[int, int]):
     """Class for handling the mute_roles table."""
 
     def __init__(self, dbpath: str, logger: logging.Logger) -> None:

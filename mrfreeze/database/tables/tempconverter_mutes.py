@@ -7,7 +7,7 @@ from discord import Guild
 from mrfreeze.database.tables.abc_table_dict import ABCTableDict
 
 
-class TempConverterMutes(ABCTableDict):
+class TempConverterMutes(ABCTableDict[int, bool]):
     """Class for handling the freeze_mutes table."""
 
     def __init__(self, dbpath: str, logger: logging.Logger) -> None:

@@ -1,11 +1,12 @@
 """Mute interval stores information about how often to check for users due for unmute."""
 
 import logging
+from typing import Optional
 
 from mrfreeze.database.tables.abc_table_dict import ABCTableDict
 
 
-class MuteInterval(ABCTableDict):
+class MuteInterval(ABCTableDict[int, Optional[int]]):
     """
     Class for handling the mute_intervals table.
 

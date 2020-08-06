@@ -2,9 +2,10 @@
 
 import logging
 import sqlite3
-from typing import Any
 from typing import Dict
+from typing import Generic
 from typing import Optional
+from typing import TypeVar
 from typing import Union
 
 from discord import Guild
@@ -20,8 +21,11 @@ from mrfreeze.lib.colors import RED
 from mrfreeze.lib.colors import RESET
 from mrfreeze.lib.colors import YELLOW_B
 
+KT = TypeVar("KT")
+VT = TypeVar("VT")
 
-class ABCTableDict(ABCTableBase):
+
+class ABCTableDict(Generic[KT, VT], ABCTableBase):
     """
     Abstract base class for Settings.
 
@@ -34,7 +38,7 @@ class ABCTableDict(ABCTableBase):
     table_name: str
     dbpath: str
     logger: logging.Logger
-    dict: Optional[Dict[Any, Any]]
+    dict: Optional[Dict[KT, VT]]
 
     # SQL commands
     select_all: str
@@ -75,7 +79,7 @@ class ABCTableDict(ABCTableBase):
             self.errorlog(f"failed to fetch data: {query.error}")
             self.dict = None
 
-    def get(self, server: Guild) -> Optional[int]:
+    def get(self, server: Guild) -> Optional[VT]:
         """Get the value from a given module for a given server."""
         # Check that values are loaded, if not try again.
         if self.dict is None:
@@ -92,7 +96,7 @@ class ABCTableDict(ABCTableBase):
         # Finally, return the actual value from the dictionary.
         return self.dict[server.id]
 
-    def update_dictionary(self, key: int, value: Any) -> bool:
+    def update_dictionary(self, key: KT, value: VT) -> bool:
         """Update the dictionary for a given module."""
         if self.dict is None:
             self.load_from_db()
@@ -107,11 +111,11 @@ class ABCTableDict(ABCTableBase):
         """Set the value using a TextChannel or Role object."""
         return self.upsert(object.guild, object.id)
 
-    def set_by_id(self, server: Guild, value: Any) -> bool:
+    def set_by_id(self, server: Guild, value: VT) -> bool:
         """Set the value using a Guild object and a value."""
         return self.upsert(server, value)
 
-    def upsert(self, server: Guild, value: Any) -> bool:
+    def upsert(self, server: Guild, value: VT) -> bool:
         """Insert or update the value for `server.id` with `value`."""
         query = db_execute(self.dbpath, self.insert, (server.id, value, value))
 

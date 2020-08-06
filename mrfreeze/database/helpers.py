@@ -48,7 +48,7 @@ def db_time(in_data: Union[str, datetime.datetime]) -> Optional[Union[str, datet
         return None
 
 
-def db_execute(dbpath: str, sql: str, values: Tuple[str, ...]) -> ExecutionResult:
+def db_execute(dbpath: str, sql: str, values: Tuple[Any, ...]) -> ExecutionResult:
     """Execute a database query."""
     error = None
     output = list()

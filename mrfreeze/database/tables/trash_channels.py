@@ -5,7 +5,7 @@ import logging
 from mrfreeze.database.tables.abc_table_dict import ABCTableDict
 
 
-class TrashChannels(ABCTableDict):
+class TrashChannels(ABCTableDict[int, int]):
     """Class for handling the trash_channels table."""
 
     def __init__(self, dbpath: str, logger: logging.Logger) -> None:

@@ -1,11 +1,12 @@
 """Mute channels stores information about which channels servers use for mutes."""
 
 import logging
+from typing import Optional
 
 from mrfreeze.database.tables.abc_table_dict import ABCTableDict
 
 
-class SelfMuteTimes(ABCTableDict):
+class SelfMuteTimes(ABCTableDict[int, Optional[int]]):
     """Class for handling the mute_channels table."""
 
     def __init__(self, dbpath: str, logger: logging.Logger) -> None:
