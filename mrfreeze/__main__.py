@@ -14,6 +14,10 @@ from mrfreeze.lib.colors import MAGENTA_B
 from mrfreeze.lib.colors import RED
 from mrfreeze.lib.colors import RESET
 
+import setproctitle
+
+setproctitle.setproctitle("mrfreeze")
+
 # Set general logging to warn, this will display warnings
 # from various modules we have imported such as discord,
 # then set the format for our logs
