@@ -60,7 +60,7 @@ load_cogs = [
 
     # Mostly for owner/mods
     "mrfreeze.cogs.moderation",
-    "mrfreeze.cogs.banish.banish",
+    "mrfreeze.cogs.banish",
     "mrfreeze.cogs.loglevel",
     "mrfreeze.cogs.devtools",
 
