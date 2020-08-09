@@ -8,11 +8,19 @@ from discord import Member
 from discord.ext.commands import Context
 
 from mrfreeze.bot import MrFreeze
+from mrfreeze.cogs.coginfo import CogInfo
+from mrfreeze.cogs.coginfo import InsufficientCogInfo
 from mrfreeze.lib import default
 
 
-def welcome_member(member: Member, bot: MrFreeze, default_template: Template) -> str:
+def welcome_member(member: Member, coginfo: CogInfo) -> str:
     """Log when a member joins the chat."""
+    if coginfo.bot and coginfo.default_welcome_template:
+        bot: MrFreeze = coginfo.bot
+        default_template: Template = coginfo.default_welcome_template
+    else:
+        raise InsufficientCogInfo()
+
     template_string = bot.settings.get_welcome_message(member.guild)
     template = Template(template_string) if template_string else default_template
     return fill_template(member, template)
@@ -25,12 +33,7 @@ def fill_template(member: Member, template: Template) -> str:
     return default.context_replacements(member, template, rules=rules_channel)
 
 
-def test_welcome_message(
-    member: Member,
-    bot: MrFreeze,
-    text: Optional[str],
-    default_template: Template
-) -> str:
+def test_welcome_message(member: Member, coginfo: CogInfo, text: Optional[str]) -> str:
     """
     Simulate a welcome message.
 
@@ -40,7 +43,7 @@ def test_welcome_message(
     if text:
         return fill_template(member, Template(text))
     else:
-        return welcome_member(member, bot, default_template)
+        return welcome_member(member, coginfo)
 
 
 def get_message(ctx: Context, bot: MrFreeze, default_template: Template) -> str:

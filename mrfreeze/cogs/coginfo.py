@@ -1,6 +1,7 @@
 """An object for easily passing information that all cogs should possess."""
 
 from logging import Logger
+from string import Template
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -22,6 +23,7 @@ class CogInfo:
     regions: Optional[Dict[int, Dict[str, Optional[int]]]]
     default_mute_interval: Optional[int]
     default_self_mute_time: Optional[int]
+    default_welcome_template: Optional[Template]
 
     def __init__(self, cog: Any) -> None:
         self.cog = cog
@@ -31,6 +33,7 @@ class CogInfo:
         self.set_attribute("regions")
         self.set_attribute("default_mute_interval")
         self.set_attribute("default_self_mute_time")
+        self.set_attribute("default_welcome_template")
 
     def set_attribute(self, name: str) -> None:
         """Check if the cog has the given attribute and return it."""
