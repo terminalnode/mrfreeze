@@ -1,8 +1,32 @@
 """Various standard methods to ensure consistent behaviour throughout application."""
+from string import Template
+from typing import Any
 from typing import Iterable
 from typing import List
+from typing import Union
 
+from discord import Member
 from discord import User
+from discord.ext.commands import Context
+
+
+def context_replacements(
+    ctx: Union[Context, Member],
+    template: Template,
+    **extras: Any
+) -> str:
+    """Carry out common string substitutions."""
+    is_context = isinstance(ctx, Context)
+    server = ctx.guild.name
+    member = ctx.author.mention if is_context else ctx.mention
+    channel = ctx.channel.mention if is_context else ""
+
+    return template.substitute(
+        extras,
+        server=server,
+        member=member,
+        channel=channel
+    )
 
 
 def mentions_list(mentions: List[User]) -> str:

@@ -1,4 +1,5 @@
 """Cog for logging when users join or leave a server."""
+from string import Template
 from typing import List
 
 import discord
@@ -6,8 +7,10 @@ from discord import Embed
 from discord import Member
 from discord import TextChannel
 from discord.ext.commands import Cog
+from discord.ext.commands import command
 
 from mrfreeze.bot import MrFreeze
+from mrfreeze.lib import welcome_messages
 
 
 def setup(bot: MrFreeze) -> None:
@@ -20,6 +23,14 @@ class DeparturesAndArrivals(Cog):
 
     def __init__(self, bot: MrFreeze) -> None:
         self.bot = bot
+
+        def_welcome = "Welcome to **$server**, $member!\n"
+        def_welcome += "Please specify your region using `!region <region name>` "
+        def_welcome += "to get a snazzy color for your nickname.\nThe available "
+        def_welcome += "regions are: Asia, Europe, North America, South America, "
+        def_welcome += "Africa, Oceania, Middle East and Antarctica."
+        def_welcome += "\n\nDon't forget to read the $rules!"
+        self.default_welcome = Template(def_welcome)
 
     @Cog.listener()
     async def on_member_remove(self, member: Member) -> None:
@@ -47,16 +58,5 @@ class DeparturesAndArrivals(Cog):
         if self.bot.listener_block_check(member):
             return
 
-        guild = member.guild.name
-        # Penposium rules channel
-        rules_channel = discord.utils.get(member.guild.channels, name="rules")
-
-        msg = f"Welcome to {guild}, {member.mention}!\n"
-        msg += "Please specify your region using `!region <region name>` to get a snazzy color "
-        msg += "for your nickname.\nThe available regions are: Asia, Europe, North America, "
-        msg += "South America, Africa, Oceania, Middle East and Antarctica."
-
-        if rules_channel:
-            msg += f"\n\nDon't forget to read the {rules_channel.mention}!"
-
+        msg = welcome_messages.get_message(member, self.bot, self.default_welcome)
         await member.guild.system_channel.send(msg)

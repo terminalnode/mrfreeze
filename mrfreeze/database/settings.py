@@ -17,6 +17,7 @@ from mrfreeze.database.tables.mute_roles import MuteRoles
 from mrfreeze.database.tables.self_mute_times import SelfMuteTimes
 from mrfreeze.database.tables.tempconverter_mutes import TempConverterMutes
 from mrfreeze.database.tables.trash_channels import TrashChannels
+from mrfreeze.database.tables.welcome_messages import WelcomeMessages
 
 
 class Settings:
@@ -37,6 +38,7 @@ class Settings:
         self.self_mute_times = SelfMuteTimes(self.dbpath, self.logger)
         self.tempconverter_mutes = TempConverterMutes(self.dbpath, self.logger)
         self.trash_channels = TrashChannels(self.dbpath, self.logger)
+        self.welcome_messages = WelcomeMessages(self.dbpath, self.logger)
         self.logger.info("All tables instantiated")
 
         # Add tables to self.tables
@@ -81,7 +83,7 @@ class Settings:
         self.get_self_mute_time         = self.self_mute_times.get
         self.set_self_mute_time         = self.self_mute_times.set_by_id
 
-        # TempConverterMutes Mutes
+        # Temperature Converter Mutes
         self.is_tempconverter_muted     = self.tempconverter_mutes.get
         self.toggle_tempconverter_mute  = self.tempconverter_mutes.toggle
 
@@ -89,6 +91,11 @@ class Settings:
         self.get_trash_channel          = self.trash_channels.get
         self.set_trash_channel          = self.trash_channels.set
         self.set_trash_channel_by_id    = self.trash_channels.set_by_id
+
+        # Welcome Messages
+        self.get_welcome_message        = self.welcome_messages.get
+        self.set_welcome_message        = self.welcome_messages.set
+        self.set_welcome_message_by_id  = self.welcome_messages.set_by_id
 
     def initialize(self) -> None:
         """Set up the database and tables necessary for the server settings module."""
