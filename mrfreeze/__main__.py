@@ -34,7 +34,7 @@ logging_modules = [
     "mrfreeze", "CommandLogger", "Inkcyclopedia", "MrFreeze",
     "PinHandler", "Settings", "Moderation", "ErrorHandler",
     "BanishAndRegion", "BanishCommandModule", "LogLevel",
-    "DevTools"
+    "DevTools", "JoinMessages", "LeaveMessages"
 ]
 for logging_module in logging_modules:
     logging.getLogger(logging_module).setLevel(logging.INFO)
@@ -54,7 +54,8 @@ load_cogs = [
     "mrfreeze.cogs.inkcyclopedia",
     "mrfreeze.cogs.error_handling",
     "mrfreeze.cogs.temp_converter",
-    "mrfreeze.cogs.departures_and_arrivals",
+    "mrfreeze.cogs.join_messages",
+    "mrfreeze.cogs.leave_messages",
     "mrfreeze.cogs.pin_handling",
 
     # Mostly for owner/mods

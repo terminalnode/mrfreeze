@@ -1,7 +1,7 @@
 """A module for handling editing and displaying of welcome messages."""
 
-from typing import Optional
 from string import Template
+from typing import Optional
 
 import discord
 from discord import Member
