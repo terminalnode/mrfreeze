@@ -17,9 +17,18 @@ def context_replacements(
 ) -> str:
     """Carry out common string substitutions."""
     is_context = isinstance(ctx, Context)
-    server = ctx.guild.name
-    member = ctx.author.mention if is_context else ctx.mention
+    guild = ctx.guild
+    author = ctx.author if is_context else ctx
+
+    server = guild.name
+    member = author.mention
+    mention = author.mention
     channel = ctx.channel.mention if is_context else ""
+    username = f"{author.name}#{author.discriminator}"
+    name = f"{author.name}"
+    discriminator = f"{author.discriminator}"
+    display_name = author.display_name
+    nick = author.display_name
 
     # Use safe substitute to avoid errors.
     # Missing keys will simply not be replaced with anything.
@@ -27,7 +36,13 @@ def context_replacements(
         extras,
         server=server,
         member=member,
-        channel=channel
+        mention=mention,
+        channel=channel,
+        username=username,
+        name=name,
+        discriminator=discriminator,
+        nick=nick,
+        display_name=display_name
     )
 
 

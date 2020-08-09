@@ -24,6 +24,7 @@ class CogInfo:
     default_mute_interval: Optional[int]
     default_self_mute_time: Optional[int]
     default_welcome_template: Optional[Template]
+    default_goodbye_template: Optional[Template]
 
     def __init__(self, cog: Any) -> None:
         self.cog = cog
@@ -34,6 +35,7 @@ class CogInfo:
         self.set_attribute("default_mute_interval")
         self.set_attribute("default_self_mute_time")
         self.set_attribute("default_welcome_template")
+        self.set_attribute("default_goodbye_template")
 
     def set_attribute(self, name: str) -> None:
         """Check if the cog has the given attribute and return it."""
