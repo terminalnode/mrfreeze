@@ -50,6 +50,7 @@ class Settings:
         self.tables.append(self.self_mute_times)
         self.tables.append(self.tempconverter_mutes)
         self.tables.append(self.trash_channels)
+        self.tables.append(self.welcome_messages)
 
         # Initialize all the tables
         self.logger.info("Initializing tables")

@@ -21,12 +21,21 @@ def context_replacements(
     member = ctx.author.mention if is_context else ctx.mention
     channel = ctx.channel.mention if is_context else ""
 
-    return template.substitute(
+    # Use safe substitute to avoid errors.
+    # Missing keys will simply not be replaced with anything.
+    return template.safe_substitute(
         extras,
         server=server,
         member=member,
         channel=channel
     )
+
+
+def command_free_content(ctx: Context) -> str:
+    """Strip the command invocation from the content of a Context object."""
+    content = ctx.message.content
+    prefix_length = len(ctx.prefix) + len(ctx.invoked_with) + 1
+    return content[prefix_length:]
 
 
 def mentions_list(mentions: List[User]) -> str:
