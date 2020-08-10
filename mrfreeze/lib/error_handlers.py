@@ -28,13 +28,22 @@ from mrfreeze.lib.colors import YELLOW
 class ContextData:
     """Class for holding contextual information."""
 
+    user: str
+    member: str
+    mention: str
+    plain_invocation: str
+    invocation: str
+
     def __init__(self, ctx: Context) -> None:
         self.ctx = ctx
-        self.user: str = f"{ctx.author.name}#{ctx.author.discriminator}"
-        self.member: str = f"{YELLOW}{ctx.author} {CYAN_B}@ {MAGENTA}{ctx.guild.name}"
-        self.mention: str = ctx.author.mention
-        self.plain_invocation: str = f"{ctx.prefix}{ctx.invoked_with}"
-        self.invocation: str = f"{WHITE_B}{self.plain_invocation}{RESET}"
+        self.user = f"{ctx.author.name}#{ctx.author.discriminator}"
+        if ctx.guild:
+            self.member = f"{YELLOW}{ctx.author} {CYAN_B}@ {MAGENTA}{ctx.guild.name}"
+        else:
+            self.member = f"{YELLOW}{ctx.author} {CYAN_B}@ {MAGENTA}DMs"
+        self.mention = ctx.author.mention
+        self.plain_invocation = f"{ctx.prefix}{ctx.invoked_with}"
+        self.invocation = f"{WHITE_B}{self.plain_invocation}{RESET}"
 
 
 def color_error(name: str) -> str:

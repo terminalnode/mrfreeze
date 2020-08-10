@@ -7,12 +7,16 @@ from discord.ext.commands import Context
 from mrfreeze.bot import MrFreeze
 from mrfreeze.lib import about_bot
 from mrfreeze.lib import server_info
+from mrfreeze.lib import user_info
 
 
 def setup(bot: MrFreeze) -> None:
     """Add the cog to the bot."""
     bot.add_cog(About(bot))
 
+
+whois_cmd = "whois"
+whois_aliases = [ "whoami", "who" ]
 
 serverinfo_cmd = "serverinfo"
 serverinfo_aliases = [ "server" ]
@@ -35,6 +39,11 @@ class About(Cog):
     def __init__(self, bot: MrFreeze) -> None:
         """Initialize the About cog."""
         self.bot = bot
+
+    @discord.ext.commands.command(name=whois_cmd, aliases=whois_aliases)
+    async def whois(self, ctx: Context) -> None:
+        """Display information about yourself or a target user."""
+        await user_info.run(ctx)
 
     @discord.ext.commands.command(name=serverinfo_cmd, aliases=serverinfo_aliases)
     async def server(self, ctx: Context) -> None:
