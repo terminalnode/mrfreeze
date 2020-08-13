@@ -1,6 +1,7 @@
 """Module for the region command."""
 
 import datetime
+from typing import Optional
 from typing import Tuple
 
 import discord
@@ -41,6 +42,13 @@ antarctica_spellings = (
 async def region_cmd(ctx: Context, cog: CogInfo, args: Tuple[str, ...]) -> None:
     """Assign yourself a colourful regional role."""
     args = tuple([ a.lower() for a in args ])
+    msg: Optional[str] = None
+
+    # antarctica_spelling will be none if the user did not spell it
+    antarctica_spelling: Optional[str] = None
+    for variant in antarctica_spellings:
+        if variant in args:
+            antarctica_spelling = variant
 
     if len(args) == 0 or "help" in args:
         msg = "Type !region followed by your region, this will assign you a regional role "
@@ -49,23 +57,26 @@ async def region_cmd(ctx: Context, cog: CogInfo, args: Tuple[str, ...]) -> None:
         msg += "The available regions are:\n"
         msg += " - Asia\n - Europe\n - North America\n - South America\n"
         msg += " - Africa\n - Oceania\n - Middle East"
-        await ctx.send(msg)
-        return
 
-    if "list" in args:
+    elif "list" in args:
         msg = "Available regions:\n"
         msg += " - Asia\n - Europe\n - North America\n - South America\n"
         msg += " - Africa\n - Oceania\n - Middle East"
+
+    elif antarctica_spelling and ctx.author.guild_permissions.administrator:
+        msg = f"{ctx.author.mention} Go away stupid mod, you're not welcome in my realm!"
+
+    elif antarctica_spelling:
+        await region_antarctica(ctx, cog, antarctica_spelling)
+
+    else:
+        await set_region(ctx, cog, args)
+
+    if msg:
         await ctx.send(msg)
-        return
-
-    if await region_antarctica(ctx, cog, args):
-        return
-
-    await set_region(ctx, cog, args)
 
 
-async def region_antarctica(ctx: Context, cog: CogInfo, args: Tuple[str, ...]) -> bool:
+async def region_antarctica(ctx: Context, cog: CogInfo, spelling: str) -> bool:
     """
     Analyze arguments to see if user tried to set region to Antarctica.
 
@@ -77,17 +88,6 @@ async def region_antarctica(ctx: Context, cog: CogInfo, args: Tuple[str, ...]) -
         logger = cog.logger
     else:
         raise InsufficientCogInfo()
-
-    # Check if the user tried to set region to Antarctica
-    said_antarctica = False
-    for variant in antarctica_spellings:
-        if variant in args:
-            said_antarctica = True
-            spelling = variant
-            break
-
-    if not said_antarctica:
-        return False
 
     # Check if the user is on an indefinite banish.
     mute_status = mute_db.mdb_fetch(bot, ctx.author)
