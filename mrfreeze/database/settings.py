@@ -18,6 +18,7 @@ from mrfreeze.database.tables.self_mute_times import SelfMuteTimes
 from mrfreeze.database.tables.tempconverter_mutes import TempConverterMutes
 from mrfreeze.database.tables.trash_channels import TrashChannels
 from mrfreeze.database.tables.welcome_messages import WelcomeMessages
+from mrfreeze.database.tables.leave_messages import LeaveMessages
 
 
 class Settings:
@@ -39,6 +40,7 @@ class Settings:
         self.tempconverter_mutes = TempConverterMutes(self.dbpath, self.logger)
         self.trash_channels = TrashChannels(self.dbpath, self.logger)
         self.welcome_messages = WelcomeMessages(self.dbpath, self.logger)
+        self.leave_messages = LeaveMessages(self.dbpath, self.logger)
         self.logger.info("All tables instantiated")
 
         # Add tables to self.tables
@@ -51,6 +53,7 @@ class Settings:
         self.tables.append(self.tempconverter_mutes)
         self.tables.append(self.trash_channels)
         self.tables.append(self.welcome_messages)
+        self.tables.append(self.leave_messages)
 
         # Initialize all the tables
         self.logger.info("Initializing tables")
@@ -95,8 +98,11 @@ class Settings:
 
         # Welcome Messages
         self.get_welcome_message        = self.welcome_messages.get
-        self.set_welcome_message        = self.welcome_messages.set
         self.set_welcome_message_by_id  = self.welcome_messages.set_by_id
+
+        # Leave Messages
+        self.get_leave_message          = self.leave_messages.get
+        self.set_leave_message_by_id    = self.leave_messages.set_by_id
 
     def initialize(self) -> None:
         """Set up the database and tables necessary for the server settings module."""

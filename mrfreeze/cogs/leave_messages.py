@@ -45,6 +45,27 @@ class LeaveMessages(Cog):
 
         await mod_channel.send(embed=embed)
 
+    @commands.command(name="setleave", aliases=[ "setleavemessage", "setleavemsg" ])
+    @commands.check(checks.is_owner_or_mod)
+    async def set_leave_message(self, ctx: Context) -> None:
+        """Change the leave message for the server."""
+        msg = leave_messages.set_message(ctx, self.bot)
+        await ctx.send(msg)
+
+    @commands.command(name="getleave", aliases=[ "getleavemessage", "getleavemsg" ])
+    @commands.check(checks.is_owner_or_mod)
+    async def get_leave_message(self, ctx: Context) -> None:
+        """Check what the current leave message is."""
+        msg = leave_messages.get_message(ctx, self.bot, self.default_goodbye_template)
+        await ctx.send(msg)
+
+    @commands.command(name="unsetleave", aliases=[ "delleave", "unleave" ])
+    @commands.check(checks.is_owner_or_mod)
+    async def unset_leave(self, ctx: Context) -> None:
+        """Change the leave message for the server to use bot default."""
+        msg = leave_messages.unset_message(ctx, self.bot)
+        await ctx.send(msg)
+
     @commands.command(name="simulateleave", aliases=[ "simleave", "testleave" ])
     @commands.check(checks.is_owner_or_mod)
     async def simulate_leave_message(self, ctx: Context, *args: str) -> None:

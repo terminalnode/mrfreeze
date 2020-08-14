@@ -16,12 +16,12 @@ from mrfreeze.lib import default
 def say_goodbye(member: Member, coginfo: CogInfo) -> Embed:
     """Log when a member leaves the server."""
     if coginfo.bot and coginfo.default_goodbye_template:
-        # bot: MrFreeze = coginfo.bot
+        bot: MrFreeze = coginfo.bot
         default_template: Template = coginfo.default_goodbye_template
     else:
         raise InsufficientCogInfo()
 
-    template_string = ""   # until we add setting for it
+    template_string = bot.settings.get_leave_message(member.guild)
     template = Template(template_string) if template_string else default_template
     return create_embed(member, template)
 
@@ -59,14 +59,27 @@ def test_leave_message(member: Member, coginfo: CogInfo, text: Optional[str]) ->
 
 def get_message(ctx: Context, bot: MrFreeze, default_template: Template) -> str:
     """Get the server's current leave message."""
-    pass
+    msg = bot.settings.get_leave_message(ctx.guild) or default_template.template
+
+    return f"{ctx.author.mention} The welcome message for this server is:\n{msg}"
 
 
 def set_message(ctx: Context, bot: MrFreeze) -> str:
     """Set the server's leave message."""
-    pass
+    new_msg = default.command_free_content(ctx)
+    was_set = bot.settings.set_leave_message_by_id(ctx.guild, new_msg)
+
+    if was_set:
+        return f"{ctx.author.mention} The leave message has been set to:\n{new_msg}"
+    else:
+        return f"{ctx.author.mention} Something went awry, I couldn't change your leave message."
 
 
 def unset_message(ctx: Context, bot: MrFreeze) -> str:
     """Unset the server's leave message, reverting to the default."""
-    pass
+    was_unset = bot.settings.set_leave_message_by_id(ctx.guild, None)
+
+    if was_unset:
+        return f"{ctx.author.mention} The leave message has been reset to bot default. :ok_hand:"
+    else:
+        return f"{ctx.author.mention} Something went awry, I couldn't unset your leave message."
