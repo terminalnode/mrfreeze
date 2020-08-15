@@ -1,7 +1,5 @@
 """A module for handling editing and displaying of welcome messages."""
 
-from enum import Enum
-from enum import auto
 from string import Template
 from typing import Optional
 
@@ -15,37 +13,8 @@ from mrfreeze.bot import MrFreeze
 from mrfreeze.cogs.coginfo import CogInfo
 from mrfreeze.cogs.coginfo import InsufficientCogInfo
 from mrfreeze.lib import default
-
-
-class ChannelType(Enum):
-    """An enum to distinguish between different types of channels."""
-
-    WELCOME = auto()
-    DEFAULT = auto()
-
-
-class WelcomeChannel:
-    """A class for holding the channel and the channel type."""
-
-    channel: TextChannel
-    type: ChannelType
-
-    def __init__(self, channel: TextChannel, type: ChannelType) -> None:
-        self.channel = channel
-        self.type = type
-
-    def __str__(self) -> str:
-        """
-        Get a string representing the channel.
-
-        If a leave messages channel is found, only a mention of that channel is returned.
-        If using the system messages channel", a mention followed by '(the system messages channel)' is returned.
-        """
-        if self.type == ChannelType.WELCOME:
-            return self.channel.mention
-
-        else:  # Must be ChannelType.DEFAULT
-            return f"{self.channel.mention} (the system messages channel)"
+from mrfreeze.lib.channel_settings import ChannelReturnType
+from mrfreeze.lib.channel_settings import TypedChannel
 
 
 def welcome_member(member: Member, coginfo: CogInfo) -> str:
@@ -109,7 +78,7 @@ def unset_message(ctx: Context, bot: MrFreeze) -> str:
         return f"{ctx.author.mention} Something went awry, I couldn't unset your welcome message."
 
 
-async def get_welcome_channel(guild: Guild, bot: MrFreeze) -> WelcomeChannel:
+async def get_welcome_channel(guild: Guild, bot: MrFreeze) -> TypedChannel:
     """Get a WelcomeChannel object representing which channel welcome messages get posted in."""
     # Fetch welcome channel, if there is any.
     db_welcome = bot.settings.get_welcome_channel(guild)
@@ -122,11 +91,11 @@ async def get_welcome_channel(guild: Guild, bot: MrFreeze) -> WelcomeChannel:
 
     # Return the appropriate channel
     if welcome_channel:
-        return WelcomeChannel(welcome_channel, ChannelType.WELCOME)
+        return TypedChannel(welcome_channel, ChannelReturnType.WELCOME, ChannelReturnType.WELCOME)
 
     else:
         sysmsg = guild.system_channel
-        return WelcomeChannel(sysmsg, ChannelType.DEFAULT)
+        return TypedChannel(sysmsg, ChannelReturnType.SYSMSG, ChannelReturnType.WELCOME)
 
 
 async def get_channel(ctx: Context, coginfo: CogInfo) -> str:
@@ -149,7 +118,7 @@ async def set_channel(ctx: Context, coginfo: CogInfo, channel: Optional[TextChan
 
     # Get old channel, do early return if the channels are the same.
     old_channel = await get_welcome_channel(ctx.guild, bot)
-    if old_channel.channel == channel and old_channel.type == ChannelType.WELCOME:
+    if old_channel.channel == channel and old_channel.type == ChannelReturnType.WELCOME:
         return f"{ctx.author.mention} The welcome messages are already being posted to {old_channel}"
 
     # Try to change the channel, give responses accordingly

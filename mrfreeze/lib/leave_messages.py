@@ -1,7 +1,5 @@
 """A module for handling editing and displaying of leave messages."""
 
-from enum import Enum
-from enum import auto
 from string import Template
 from typing import Optional
 
@@ -15,42 +13,8 @@ from mrfreeze.bot import MrFreeze
 from mrfreeze.cogs.coginfo import CogInfo
 from mrfreeze.cogs.coginfo import InsufficientCogInfo
 from mrfreeze.lib import default
-
-
-class ChannelType(Enum):
-    """An enum to distinguish between different types of channels."""
-
-    LEAVE = auto()
-    TRASH = auto()
-    DEFAULT = auto()
-
-
-class LeaveChannel:
-    """A class for holding the channel and the channel type."""
-
-    channel: TextChannel
-    type: ChannelType
-
-    def __init__(self, channel: TextChannel, type: ChannelType) -> None:
-        self.channel = channel
-        self.type = type
-
-    def __str__(self) -> str:
-        """
-        Get a string representing the channel.
-
-        If a leave messages channel is found, only a mention of that channel is returned.
-        If a trash channel is found, a mention followed by '(the server's trash channel)' is returned.
-        If using the system messages channel", a mention followed by '(the system messages channel)' is returned.
-        """
-        if self.type == ChannelType.LEAVE:
-            return self.channel.mention
-
-        elif self.type == ChannelType.TRASH:
-            return f"{self.channel.mention} (the server's trash channel)"
-
-        else:  # Must be ChannelType.DEFAULT
-            return f"{self.channel.mention} (the system messages channel)"
+from mrfreeze.lib.channel_settings import ChannelReturnType
+from mrfreeze.lib.channel_settings import TypedChannel
 
 
 def say_goodbye(member: Member, coginfo: CogInfo) -> Embed:
@@ -125,7 +89,7 @@ def unset_message(ctx: Context, bot: MrFreeze) -> str:
         return f"{ctx.author.mention} Something went awry, I couldn't unset your leave message."
 
 
-async def get_leave_channel(guild: Guild, bot: MrFreeze) -> LeaveChannel:
+async def get_leave_channel(guild: Guild, bot: MrFreeze) -> TypedChannel:
     """Get a LeaveChannel object representing which channel leave messages get posted in."""
     # Fetch leave channel, if there is any.
     db_leave = bot.settings.get_leave_channel(guild)
@@ -147,14 +111,14 @@ async def get_leave_channel(guild: Guild, bot: MrFreeze) -> LeaveChannel:
 
     # Return the appropriate channel
     if leave_channel:
-        return LeaveChannel(leave_channel, ChannelType.LEAVE)
+        return TypedChannel(leave_channel, ChannelReturnType.LEAVE, ChannelReturnType.LEAVE)
 
     elif trash_channel:
-        return LeaveChannel(trash_channel, ChannelType.TRASH)
+        return TypedChannel(trash_channel, ChannelReturnType.TRASH, ChannelReturnType.LEAVE)
 
     else:
         sysmsg = guild.system_channel
-        return LeaveChannel(sysmsg, ChannelType.DEFAULT)
+        return TypedChannel(sysmsg, ChannelReturnType.SYSMSG, ChannelReturnType.LEAVE)
 
 
 async def get_channel(ctx: Context, coginfo: CogInfo) -> str:
@@ -177,7 +141,7 @@ async def set_channel(ctx: Context, coginfo: CogInfo, channel: Optional[TextChan
 
     # Get old channel, do early return if the channels are the same.
     old_channel = await get_leave_channel(ctx.guild, bot)
-    if old_channel.channel == channel and old_channel.type == ChannelType.LEAVE:
+    if old_channel.channel == channel and old_channel.type == ChannelReturnType.LEAVE:
         return f"{ctx.author.mention} The leave messages are already being posted to {old_channel}"
 
     # Try to change the channel, give responses accordingly
