@@ -1,8 +1,10 @@
 """Cog for logging when users joins server."""
 import logging
 from string import Template
+from typing import Optional
 
 from discord import Member
+from discord import TextChannel
 from discord.ext import commands
 from discord.ext.commands import Cog
 from discord.ext.commands import Context
@@ -42,8 +44,9 @@ class JoinMessages(Cog):
         if self.bot.listener_block_check(member):
             return
 
+        welcome_channel = await welcome_messages.get_welcome_channel(member.guild, self.bot)
         msg = welcome_messages.welcome_member(member, self.coginfo)
-        await member.guild.system_channel.send(msg)
+        await welcome_channel.channel.send(msg)
 
     @commands.command(name="setwelcome", aliases=[ "setwelcomemessage", "setwelcomemsg" ])
     @commands.check(checks.is_owner_or_mod)
@@ -72,4 +75,18 @@ class JoinMessages(Cog):
         """Pretend that the caller of the command just joined the server."""
         text = " ".join(args)
         msg = welcome_messages.test_welcome_message(ctx.author, self.coginfo, text)
+        await ctx.send(msg)
+
+    @commands.command(name="getwelcomechannel", aliases=[ "getwelcomech", "getwelcomec" ])
+    @commands.check(checks.is_owner_or_mod)
+    async def get_leave_channel(self, ctx: Context) -> None:
+        """Check what the current channel for welcome messages is."""
+        msg = await welcome_messages.get_channel(ctx, self.coginfo)
+        await ctx.send(msg)
+
+    @commands.command(name="setwelcomechannel", aliases=[ "setwelcomech", "setwelcomec" ])
+    @commands.check(checks.is_owner_or_mod)
+    async def set_leave_channel(self, ctx: Context, channel: Optional[TextChannel]) -> None:
+        """Set which channel to use for welcome messages (default is system channel)."""
+        msg = await welcome_messages.set_channel(ctx, self.coginfo, channel)
         await ctx.send(msg)

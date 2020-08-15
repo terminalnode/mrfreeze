@@ -1,8 +1,8 @@
 """Cog for logging when users leaves a server."""
 import logging
 from string import Template
+from typing import Optional
 
-import discord
 from discord import Member
 from discord import TextChannel
 from discord.ext import commands
@@ -40,10 +40,9 @@ class LeaveMessages(Cog):
         if self.bot.listener_block_check(member):
             return
 
-        mod_channel: TextChannel = discord.utils.get(member.guild.text_channels, name="leaving-messages")
+        leave_channel = await leave_messages.get_leave_channel(member.guild, self.bot)
         embed = leave_messages.say_goodbye(member, self.coginfo)
-
-        await mod_channel.send(embed=embed)
+        await leave_channel.channel.send(embed=embed)
 
     @commands.command(name="setleave", aliases=[ "setleavemessage", "setleavemsg" ])
     @commands.check(checks.is_owner_or_mod)
@@ -73,3 +72,17 @@ class LeaveMessages(Cog):
         text = " ".join(args)
         leave_embed = leave_messages.test_leave_message(ctx.author, self.coginfo, text)
         await ctx.send(embed=leave_embed)
+
+    @commands.command(name="getleavechannel", aliases=[ "getleavech", "getleavec" ])
+    @commands.check(checks.is_owner_or_mod)
+    async def get_leave_channel(self, ctx: Context) -> None:
+        """Check what the current channel for leave messages is."""
+        msg = await leave_messages.get_channel(ctx, self.coginfo)
+        await ctx.send(msg)
+
+    @commands.command(name="setleavechannel", aliases=[ "setleavech", "setleavec" ])
+    @commands.check(checks.is_owner_or_mod)
+    async def set_leave_channel(self, ctx: Context, channel: Optional[TextChannel]) -> None:
+        """Set which channel to use for leave messages (default is system channel or trash channel)."""
+        msg = await leave_messages.set_channel(ctx, self.coginfo, channel)
+        await ctx.send(msg)
