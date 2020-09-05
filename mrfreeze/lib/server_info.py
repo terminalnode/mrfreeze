@@ -7,17 +7,19 @@ from discord import TextChannel
 from discord.ext.commands import Context
 
 from mrfreeze.database.settings import Settings
+from mrfreeze.lib import leave_messages
+from mrfreeze.lib import welcome_messages
 
 
 async def run(ctx: Context) -> None:
     """Run the !server command."""
     if ctx.guild:
-        await ctx.send(embed=create_embed(ctx))
+        await ctx.send(embed= await create_embed(ctx))
     else:
         await ctx.send(f"{ctx.author.mention} Don't be silly.")
 
 
-def create_embed(ctx: Context) -> Embed:
+async def create_embed(ctx: Context) -> Embed:
     """Create the embed for the command."""
     embed = Embed(color=0x00dee9)
     embed.title = f"{ctx.guild.name} server information"
@@ -31,6 +33,8 @@ def create_embed(ctx: Context) -> Embed:
     add_freeze_features(ctx, embed)
     add_channels_field(ctx, embed)
     add_members_field(ctx, embed)
+    await add_welcome_channel_field(ctx, embed)
+    await add_leave_channel_field(ctx, embed)
     add_footer(ctx, embed)
     return embed
 
@@ -138,3 +142,19 @@ def add_footer(ctx: Context, embed: Embed) -> None:
     created_str = created.strftime("%Y-%m-%d")
 
     embed.set_footer(text=f"Created {created_str}  |  {days_ago} days ago")
+
+
+async def add_welcome_channel_field(ctx: Context, embed: Embed) -> None:
+    """Add welcome channel field to the embed."""
+    welcome_channel = await welcome_messages.get_welcome_channel(ctx.guild, ctx.bot)
+    embed.add_field(
+        name="Welcome channel",
+        value=welcome_channel.get_mention(skip_explanation=True))
+
+
+async def add_leave_channel_field(ctx: Context, embed: Embed) -> None:
+    """Add leave channel field to the embed."""
+    leave_channel = await leave_messages.get_leave_channel(ctx.guild, ctx.bot)
+    embed.add_field(
+        name="Leave channel",
+        value=leave_channel.get_mention(skip_explanation=True))
