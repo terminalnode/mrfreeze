@@ -7,8 +7,8 @@ from discord import TextChannel
 from discord.ext.commands import Context
 
 from mrfreeze.database.settings import Settings
-from mrfreeze.lib import welcome_messages
 from mrfreeze.lib import leave_messages
+from mrfreeze.lib import welcome_messages
 
 
 async def run(ctx: Context) -> None:
@@ -143,12 +143,18 @@ def add_footer(ctx: Context, embed: Embed) -> None:
 
     embed.set_footer(text=f"Created {created_str}  |  {days_ago} days ago")
 
+
 async def add_welcome_channel_field(ctx: Context, embed: Embed) -> None:
-    """Add Welcome channel field to the embed"""
+    """Add welcome channel field to the embed."""
     welcome_channel = await welcome_messages.get_welcome_channel(ctx.guild, ctx.bot)
-    embed.add_field(name="Welcome Channel", value=welcome_channel.get_mention(True))
+    embed.add_field(
+        name="Welcome channel",
+        value=welcome_channel.get_mention(skip_explanation=True))
+
 
 async def add_leave_channel_field(ctx: Context, embed: Embed) -> None:
-    """Add Leave channel field to the embed"""
+    """Add leave channel field to the embed."""
     leave_channel = await leave_messages.get_leave_channel(ctx.guild, ctx.bot)
-    embed.add_field(name="Leave Channel", value=leave_channel.get_mention(True))
+    embed.add_field(
+        name="Leave channel",
+        value=leave_channel.get_mention(skip_explanation=True))
