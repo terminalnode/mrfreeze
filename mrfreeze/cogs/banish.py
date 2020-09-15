@@ -14,6 +14,7 @@ from typing import List
 from typing import Optional
 
 import discord
+from discord import Member
 from discord.ext.commands import Cog
 from discord.ext.commands import Context
 from discord.ext.commands import command
@@ -110,9 +111,9 @@ class BanishAndRegion(Cog):
         await unauthorized_banish.run_command(ctx, self.coginfo, template_engine, error)
 
     @command(name=banishtime_command, aliases=banishtime_aliases)
-    async def banishtime(self, ctx: Context) -> None:
+    async def banishtime(self, ctx: Context, user: Optional[Member]) -> None:
         """Check how long until you're unbanished."""
-        await banish_time.run_command(ctx, self.coginfo)
+        await banish_time.run_command(ctx, self.coginfo, user)
 
     @command(name="roulette")
     async def roulette(self, ctx: Context) -> None:
