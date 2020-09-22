@@ -31,7 +31,7 @@ class UserCommands(Cog):
 
     @command(name="vote", aliases=["poll"])
     @bot_has_permissions(add_reactions=True)
-    async def vote_cmd(self, ctx: Context, *args: str) -> None:
+    async def vote_cmd(self, ctx: Context) -> None:
         """Create a poll."""
         await vote.vote(ctx, self.bot)
 
@@ -44,7 +44,7 @@ class UserCommands(Cog):
             await ctx.send(msg)
 
     @command(name="praise")
-    async def _praise(self, ctx: Context, *args: str) -> None:
+    async def _praise(self, ctx: Context) -> None:
         """Praise me."""
         author = ctx.author.mention
         msg = f"{author} Your praises have been heard, and "
@@ -52,7 +52,7 @@ class UserCommands(Cog):
         await ctx.send(msg)
 
     @command(name="icon", aliases=["logo"])
-    async def _logo(self, ctx: Context, *args: str) -> None:
+    async def _logo(self, ctx: Context) -> None:
         """Post the logo of the current server."""
         author = ctx.author.mention
         server = ctx.guild.name
@@ -67,7 +67,7 @@ class UserCommands(Cog):
             embed=logo)
 
     @command(name="mrfreeze", aliases=["freeze"])
-    async def _mrfreeze(self, ctx: Context, *args: str) -> None:
+    async def _mrfreeze(self, ctx: Context) -> None:
         """Get a quote from my timeless classic "Batman & Robin"."""
         author = ctx.author.mention
         server = ctx.guild.name
@@ -80,7 +80,7 @@ class UserCommands(Cog):
         await ctx.send(quote)
 
     @command(name="cointoss", aliases=["coin", "coinflip"])
-    async def _cointoss(self, ctx: Context, *args: str) -> None:
+    async def _cointoss(self, ctx: Context) -> None:
         """Toss a coin, results are 50/50."""
         if random.randint(0, 1):
             await ctx.send(f"{ctx.author.mention} Heads")
