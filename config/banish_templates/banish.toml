@@ -9,6 +9,7 @@
   freeze = "OK, I'll just march right on home then."
   freeze_self = "Oh heeeeell no! This is my realm and you're not invited."
   freeze_others = "If you think I'm spending a second more than necessary with $fails you're gravely mistaken."
+  freeze_owner = "You really want me to banish poor $fails, my lord and master? But... he'll freeze out there."
   self = "Oh heeeeell no! This is my realm and you're not invited."
   mod = "Sorry, I have a strict no mods-policy at home."
   mods = "Oh yay, mod party at my house! Me, $fails can have long enthralling talks on server policy all night! On second thought... PASS."

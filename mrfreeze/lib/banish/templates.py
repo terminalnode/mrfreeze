@@ -38,6 +38,7 @@ class MuteResponseType(Enum):
     FREEZE          = "freeze"          # Tried muting: MrFreeze
     FREEZE_SELF     = "freeze_self"     # Tried muting: MrFreeze + only self
     FREEZE_OTHERS   = "freeze_others"   # Tried muting: MrFreeze + others (possibly self)
+    FREEZE_OWNER    = "freeze_owner"    # Tried muting: bot owner
     SELF            = "self"            # Tried muting: self
     MOD             = "mod"             # Tried muting: a single mod
     MODS            = "mods"            # Tried muting: several mods (possibly self)

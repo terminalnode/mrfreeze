@@ -39,6 +39,8 @@
   freeze_self = ""
   # Tried muting: MrFreeze + others (possibly self)
   freeze_others = ""
+  # Tried muting: bot owner
+  freeze_owner = ""
   # Tried muting: self
   self = ""
   # Tried muting: a single mod

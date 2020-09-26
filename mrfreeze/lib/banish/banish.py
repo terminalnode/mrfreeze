@@ -56,13 +56,18 @@ async def banish(
     # Parse targetted users
     bot_mentioned = bot.user in ctx.message.mentions
     self_mentioned = ctx.author in ctx.message.mentions
+    owners_mentioned = [ u for u in ctx.message.mentions if await bot.is_owner(u) ]
     mentions = ctx.message.mentions
     mods = [ u for u in mentions if u.guild_permissions.administrator and u != bot.user ]
     users = [ u for u in mentions if not u.guild_permissions.administrator and u != bot.user ]
 
-    if bot_mentioned or self_mentioned or mods:
+    if bot_mentioned or self_mentioned or mods or owners_mentioned:
         # Illegal banish, prepare silly response.
-        if bot_mentioned and len(mentions) == 1:
+        if owners_mentioned:
+            logger.debug("Setting template to MuteResponseType.FREEZE_OWNER")
+            template = MuteResponseType.FREEZE_OWNER
+            fails_list = owners_mentioned
+        elif bot_mentioned and len(mentions) == 1:
             logger.debug("Setting template to MuteResponseType.FREEZE")
             template = MuteResponseType.FREEZE
             fails_list = [ bot.user ]

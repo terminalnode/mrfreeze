@@ -9,6 +9,7 @@
   freeze = "No *you* shut up!"
   freeze_self = "If you shut up, I shut up. Deal?"
   freeze_others = "If you could silence me you would've done so long ago, now $fails on the other hand... just give me the word."
+  freeze_owner = "No, no, no. $fails is love, $fails is life. They're free to say whatever they want."
   self = "Believe me, if I could've I would've muted you the day I walked in here."
   mod = "Look, nobody likes $fails but they're a mod so we're stuck with them."
   mods = "Look, nobody likes $fails, but they're mods so we're stuck with them."
