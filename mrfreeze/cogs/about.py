@@ -22,7 +22,7 @@ serverinfo_cmd = "serverinfo"
 serverinfo_aliases = [ "server" ]
 
 wiki_cmd = "wiki"
-wiki_aliases = [ "readme", "commands" ]
+wiki_aliases = [ "readme", "commands", "help" ]
 
 source_cmd = "source"
 source_aliases = [ "github", "gitlab", "git" ]

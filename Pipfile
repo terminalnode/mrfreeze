@@ -4,7 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [packages]
-discord-py = "~=1.4"
+discord-py = "~=1.5"
 inflect = "~=4.1"
 requests = "~=2.24"
 toml = "~=0.10"

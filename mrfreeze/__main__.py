@@ -44,7 +44,11 @@ logger = logging.getLogger("BotInit")
 logger.setLevel(logging.WARN)
 
 # Instantiate the bot.
-bot = bot.MrFreeze(command_prefix=["!"])
+intents = discord.Intents.default()
+intents.members = True
+intents.presences = False
+bot = bot.MrFreeze(command_prefix=["!"], intents=intents)
+bot.remove_command("help")
 
 # Loading all the cogs.
 # One line for each cog makes it easy to disable.
