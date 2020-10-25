@@ -8,6 +8,7 @@ from typing import Set
 
 import discord
 from discord import Message
+from discord import TextChannel
 from discord.ext.commands import Cog
 from discord.ext.commands import Context
 from discord.ext.commands import command
@@ -129,7 +130,7 @@ class Inkcyclopedia(Cog):
         if len(args) == 0 or not owner_or_mod:
             msg = self.get_mute_status(ctx, is_muted)
 
-        elif args[0].lower() == "on":
+        elif args[0].lower() == "on" or args[0].lower() == "enable":
             if is_muted:
                 self.bot.settings.toggle_inkcyclopedia_mute(ctx.guild)
                 is_muted_after = bool(self.bot.settings.is_inkcyclopedia_muted(ctx.guild))
@@ -137,7 +138,7 @@ class Inkcyclopedia(Cog):
             else:
                 msg = self.get_changed_status(ctx, is_muted, is_muted, False)
 
-        elif args[0].lower() == "off":
+        elif args[0].lower() == "off" or args[0].lower() == "disable":
             if is_muted:
                 msg = self.get_changed_status(ctx, is_muted, is_muted, True)
             else:
@@ -159,15 +160,28 @@ class Inkcyclopedia(Cog):
     @Cog.listener()
     async def on_message(self, message: Message) -> None:
         """Read every message, detect requests for ink pictures."""
-        if self.bot.listener_block_check(message):
+        if message.author.bot:
             return
+
+        elif self.bot.listener_block_check(message):
+            return  # MrFreeze is muted in this server.
+
         elif message.guild and self.bot.settings.is_inkcyclopedia_muted(message.guild):
-            return
+            return  # Inkcyclopedia disabled for this server.
+
+        elif message.guild:
+            muted: Optional[bool] = self.bot.settings.is_inkcyclopedia_muted(message.guild)
+
+            ink_channel: TextChannel = self.bot.settings.get_inkcyclopedia_channel(message.guild)
+            wrong_channel = ink_channel and ink_channel != message.channel.id
+
+            if muted or wrong_channel:
+                return
 
         matches: List[str] = self.bracketmatch.findall(message.content)
 
         # Stop the function if message was sent by a bot or contains no matches
-        if message.author.bot or not matches:
+        if not matches:
             return
 
         results: List[Ink] = await self.search_inks(matches)
