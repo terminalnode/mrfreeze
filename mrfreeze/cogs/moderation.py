@@ -203,7 +203,8 @@ class Moderation(Cog):
         rule_4  = "Rule 4: Please use common sense when posting here "
         rule_4 += "and follow usual Discord etiquette."
         rule_5  = "Rule 5: Political discussion is not allowed."
-        rules = { 1: rule_1, 2: rule_2, 3: rule_3, 4: rule_4, 5: rule_5 }
+        rule_6  = "Rule 6: Please google things."
+        rules = { 1: rule_1, 2: rule_2, 3: rule_3, 4: rule_4, 5: rule_5, 6: rule_6 }
 
         rule_triggers: Dict[int, Tuple[str, ...]] = {
             1: ("1", "joke", "jokes", "joking", "sex", "sexual", "weight",
@@ -214,7 +215,8 @@ class Moderation(Cog):
                 "shoes", "shoesize", "age", "act", "behave"),
             3: ("3", "topic", "ontopic", "offtopic", "spam", "nonsense"),
             4: ("4", "sense", "etiquette", "ettiquette"),
-            5: ("5", "politic", "politics", "political")
+            5: ("5", "politic", "politics", "political"),
+            6: ("6", "google", "duck", "qwant", "ecosia", "bing", "yahoo")
         }
 
         request = " ".join(args).lower()
