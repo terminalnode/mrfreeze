@@ -48,7 +48,7 @@ class Inkcyclopedia(Cog):
     def __init__(self, bot: MrFreeze) -> None:
         self.bot: MrFreeze = bot
         self.inkydb: Set[Ink] = set()
-        self.url: str = "https://system-inks-api.us-e2.cloudhub.io/api/inks"
+        self.url: str = "https://api.inkybot.app/v1/inks"
         self.bracketmatch: Pattern = re.compile(r"[{]([\w\-\s]+)[}]")
 
         self.logger = logging.getLogger(self.__class__.__name__)
