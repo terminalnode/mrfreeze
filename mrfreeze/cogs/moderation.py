@@ -197,14 +197,16 @@ class Moderation(Cog):
     @command(name="rules", aliases=["rule"])
     async def _rules(self, ctx: Context, *args: str) -> None:
         """Remind users of what the rules are."""
-        rule_1  = "Rule 1: Be nice and decent to everyone. Hate speech will not be tolerated."
-        rule_2  = "Rule 2: Keep discussions civil and mature."
-        rule_3  = "Rule 3: Stay on topic and avoid spamming."
-        rule_4  = "Rule 4: Please use common sense when posting here "
-        rule_4 += "and follow usual Discord etiquette."
-        rule_5  = "Rule 5: Political discussion is not allowed."
-        rule_6  = "Rule 6: Please google things."
-        rules = { 1: rule_1, 2: rule_2, 3: rule_3, 4: rule_4, 5: rule_5, 6: rule_6 }
+        rules = {
+            1:  "Be nice and decent to everyone. Hate speech will not be tolerated.",
+            2:  "Keep discussions civil and mature.",
+            3:  "Stay on topic and avoid spamming.",
+            4:  "Please use common sense when posting here and follow social norms.",
+            5:  "Political discussion is not allowed.",
+            6:  "Please google things.",
+            7:  "Don't be horny on main.",
+            8:  "No sales are allowed in server.",
+        }
 
         rule_triggers: Dict[int, Tuple[str, ...]] = {
             1: ("1", "joke", "jokes", "joking", "sex", "sexual", "weight",
@@ -216,7 +218,9 @@ class Moderation(Cog):
             3: ("3", "topic", "ontopic", "offtopic", "spam", "nonsense"),
             4: ("4", "sense", "etiquette", "ettiquette"),
             5: ("5", "politic", "politics", "political"),
-            6: ("6", "google", "duck", "qwant", "ecosia", "bing", "yahoo")
+            6: ("6", "google", "duck", "qwant", "ecosia", "bing", "yahoo"),
+            7: ("7", "horny", "horndog", "horndawg", "main"),
+            8: ("8", "sales", "sell", "selling")
         }
 
         request = " ".join(args).lower()
@@ -229,7 +233,7 @@ class Moderation(Cog):
             for rule in rule_triggers:
                 for keyword in rule_triggers[rule]:
                     if keyword in request and str(rule) not in called_rules:
-                        called_rules += f"{rules[rule]}\n"
+                        called_rules += f"Rule {rule}: {rules[rule]}\n"
 
         if len(called_rules) == 0:
             reply  = f"Sorry {ctx.author.mention}, your terms don't "
