@@ -6,7 +6,7 @@ verify_ssl = true
 [packages]
 discord-py = "~=1.5"
 inflect = "~=4.1"
-requests = "~=2.24"
+requests = "~=2.31"
 toml = "~=0.10"
 setproctitle = "~=1.1"
 
