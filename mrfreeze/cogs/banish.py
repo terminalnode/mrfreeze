@@ -123,4 +123,14 @@ class BanishAndRegion(Cog):
     @command(name="region", aliases=["regions"])
     async def _region(self, ctx: Context, *args: str) -> None:
         """Assign yourself a colourful regional role."""
+
+        # TODO Remove this ugly hack
+        region_bl = [
+                245422943113445377 # StayingDead
+        ]
+
+        if ctx.author.id in region_bl:
+            await ctx.send(f"{ctx.author.mention} Your rights to switch region have been revoked! >:(")
+            return
+
         await region.region_cmd(ctx, self.coginfo, args)

@@ -1,5 +1,6 @@
 # Your token is secret, do not upload to git.
 token
+token.*
 
 # Local files
 config/*
